@@ -1,0 +1,2356 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPA Dashboard — ระบบบริหารทรัพย์สินรอการขาย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #f0883e;
+    --accent2: #58a6ff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warning: #d29922;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #484f58;
+    --font: 'IBM Plex Sans Thai', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  body.light {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #d0d7de;
+    --accent: #d4580a;
+    --accent2: #0969da;
+    --accent3: #1a7f37;
+    --danger: #cf222e;
+    --warning: #9a6700;
+    --text: #1f2328;
+    --text-muted: #636c76;
+    --text-dim: #b0b8c0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(240,136,62,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(240,136,62,0); }
+  }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .last-update { font-size: 13px; color: var(--text-muted); font-family: var(--mono); }
+
+  /* ── DATA SOURCE BAR ── */
+  .datasource-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .ds-label { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+  .ds-tabs { display: flex; gap: 4px; }
+  .ds-tab {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .ds-tab:hover { border-color: var(--accent); color: var(--text); }
+  .ds-tab.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+
+  .ds-input-area { display: flex; gap: 8px; align-items: center; flex: 1; }
+  .ds-input {
+    flex: 1; max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--mono);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .ds-input:focus { border-color: var(--accent2); }
+  .ds-input::placeholder { color: var(--text-dim); }
+
+  .file-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .file-label:hover { border-color: var(--accent2); color: var(--text); }
+  #fileInput { display: none; }
+
+  .btn-load {
+    padding: 6px 18px;
+    background: var(--accent2);
+    border: none;
+    border-radius: 6px;
+    color: #000;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: opacity 0.15s;
+  }
+  .btn-load:hover { opacity: 0.85; }
+
+  .btn-sample {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .btn-sample:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  /* ── LAYOUT ── */
+  .main { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .kpi-card:hover { border-color: var(--text-dim); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi-card.blue::before { background: var(--accent2); }
+  .kpi-card.orange::before { background: var(--accent); }
+  .kpi-card.green::before { background: var(--accent3); }
+  .kpi-card.red::before { background: var(--danger); }
+  .kpi-card.yellow::before { background: var(--warning); }
+
+  .kpi-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 8px; }
+  .kpi-value { font-size: 28px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+  .kpi-sub { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+  .kpi-value.blue { color: var(--accent2); }
+  .kpi-value.orange { color: var(--accent); }
+  .kpi-value.green { color: var(--accent3); }
+  .kpi-value.red { color: var(--danger); }
+  .kpi-value.yellow { color: var(--warning); }
+
+  /* ── SECTION LAYOUT ── */
+  .row { display: grid; gap: 16px; }
+  .row-2 { grid-template-columns: 1fr 1fr; }
+  .row-3 { grid-template-columns: 2fr 1fr 1fr; }
+  .row-alert { grid-template-columns: 1fr 1fr; }
+  .row-3    { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .panel-icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 11px; }
+  .panel-icon.blue { background: rgba(88,166,255,0.15); }
+  .panel-icon.orange { background: rgba(240,136,62,0.15); }
+  .panel-icon.green { background: rgba(63,185,80,0.15); }
+  .panel-icon.red { background: rgba(248,81,73,0.15); }
+  .panel-badge {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+  .panel-badge.danger { background: rgba(248,81,73,0.15); color: var(--danger); }
+  .panel-badge.warning { background: rgba(210,153,34,0.15); color: var(--warning); }
+  .panel-badge.blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .panel-badge.muted { background: var(--surface2); color: var(--text-muted); }
+  .panel-body { padding: 16px 18px; }
+
+  /* ── CHART ── */
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* ── ALERTS ── */
+  .alert-list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+  .alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+    background: var(--surface2);
+    font-size: 14px;
+    transition: transform 0.1s;
+    animation: slideIn 0.3s ease both;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .alert-item:hover { transform: translateX(2px); }
+  .alert-item.danger { border-color: var(--danger); }
+  .alert-item.warning { border-color: var(--warning); }
+  .alert-item.info { border-color: var(--accent2); }
+  .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .alert-dot.danger { background: var(--danger); }
+  .alert-dot.warning { background: var(--warning); }
+  .alert-dot.info { background: var(--accent2); }
+  .alert-text { flex: 1; }
+  .alert-title { font-weight: 600; color: var(--text); }
+  .alert-desc { color: var(--text-muted); font-size: 13px; }
+  .alert-time { font-size: 12px; color: var(--text-dim); font-family: var(--mono); flex-shrink: 0; }
+
+  /* ── CONTRACT TABLE ── */
+  .contract-table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th {
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    font-size: 14px;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-red { background: rgba(248,81,73,0.15); color: var(--danger); }
+  .badge-yellow { background: rgba(210,153,34,0.15); color: var(--warning); }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent3); }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent2); }
+  .badge-gray { background: var(--surface2); color: var(--text-muted); }
+
+  /* ── PROPERTY TABLE ── */
+  .prop-table-wrap { overflow-x: auto; max-height: 380px; overflow-y: auto; }
+  .prop-table-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+  .prop-table-wrap::-webkit-scrollbar-track { background: var(--surface2); }
+  .prop-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .search-bar {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .search-input {
+    flex: 1; min-width: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font);
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--accent2); }
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font);
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--accent2); }
+
+  /* ── DOUGHNUT LEGEND ── */
+  .doughnut-wrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .doughnut-chart { flex-shrink: 0; height: 160px; width: 160px; position: relative; }
+  .doughnut-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend-label { color: var(--text-muted); flex: 1; }
+  .legend-val { font-family: var(--mono); color: var(--text); font-weight: 600; }
+
+  /* ── AGING BAR ── */
+  .aging-list { display: flex; flex-direction: column; gap: 10px; }
+  .aging-item { display: flex; flex-direction: column; gap: 4px; }
+  .aging-header { display: flex; justify-content: space-between; font-size: 13px; }
+  .aging-label { color: var(--text-muted); }
+  .aging-count { font-family: var(--mono); color: var(--text); }
+  .aging-bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .aging-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+  /* ── PROVINCE MAP ── */
+  .province-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 6px;
+  }
+  .province-card {
+    padding: 8px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+  }
+  .province-card:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .sf-btn { font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);cursor:pointer; }
+  .sf-btn.sf-active { background:var(--accent);color:#000;border-color:var(--accent);font-weight:700; }
+  .province-name { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+  .province-count { font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--accent2); }
+  .province-val { font-size: 12px; color: var(--text-dim); }
+
+  /* ── STATUS INDICATOR ── */
+  .status-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    margin-top: 12px;
+  }
+  .status-seg { height: 100%; transition: width 0.8s; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    color: var(--text-dim);
+    text-align: center;
+    gap: 8px;
+  }
+  .empty-icon { font-size: 36px; opacity: 0.4; }
+  .empty-title { font-size: 15px; color: var(--text-muted); }
+  .empty-sub { font-size: 13px; }
+
+  .btn-theme {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  .btn-theme:hover { border-color: var(--accent2); color: var(--text); }
+  .theme-icon { font-size: 14px; transition: transform 0.4s; }
+  .btn-theme:hover .theme-icon { transform: rotate(20deg); }
+  .footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 900px) {
+    .row-2, .row-3, .row-alert { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    <span>NPA Dashboard</span>
+    <span style="color:var(--text-dim);font-weight:400;">— บสอ. ระบบบริหารทรัพย์สินรอการขาย</span>
+  </div>
+  <div class="header-right">
+    <button class="btn-theme" onclick="toggleTheme()" id="themeBtn">
+      <span class="theme-icon" id="themeIcon">🌙</span>
+      <span id="themeLabel">Dark Mode</span>
+    </button>
+    <span class="last-update" id="lastUpdate">ยังไม่ได้โหลดข้อมูล</span>
+  </div>
+</header>
+
+<!-- DATA SOURCE BAR -->
+<div class="datasource-bar">
+  <span class="ds-label">แหล่งข้อมูล</span>
+  <div class="ds-tabs">
+    <button class="ds-tab active" onclick="switchTab('csv')">📂 CSV File</button>
+    <button class="ds-tab" onclick="switchTab('gsheet')">📊 Google Sheet</button>
+  </div>
+
+  <div class="ds-input-area" id="csvArea">
+    <label class="file-label" for="fileInput">📁 เลือกไฟล์ CSV</label>
+    <input type="file" id="fileInput" accept=".csv" onchange="loadCSV(this)">
+    <button class="btn-sample" onclick="loadSampleData()">✨ ลองข้อมูลตัวอย่าง</button>
+  </div>
+
+  <div class="ds-input-area" id="gsheetArea" style="display:none;flex-direction:column;gap:8px;align-items:flex-start;">
+
+    <!-- ยังไม่ได้ login -->
+    <div id="gsLoginArea" style="display:flex;align-items:center;gap:12px;">
+      <div id="googleSignInBtn"></div>
+      <span style="font-size:12px;color:var(--text-muted);">Sign in ด้วย Google เพื่อเข้าถึง Sheet</span>
+    </div>
+
+    <!-- หลัง login แล้ว -->
+    <div id="gsLoggedArea" style="display:none;width:100%;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <img id="gsAvatar" style="width:28px;height:28px;border-radius:50%;" />
+        <span id="gsUserName" style="font-size:13px;font-weight:600;"></span>
+        <span style="font-size:12px;color:var(--text-muted);" id="gsUserEmail"></span>
+        <button onclick="gsSignOut()" style="margin-left:auto;font-size:11px;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--text-muted);">ออกจากระบบ</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;width:100%;max-width:860px;">
+        <label style="font-size:12px;color:var(--text-muted);white-space:nowrap;">📊 URL Google Sheet</label>
+        <input class="ds-input" id="gsId1" placeholder="วาง URL ของ Google Sheet (ไฟล์เดียว 4 tabs)" style="flex:1;" />
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+        <button class="btn-load" onclick="loadAllGSheets()">⬇️ โหลดข้อมูล</button>
+        <button class="btn-load" onclick="loadAllGSheets()" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);">🔄 Refresh</button>
+        <button class="btn-sample" onclick="loadSampleData()">✨ ลองข้อมูลตัวอย่าง</button>
+        <span id="gsStatus" style="font-size:12px;color:var(--text-muted);"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main" id="mainContent">
+
+  <!-- EMPTY STATE -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">🏢</div>
+    <div class="empty-title">โหลดข้อมูลทรัพย์สินเพื่อเริ่มต้น</div>
+    <div class="empty-sub">รองรับ CSV หรือ Google Sheet ที่ตั้งค่าสาธารณะแล้ว<br>หรือกด "ลองข้อมูลตัวอย่าง" เพื่อดูตัวอย่าง Dashboard</div>
+  </div>
+
+  <!-- DASHBOARD (hidden until data loaded) -->
+  <div id="dashboard" style="display:none; display:flex; flex-direction:column; gap:20px;">
+
+    <!-- KPI ROW -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- ROW 1: Alert + Upcoming + Type Chart -->
+    <div class="row row-alert">
+      <!-- Alerts -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon red">🚨</span>
+            การแจ้งเตือน
+          </div>
+          <span class="panel-badge danger" id="alertCount">0 รายการ</span>
+        </div>
+        <div style="padding:8px 16px 0;display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="setAlertFilter('all')"     id="afAll"     class="sf-btn sf-active">ทั้งหมด</button>
+          <button onclick="setAlertFilter('contract')" id="afContract" class="sf-btn">🏠 สัญญา</button>
+          <button onclick="setAlertFilter('issue')"   id="afIssue"   class="sf-btn">⚠️ ปัญหาทรัพย์</button>
+          <button onclick="setAlertFilter('survey')"  id="afSurvey"  class="sf-btn">🔍 สำรวจ</button>
+        </div>
+        <div class="panel-body">
+          <div class="alert-list" id="alertList">
+            <div class="empty-state" style="padding:24px">
+              <div class="empty-sub">ไม่มีการแจ้งเตือน</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Events -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon blue">📅</span>
+            กำหนดการที่ใกล้มาถึง
+          </div>
+          <span class="panel-badge muted" id="upcomingCount">0 รายการ</span>
+        </div>
+        <div class="panel-body">
+          <div class="alert-list" id="upcomingList">
+            <div class="empty-state" style="padding:24px">
+              <div class="empty-sub">ไม่มีกำหนดการ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Aging + Province + Status + Type -->
+    <div class="row row-3">
+      <!-- Aging Analysis -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon yellow">⏳</span>
+            อายุทรัพย์ (Aging)
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="aging-list" id="agingList"></div>
+          <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+            <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:10px;">🏆 ถือครองนานที่สุด TOP 5</div>
+            <div id="agingTop5"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Province -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon blue">🗺️</span>
+            แยกตามภาค
+          </div>
+        </div>
+        <div class="panel-body" style="padding:12px;">
+          <div class="province-grid" id="provinceGrid"></div>
+        </div>
+      </div>
+
+      <!-- Status + Type Chart รวมกัน -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon green">📋</span>
+            สถานะและประเภททรัพย์
+          </div>
+        </div>
+        <div class="panel-body">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:8px;">สถานะทรัพย์</div>
+          <div style="height:160px;position:relative;">
+            <canvas id="statusChart"></canvas>
+          </div>
+          <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:8px;">ประเภททรัพย์</div>
+          <div class="doughnut-wrap" style="gap:12px;">
+            <div class="doughnut-chart" style="width:110px;height:110px;">
+              <canvas id="typeChart"></canvas>
+            </div>
+            <div class="doughnut-legend" id="typeLegend" style="font-size:11px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTRACT TABLES: 2 คอลัมน์ -->
+    <div class="row row-2">
+
+      <!-- คอลัมน์ 1: ดูแลทรัพย์สิน -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon orange">🏠</span>
+            สัญญาดูแลทรัพย์สินรอการขาย
+          </div>
+          <span class="panel-badge warning" id="maintCount">0 สัญญา</span>
+        </div>
+        <div class="contract-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ชื่อบริษัท</th>
+                <th>โซนที่ดูแล</th>
+                <th>วันเริ่ม</th>
+                <th>วันสิ้นสุด</th>
+                <th>อายุสัญญา</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="maintBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- คอลัมน์ 2: รักษาความปลอดภัย -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-icon blue">🛡️</span>
+            สัญญารักษาความปลอดภัย
+          </div>
+          <span class="panel-badge warning" id="secCount">0 สัญญา</span>
+        </div>
+        <div class="contract-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ชื่อบริษัท</th>
+                <th>ทรัพย์ที่ดูแลอยู่</th>
+                <th>วันเริ่ม</th>
+                <th>วันสิ้นสุด</th>
+                <th>อายุสัญญา</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="secBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- QUARTERLY SUMMARY PANEL -->
+    <div class="panel" id="quarterlyPanel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="panel-icon green">📊</span>
+          สรุปภาพรวมรายไตรมาส
+        </div>
+        <span id="quarterlyLabel" class="panel-badge info" style="font-size:12px;"></span>
+      </div>
+      <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="quarterlyGrid">
+        <div class="empty-state" style="padding:24px;grid-column:1/-1;"><div class="empty-sub">โหลดข้อมูลเพื่อดูสรุปรายไตรมาส</div></div>
+      </div>
+    </div>
+
+    <!-- SURVEY TRACKING PANEL -->
+    <div class="panel" id="surveyPanel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="panel-icon orange">🔍</span>
+          ติดตามการสำรวจทรัพย์รายไตรมาส
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select id="surveyQuarterSelect" class="filter-select" onchange="renderSurveyPanel()" style="font-size:12px;">
+          </select>
+          <label class="ds-tab" style="font-size:12px;padding:4px 10px;cursor:pointer;background:var(--surface2);border-radius:6px;">
+            📂 โหลด CSV สำรวจ
+            <input type="file" accept=".csv" onchange="loadSurveyCSV(this)" style="display:none;">
+          </label>
+        </div>
+      </div>
+
+      <!-- KPI ไตรมาส -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:16px 16px 0;">
+        <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#3fb950;font-family:var(--mono);" id="surveyDone">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">✅ สำรวจเสร็จแล้ว</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">ได้รับรายงานแล้ว</div>
+        </div>
+        <div style="background:rgba(121,192,255,0.1);border:1px solid rgba(121,192,255,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#79c0ff;font-family:var(--mono);" id="surveyOrdered">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">📋 สั่งสำรวจแล้ว</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">ออก Work Order แล้ว รอผล</div>
+        </div>
+        <div style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#d29922;font-family:var(--mono);" id="surveyPending">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">⏳ ยังไม่สั่งงาน</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">ยังไม่มีการดำเนินการ</div>
+        </div>
+        <div style="background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#f85149;font-family:var(--mono);" id="surveyOverdue">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">❌ ขาดสำรวจ ≥2 ไตรมาส</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">ต้องเร่งดำเนินการ</div>
+        </div>
+        <div style="background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#58a6ff;font-family:var(--mono);" id="surveyPct">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">📊 % ครอบคลุม</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">(เสร็จ + สั่งแล้ว) / ทั้งหมด</div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="padding:12px 16px 4px;">
+        <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">
+          <div id="surveyProgressBar" style="height:100%;background:linear-gradient(90deg,#3fb950,#58a6ff);border-radius:3px;width:0%;transition:width 0.8s;"></div>
+        </div>
+      </div>
+
+      <!-- ตารางสถานะรายทรัพย์ -->
+      <div style="padding:8px 16px 16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <input id="surveySearch" class="search-input" style="width:220px;font-size:12px;padding:4px 10px;"
+            placeholder="🔍 ค้นหา รหัส / ชื่อทรัพย์ / จังหวัด..." oninput="renderSurveyPanel()">
+          <span style="font-size:12px;color:var(--text-muted);">สถานะ:</span>
+          <button onclick="setSurveyFilter('all')"     id="sfAll"     class="sf-btn sf-active">ทั้งหมด</button>
+          <button onclick="setSurveyFilter('done')"    id="sfDone"    class="sf-btn">✅ สำรวจเสร็จแล้ว</button>
+          <button onclick="setSurveyFilter('ordered')" id="sfOrdered" class="sf-btn">📋 สั่งสำรวจแล้ว</button>
+          <button onclick="setSurveyFilter('pending')" id="sfPending" class="sf-btn">⏳ ยังไม่สั่งงาน</button>
+          <button onclick="setSurveyFilter('overdue')" id="sfOverdue" class="sf-btn">❌ ขาดสำรวจ</button>
+        </div>
+        <div class="prop-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัสทรัพย์</th>
+                <th>ชื่อทรัพย์</th>
+                <th>จังหวัด</th>
+                <th>ภาค</th>
+                <th>วันออก Work Order</th>
+                <th>สำรวจล่าสุด</th>
+                <th>ไตรมาสล่าสุด</th>
+                <th>สถานะไตรมาสนี้</th>
+              </tr>
+            </thead>
+            <tbody id="surveyBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLEANING PANEL -->
+    <div class="panel" id="cleaningPanel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="panel-icon green">🧹</span>
+          ติดตามงานทำความสะอาด
+        </div>
+        <span class="panel-badge muted" id="cleanCount">0 รายการ</span>
+      </div>
+
+      <!-- KPI row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 16px 0;">
+        <div style="background:rgba(139,148,158,0.1);border:1px solid rgba(139,148,158,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#8b949e;font-family:var(--mono);" id="cleanNA">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">⛔ ไม่ต้องทำ</div>
+        </div>
+        <div style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#d29922;font-family:var(--mono);" id="cleanWaiting">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">⏳ รอสั่งงาน</div>
+        </div>
+        <div style="background:rgba(121,192,255,0.1);border:1px solid rgba(121,192,255,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#79c0ff;font-family:var(--mono);" id="cleanOrdered">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">📋 สั่งงานแล้ว รอทำ</div>
+        </div>
+        <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#3fb950;font-family:var(--mono);" id="cleanDone">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">✅ ทำความสะอาดแล้ว</div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="padding:12px 16px 4px;">
+        <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">
+          <div id="cleanProgressBar" style="height:100%;background:linear-gradient(90deg,#3fb950,#58a6ff);border-radius:3px;width:0%;transition:width 0.8s;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right;" id="cleanPctLabel"></div>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="padding:8px 16px 16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <input id="cleanSearch" class="search-input" style="width:220px;font-size:12px;padding:4px 10px;"
+            placeholder="🔍 ค้นหา รหัส / ชื่อทรัพย์ / จังหวัด..." oninput="renderCleaningPanel()">
+          <span style="font-size:12px;color:var(--text-muted);">สถานะ:</span>
+          <button onclick="setCleanFilter('all')"     id="cfAll"     class="sf-btn sf-active">ทั้งหมด</button>
+          <button onclick="setCleanFilter('na')"      id="cfNa"      class="sf-btn">⛔ ไม่ต้องทำ</button>
+          <button onclick="setCleanFilter('waiting')" id="cfWaiting" class="sf-btn">⏳ รอสั่งงาน</button>
+          <button onclick="setCleanFilter('ordered')" id="cfOrdered" class="sf-btn">📋 สั่งงานแล้ว</button>
+          <button onclick="setCleanFilter('done')"    id="cfDone"    class="sf-btn">✅ ทำแล้ว</button>
+        </div>
+        <div class="prop-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัสทรัพย์</th>
+                <th>ชื่อทรัพย์</th>
+                <th>จังหวัด</th>
+                <th>ภาค</th>
+                <th>วันออก WO ทำความสะอาด</th>
+                <th>วันทำความสะอาดล่าสุด</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="cleanBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPERTY TABLE -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="panel-icon blue">🏗️</span>
+          รายการทรัพย์สินทั้งหมด
+        </div>
+        <span class="panel-badge muted" id="propCount">0 รายการ</span>
+      </div>
+      <div class="search-bar">
+        <input class="search-input" id="searchInput" placeholder="🔍 ค้นหา รหัส / ชื่อทรัพย์ / จังหวัด..." oninput="filterTable()">
+        <select class="filter-select" id="filterType" onchange="filterTable()">
+          <option value="">ประเภท: ทั้งหมด</option>
+        </select>
+        <select class="filter-select" id="filterStatus" onchange="filterTable()">
+          <option value="">สถานะ: ทั้งหมด</option>
+        </select>
+        <select class="filter-select" id="filterProvince" onchange="filterTable()">
+          <option value="">จังหวัด: ทั้งหมด</option>
+        </select>
+      </div>
+      <div class="prop-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>รหัสทรัพย์</th>
+              <th>ชื่อทรัพย์</th>
+              <th>ประเภท</th>
+              <th>จังหวัด</th>
+              <th>ราคาประเมิน</th>
+              <th>ราคาขาย</th>
+              <th>สถานะ</th>
+              <th>ปัญหาทรัพย์</th>
+              <th>วันนัดรังวัด</th>
+              <th>อายุ (ปี)</th>
+            </tr>
+          </thead>
+          <tbody id="propBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /main -->
+
+<div class="footer">NPA Dashboard v1.0 — บสอ. ระบบบริหารทรัพย์สินรอการขาย | สร้างด้วย Claude</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  GLOBAL STATE
+// ═══════════════════════════════════════════
+let allData = [];
+let charts = {};
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeIcon').textContent = isLight ? '☀️' : '🌙';
+  document.getElementById('themeLabel').textContent = isLight ? 'Light Mode' : 'Dark Mode';
+  // re-render charts so they pick up new colors
+  if (allData.length > 0) {
+    renderTypeChart();
+    renderStatusChart();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  TAB SWITCH
+// ═══════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.ds-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('csvArea').style.display = tab === 'csv' ? 'flex' : 'none';
+  document.getElementById('gsheetArea').style.display = tab === 'gsheet' ? 'flex' : 'none';
+}
+
+// ═══════════════════════════════════════════
+//  CSV LOAD
+// ═══════════════════════════════════════════
+function loadCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: (res) => processData(res.data),
+    error: (err) => alert('อ่านไฟล์ไม่ได้: ' + err.message)
+  });
+}
+
+// ═══════════════════════════════════════════
+//  GOOGLE OAUTH 2.0 + SHEETS API v4
+// ═══════════════════════════════════════════
+const GS_CLIENT_ID = '490649363384-99c12jqdqjc2mt21tmqqd32vo64lpu27.apps.googleusercontent.com';
+const GS_SCOPE     = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+let   gsAccessToken = null;
+
+// ── Init Google Sign-In ─────────────────────
+window.addEventListener('load', () => {
+  if (typeof google === 'undefined') return;
+  google.accounts.id.initialize({
+    client_id: GS_CLIENT_ID,
+    callback:  onGoogleSignIn,
+    auto_select: false,
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('googleSignInBtn'),
+    { theme: 'filled_black', size: 'medium', text: 'signin_with', shape: 'rectangular', locale: 'th' }
+  );
+  // restore login state
+  const saved = getSavedAuth();
+  if (saved) applyAuthState(saved);
+});
+
+function onGoogleSignIn(response) {
+  // decode JWT id_token เพื่อดึง profile
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  // ขอ access token สำหรับ Sheets API
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: GS_CLIENT_ID,
+    scope:     GS_SCOPE,
+    callback:  (tokenResp) => {
+      if (tokenResp.error) return alert('ขอ access token ไม่สำเร็จ: ' + tokenResp.error);
+      gsAccessToken = tokenResp.access_token;
+      const authState = { name: payload.name, email: payload.email, picture: payload.picture };
+      saveAuth(authState);
+      applyAuthState(authState);
+    }
+  });
+  client.requestAccessToken();
+}
+
+function applyAuthState(state) {
+  document.getElementById('gsLoginArea').style.display  = 'none';
+  document.getElementById('gsLoggedArea').style.display = '';
+  document.getElementById('gsUserName').textContent  = state.name;
+  document.getElementById('gsUserEmail').textContent = state.email;
+  const av = document.getElementById('gsAvatar');
+  if (state.picture) { av.src = state.picture; av.style.display = ''; }
+  restoreSheetIds();
+}
+
+function gsSignOut() {
+  gsAccessToken = null;
+  try { localStorage.removeItem('npa_auth'); localStorage.removeItem('npa_sheet_ids'); } catch(e) {}
+  document.getElementById('gsLoginArea').style.display  = '';
+  document.getElementById('gsLoggedArea').style.display = 'none';
+  google.accounts.id.disableAutoSelect();
+}
+
+function saveAuth(state) {
+  try { localStorage.setItem('npa_auth', JSON.stringify(state)); } catch(e) {}
+}
+function getSavedAuth() {
+  try { return JSON.parse(localStorage.getItem('npa_auth')); } catch(e) { return null; }
+}
+function restoreSheetIds() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('npa_sheet_ids') || '[]');
+    const el = document.getElementById('gsId1');
+    if (el && saved[0]) el.value = saved[0];
+  } catch(e) {}
+}
+
+// ── Extract Sheet ID from URL or raw ID ────
+function extractSheetId(input) {
+  if (!input) return null;
+  input = input.trim();
+  const m = input.match(/\/d\/([\w-]+)/);
+  return m ? m[1] : input;
+}
+
+// ── Fetch one sheet via Sheets API v4 ──────
+async function fetchSheet(sheetId, sheetName = '') {
+  if (!gsAccessToken) throw new Error('กรุณา Sign in ก่อน');
+  // encode เฉพาะชื่อ tab — ไม่ encode "!" และ range
+  const range = sheetName ? `${encodeURIComponent(sheetName)}!A:ZZ` : 'A:ZZ';
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?access_token=${gsAccessToken}`;
+  const res = await fetch(url);
+  if (res.status === 401) { gsAccessToken = null; throw new Error('Session หมดอายุ กรุณา Sign in ใหม่'); }
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  const rows = json.values || [];
+  if (rows.length < 2) return [];
+  const headers = rows[0];
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = r[i] || ''; });
+    return obj;
+  });
+}
+
+// ── Load all 4 sheets ──────────────────────
+async function loadAllGSheets() {
+  if (!gsAccessToken) {
+    // ถ้ายังไม่มี token ขอใหม่
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: GS_CLIENT_ID,
+      scope:     GS_SCOPE,
+      callback:  async (tokenResp) => {
+        if (tokenResp.error) return alert('ขอสิทธิ์ไม่สำเร็จ: ' + tokenResp.error);
+        gsAccessToken = tokenResp.access_token;
+        await _doLoadAllSheets();
+      }
+    });
+    client.requestAccessToken();
+    return;
+  }
+  await _doLoadAllSheets();
+}
+
+// ชื่อ tab ใน Google Sheet
+const SHEET_TABS = {
+  npa:     'ทรัพย์ NPA',
+  maint:   'สัญญาดูแลทรัพย์',
+  sec:     'สัญญา รปภ.',
+  survey:  'ประวัติการสำรวจ',
+  meeting: 'นัดประชุม',
+};
+
+let meetingData = [];
+
+async function _doLoadAllSheets() {
+  const sheetId = extractSheetId(document.getElementById('gsId1')?.value);
+  if (!sheetId) return alert('กรุณาใส่ URL ของ Google Sheet');
+
+  const status = document.getElementById('gsStatus');
+  status.style.color = 'var(--text-muted)';
+  status.textContent = '⏳ กำลังโหลด...';
+
+  try { localStorage.setItem('npa_sheet_ids', JSON.stringify([document.getElementById('gsId1')?.value || ''])); } catch(e) {}
+
+  try {
+    // Tab 1 — ทรัพย์ NPA (บังคับ)
+    const npaData = await fetchSheet(sheetId, SHEET_TABS.npa);
+    if (!npaData.length) throw new Error(`ไม่พบข้อมูลใน tab "${SHEET_TABS.npa}"`);
+
+    // Tab 2 — สัญญาดูแลทรัพย์
+    try {
+      const rows = await fetchSheet(sheetId, SHEET_TABS.maint);
+      maintContracts = rows.map(r => {
+        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k)) return r[rk]||''; return ''; };
+        return { company: g('บริษัท','company','ชื่อ'), zone: g('โซน','zone','พื้นที่','ดูแล'), start: g('เริ่ม','start'), end: g('สิ้นสุด','end','หมด','expire') };
+      }).filter(r => r.company);
+      renderContractTable();
+    } catch(e) { console.warn('tab สัญญาดูแลทรัพย์:', e.message); }
+
+    // Tab 3 — สัญญา รปภ.
+    try {
+      const rows = await fetchSheet(sheetId, SHEET_TABS.sec);
+      secContracts = rows.map(r => {
+        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k)) return r[rk]||''; return ''; };
+        const props = [1,2,3,4,5].map(i => g(`ทรัพย์ที่ดูแล${i}`,`property${i}`,`ทรัพย์${i}`)).filter(Boolean);
+        return { company: g('บริษัท','company','ชื่อ'), properties: props, start: g('เริ่ม','start'), end: g('สิ้นสุด','end','หมด','expire') };
+      }).filter(r => r.company);
+      renderContractTable();
+    } catch(e) { console.warn('tab สัญญา รปภ.:', e.message); }
+
+    // Tab 4 — ประวัติการสำรวจ
+    try {
+      const rows = await fetchSheet(sheetId, SHEET_TABS.survey);
+      surveyData = rows.map(r => {
+        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k)) return r[rk]||''; return ''; };
+        return { id: g('รหัสทรัพย์','id','รหัส'), date: g('วันที่สำรวจ','date','วันที่'), result: g('ผล','result'), note: g('หมายเหตุ','note') };
+      }).filter(r => r.id && r.date);
+      renderSurveyPanel();
+    } catch(e) { console.warn('tab ประวัติการสำรวจ:', e.message); }
+
+    // Tab 5 — นัดประชุม (ไม่เชื่อมกับทรัพย์)
+    try {
+      const rows = await fetchSheet(sheetId, SHEET_TABS.meeting);
+      meetingData = rows.map(r => {
+        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k)) return r[rk]||''; return ''; };
+        return {
+          topic: g('หัวข้อการประชุม','topic','หัวข้อ','ชื่อ','คณะ'),
+          date:  g('วันนัดประชุม','date','วันที่','วัน'),
+          room:  g('ห้องประชุม','room','ห้อง'),
+        };
+      }).filter(r => r.date);
+    } catch(e) { console.warn('tab นัดประชุม:', e.message); }
+
+    processData(npaData);
+    const now = new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+    status.style.color = '#3fb950';
+    status.textContent = `✅ โหลดสำเร็จ ${npaData.length} รายการ · อัปเดต ${now}`;
+
+  } catch(err) {
+    status.style.color = 'var(--danger)';
+    status.textContent = '❌ ' + err.message;
+    console.error(err);
+  }
+}
+
+// ── ลบ old Publish-to-web functions ────────
+function toCsvUrl() {}
+function parseSheetCsv() {}
+
+// auto-fill URL จาก localStorage ถ้ามี
+(function restoreGsUrls() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('npa_gs_urls') || '[]');
+    ['gsUrl1','gsUrl2','gsUrl3','gsUrl4'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el && saved[i]) el.value = saved[i];
+    });
+  } catch(e) {}
+})();
+
+
+// ═══════════════════════════════════════════
+//  SAMPLE DATA
+// ═══════════════════════════════════════════
+function loadSampleData() {
+  const today = new Date();
+  const addDays = (d, n) => {
+    const r = new Date(d); r.setDate(r.getDate() + n);
+    return r.toISOString().split('T')[0];
+  };
+
+  const sample = [
+    { รหัสทรัพย์:'NPA-001', ชื่อทรัพย์:'บ้านเดี่ยว ม.ชัยพฤกษ์ หนองจอก',    ประเภท:'บ้านเดี่ยว',      จังหวัด:'กรุงเทพมหานคร', ราคาประเมิน:'2500000',  ราคาขาย:'2100000',  สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'ปกติ',             'วันออก Work Order': addDays(today, 10), วันที่รับทรัพย์:'2021-03-15', วันหมดสัญญาผู้รับจ้าง: addDays(today, 8),   มูลค่าสัญญา:'45000', ประเภทสัญญา:'ทำความสะอาด' },
+    { รหัสทรัพย์:'NPA-002', ชื่อทรัพย์:'ที่ดินเปล่า ถ.สุขุมวิท 71',          ประเภท:'ที่ดิน',           จังหวัด:'กรุงเทพมหานคร', ราคาประเมิน:'8500000',  ราคาขาย:'7200000',  สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'ปกติ',             'วันออก Work Order': addDays(today, 5),  วันที่รับทรัพย์:'2020-07-20', วันหมดสัญญาผู้รับจ้าง: addDays(today, 25),  มูลค่าสัญญา:'12000', ประเภทสัญญา:'ตัดหญ้า' },
+    { รหัสทรัพย์:'NPA-003', ชื่อทรัพย์:'คอนโด Le Raffine ชอมพูนุช',          ประเภท:'คอนโดมิเนียม',    จังหวัด:'กรุงเทพมหานคร', ราคาประเมิน:'3200000',  ราคาขาย:'2950000',  สถานะ:'อยู่ระหว่างเจรจา',    ปัญหาทรัพย์:'รอซ่อมแซม',       'วันทำความสะอาดครั้งแรก':'2022-01-20', วันที่รับทรัพย์:'2022-01-10', วันหมดสัญญาผู้รับจ้าง: addDays(today, 62),  มูลค่าสัญญา:'28000', ประเภทสัญญา:'ดูแลทรัพย์' },
+    { รหัสทรัพย์:'NPA-004', ชื่อทรัพย์:'อาคารพาณิชย์ ตลาดกิมหยง',           ประเภท:'อาคารพาณิชย์',   จังหวัด:'สงขลา',          ราคาประเมิน:'1800000',  ราคาขาย:'1600000',  สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'มีปัญหากฎหมาย',   วันที่รับทรัพย์:'2019-11-05', วันหมดสัญญาผู้รับจ้าง: addDays(today, -5),  มูลค่าสัญญา:'35000', ประเภทสัญญา:'ซ่อมบำรุง' },
+    { รหัสทรัพย์:'NPA-005', ชื่อทรัพย์:'บ้านแฝด The Cube Village บุรีรัมย์', ประเภท:'บ้านแฝด',         จังหวัด:'บุรีรัมย์',       ราคาประเมิน:'1200000',  ราคาขาย:'980000',   สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'ปกติ',             'สถานะทำความสะอาด':'สั่งงานแล้ว', 'วันออก WO ทำความสะอาด': addDays(today, -10), วันที่รับทรัพย์:'2020-04-18', วันหมดสัญญาผู้รับจ้าง: addDays(today, 45),  มูลค่าสัญญา:'18000', ประเภทสัญญา:'ทำความสะอาด' },
+    { รหัสทรัพย์:'NPA-006', ชื่อทรัพย์:'ที่ดินสวนยาง กาญจนบุรี',             ประเภท:'ที่ดิน',           จังหวัด:'กาญจนบุรี',      ราคาประเมิน:'5600000',  ราคาขาย:'4800000',  สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'ถูกบุกรุก',        'สถานะทำความสะอาด':'ไม่ต้องทำ', วันที่รับทรัพย์:'2018-06-30', วันหมดสัญญาผู้รับจ้าง: addDays(today, 90),  มูลค่าสัญญา:'22000', ประเภทสัญญา:'สำรวจที่ดิน' },
+    { รหัสทรัพย์:'NPA-007', ชื่อทรัพย์:'ทาวน์เฮ้าส์ นวนคร ปทุมธานี',        ประเภท:'ทาวน์เฮ้าส์',     จังหวัด:'ปทุมธานี',       ราคาประเมิน:'1500000',  ราคาขาย:'1350000',  สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'ปกติ',             วันที่รับทรัพย์:'2021-09-22', วันหมดสัญญาผู้รับจ้าง: addDays(today, 15),  มูลค่าสัญญา:'15000', ประเภทสัญญา:'ทำความสะอาด' },
+    { รหัสทรัพย์:'NPA-008', ชื่อทรัพย์:'คอนโด Lumpini Ville ลาดพร้าว',       ประเภท:'คอนโดมิเนียม',    จังหวัด:'กรุงเทพมหานคร', ราคาประเมิน:'2100000',  ราคาขาย:'1900000',  สถานะ:'อยู่ระหว่างเจรจา',    ปัญหาทรัพย์:'รอรังวัด',         วันนัดรังวัด: addDays(today, 18), วันที่รับทรัพย์:'2022-05-14', วันหมดสัญญาผู้รับจ้าง: addDays(today, 120), มูลค่าสัญญา:'20000', ประเภทสัญญา:'ดูแลทรัพย์' },
+    { รหัสทรัพย์:'NPA-009', ชื่อทรัพย์:'โกดังสินค้า นิคมอมตะนคร',            ประเภท:'โรงงาน/โกดัง',   จังหวัด:'ชลบุรี',          ราคาประเมิน:'12000000', ราคาขาย:'10500000', สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'ปกติ',             วันที่รับทรัพย์:'2019-02-28', วันหมดสัญญาผู้รับจ้าง: addDays(today, 30),  มูลค่าสัญญา:'60000', ประเภทสัญญา:'รักษาความปลอดภัย' },
+    { รหัสทรัพย์:'NPA-010', ชื่อทรัพย์:'บ้านเดี่ยว ม.ศุภาลัย สงขลา',        ประเภท:'บ้านเดี่ยว',      จังหวัด:'สงขลา',          ราคาประเมิน:'3800000',  ราคาขาย:'3400000',  สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'รอซ่อมแซม',       วันที่รับทรัพย์:'2020-10-12', วันหมดสัญญาผู้รับจ้าง: addDays(today, -12), มูลค่าสัญญา:'38000', ประเภทสัญญา:'ซ่อมบำรุง' },
+    { รหัสทรัพย์:'NPA-011', ชื่อทรัพย์:'ที่ดินเชิงพาณิชย์ เชียงใหม่',        ประเภท:'ที่ดิน',           จังหวัด:'เชียงใหม่',      ราคาประเมิน:'7200000',  ราคาขาย:'6500000',  สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'ปกติ',             วันที่รับทรัพย์:'2017-08-15', วันหมดสัญญาผู้รับจ้าง: addDays(today, 200), มูลค่าสัญญา:'25000', ประเภทสัญญา:'ตัดหญ้า' },
+    { รหัสทรัพย์:'NPA-012', ชื่อทรัพย์:'ทาวน์เฮ้าส์ พาร์คเวย์ บุรีรัมย์',   ประเภท:'ทาวน์เฮ้าส์',     จังหวัด:'บุรีรัมย์',       ราคาประเมิน:'950000',   ราคาขาย:'820000',   สถานะ:'ทรัพย์ NPA',           ปัญหาทรัพย์:'มีผู้อาศัยอยู่',  วันที่รับทรัพย์:'2023-01-08', วันหมดสัญญาผู้รับจ้าง: addDays(today, 88),  มูลค่าสัญญา:'10000', ประเภทสัญญา:'ทำความสะอาด' },
+  ];
+  processData(sample);
+}
+
+// ═══════════════════════════════════════════
+//  COLUMN MAPPING (flexible headers)
+// ═══════════════════════════════════════════
+function mapRow(row) {
+  const get = (...keys) => {
+    for (const k of keys) {
+      for (const rk of Object.keys(row)) {
+        if (rk.replace(/\s/g,'').toLowerCase().includes(k.toLowerCase())) return row[rk] || '';
+      }
+    }
+    return '';
+  };
+  return {
+    id:         get('รหัสทรัพย์','code','id','รหัส'),
+    name:       get('ชื่อทรัพย์','name','ชื่อ','สถานที่'),
+    type:       get('ประเภท','type','ชนิด'),
+    province:   get('จังหวัด','province','พื้นที่','location'),
+    appraise:   parseFloat((get('ราคาประเมิน','appraise','ราคาตลาด','ราคา1') || '0').replace(/,/g,'')) || 0,
+    price:      parseFloat((get('ราคาขาย','price','ราคาขาย','ราคา2') || '0').replace(/,/g,'')) || 0,
+    status:     get('สถานะ','status','state'),
+    issue:      get('ปัญหาทรัพย์','issue','ปัญหา','problem'),
+    surveyDate:      get('วันนัดรังวัด','surveydate','นัดรังวัด','รังวัด'),
+    selfSurveyDate:  get('วันนัดสำรวจด้วยตนเอง','selfsurvedate','สำรวจด้วยตนเอง','นัดสำรวจเอง'),
+    workOrderDate:   get('วันออกWork','workorder','workorderdate','วันworkorder','ออกwork'),
+    firstCleanDate:  get('วันทำความสะอาดล่าสุด','วันทำความสะอาดครั้งแรก','firstcleandate','ล่าสุด','ครั้งแรก'),
+    cleanWODate:     get('วันออก WO ทำความสะอาด','cleanwodate','WOทำความสะอาด'),
+    cleanStatus:     get('สถานะทำความสะอาด','cleanstatus','สถานะความสะอาด'),
+    acquired:   get('วันที่รับทรัพย์','รับที่รับทรัพย์','acquired','วันที่','date'),
+    contractEnd:get('วันหมดสัญญา','contractend','สิ้นสุด','expire','enddate'),
+    contractVal:parseFloat((get('มูลค่าสัญญา','contractval','มูลค่า','value') || '0').replace(/,/g,'')) || 0,
+    contractType:get('ประเภทสัญญา','contracttype','งาน','service'),
+  };
+}
+
+// ═══════════════════════════════════════════
+//  PROCESS DATA
+// ═══════════════════════════════════════════
+function processData(raw) {
+  allData = raw.map(mapRow).filter(r => r.id || r.name);
+  if (allData.length === 0) return alert('ไม่พบข้อมูล กรุณาตรวจสอบ CSV');
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+  document.getElementById('lastUpdate').textContent = 'อัปเดต: ' + new Date().toLocaleString('th-TH');
+  // render ครั้งเดียว — ไม่ขึ้นกับ region filter
+  renderAlerts(allData);
+  renderUpcoming(allData);
+  renderContractTable();
+  populateSurveyQuarters();
+  renderSurveyPanel();
+  renderCleaningPanel();
+  renderQuarterlySummary();
+  renderAll();
+}
+
+// ═══════════════════════════════════════════
+//  REGION FILTER STATE
+// ═══════════════════════════════════════════
+let activeRegion = null;
+
+const REGION_MAP = {
+  'กรุงเทพฯ และปริมณฑล': ['กรุงเทพมหานคร','นนทบุรี','ปทุมธานี','สมุทรปราการ'],
+  'ภาคกลาง': ['สมุทรสาคร','สมุทรสงคราม','นครปฐม','สุพรรณบุรี','อ่างทอง','พระนครศรีอยุธยา','ลพบุรี','สระบุรี','สิงห์บุรี','ชัยนาท','นครนายก','ฉะเชิงเทรา','ปราจีนบุรี','สระแก้ว'],
+  'ภาคเหนือ': ['เชียงใหม่','เชียงราย','แม่ฮ่องสอน','ลำพูน','ลำปาง','พะเยา','แพร่','น่าน','อุตรดิตถ์','สุโขทัย','พิษณุโลก','พิจิตร','กำแพงเพชร','เพชรบูรณ์','นครสวรรค์','อุทัยธานี'],
+  'ภาคตะวันออกเฉียงเหนือ': ['นครราชสีมา','บุรีรัมย์','สุรินทร์','ศรีสะเกษ','อุบลราชธานี','ยโสธร','ร้อยเอ็ด','มหาสารคาม','ขอนแก่น','กาฬสินธุ์','สกลนคร','นครพนม','มุกดาหาร','อำนาจเจริญ','อุดรธานี','หนองคาย','บึงกาฬ','หนองบัวลำภู','เลย','ชัยภูมิ'],
+  'ภาคตะวันออก': ['ชลบุรี','ระยอง','จันทบุรี','ตราด'],
+  'ภาคตะวันตก': ['ตาก','กาญจนบุรี','ราชบุรี','เพชรบุรี','ประจวบคีรีขันธ์'],
+  'ภาคใต้': ['สุราษฎร์ธานี','นครศรีธรรมราช','สงขลา','ตรัง','พัทลุง','สตูล','ปัตตานี','ยะลา','นราธิวาส','กระบี่','ภูเก็ต','พังงา','ระนอง','ชุมพร'],
+};
+
+function getFilteredData() {
+  if (!activeRegion) return allData;
+  const provs = REGION_MAP[activeRegion] || [];
+  return allData.filter(r => provs.includes(r.province));
+}
+
+function selectRegion(region) {
+  activeRegion = (activeRegion === region) ? null : region;
+  renderAll();
+}
+
+// ═══════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════
+function renderAll() {
+  const fd = getFilteredData();
+  renderKPI(fd);
+  renderTypeChart(fd);
+  renderStatusChart(fd);
+  renderAging(fd);
+  renderProvinces();
+  renderPropTable(fd);
+  populateFilters(fd);
+}
+
+// ═══════════════════════════════════════════
+//  KPI
+// ═══════════════════════════════════════════
+function renderKPI(data = allData) {
+  const total = data.length;
+  const totalAppraise = data.reduce((s,r) => s + r.appraise, 0);
+  const totalPrice = data.reduce((s,r) => s + r.price, 0);
+  const forSale = data.filter(r => r.status === 'ทรัพย์ NPA').length;
+  const today = new Date();
+  const allContracts = [...maintContracts, ...secContracts];
+  const expiringSoon = allContracts.filter(r => {
+    if (!r.end) return false;
+    const d = new Date(r.end);
+    const diff = (d - today) / 86400000;
+    return diff >= 0 && diff <= 30;
+  }).length;
+  const overdue = allContracts.filter(r => {
+    if (!r.end) return false;
+    return new Date(r.end) < today;
+  }).length;
+
+  const html = [
+    { label:'ทรัพย์สินทั้งหมด', val: total.toLocaleString(), sub: 'รายการ', cls:'blue' },
+    { label:'มูลค่าประเมินรวม', val: (totalAppraise / 1000000).toLocaleString('th-TH', {minimumFractionDigits:0, maximumFractionDigits:0}) + 'M', sub: 'บาท', cls:'orange' },
+    { label:'พร้อมขาย', val: forSale.toLocaleString(), sub: `จาก ${total} รายการ`, cls:'green' },
+    { label:'สัญญาใกล้หมด (≤30 วัน)', val: expiringSoon.toLocaleString(), sub: 'รายการ', cls:'yellow' },
+    { label:'สัญญาเกินกำหนด', val: overdue.toLocaleString(), sub: 'ต้องดำเนินการด่วน', cls:'red' },
+  ].map(k => `
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value ${k.cls}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+  document.getElementById('kpiGrid').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+//  ALERTS
+// ═══════════════════════════════════════════
+let alertFilter = 'all';
+
+function setAlertFilter(f) {
+  alertFilter = f;
+  ['all','contract','issue','survey'].forEach(k => {
+    const el = document.getElementById('af' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (el) el.classList.toggle('sf-active', k === f);
+  });
+  renderAlertList();
+}
+
+let _allAlerts = []; // เก็บ alerts ทั้งหมดไว้ filter
+
+function renderAlertList() {
+  const filtered = alertFilter === 'all' ? _allAlerts : _allAlerts.filter(a => a.cat === alertFilter);
+  const countEl = document.getElementById('alertCount');
+  countEl.textContent = alertFilter === 'all'
+    ? `${_allAlerts.length} รายการ`
+    : `${filtered.length} / ${_allAlerts.length} รายการ`;
+
+  if (filtered.length === 0) {
+    document.getElementById('alertList').innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-sub">✅ ไม่มีการแจ้งเตือนในหมวดนี้</div></div>';
+    return;
+  }
+  document.getElementById('alertList').innerHTML = filtered.map((a, i) => `
+    <div class="alert-item ${a.type}" style="animation-delay:${i * 0.03}s">
+      <div class="alert-dot ${a.type}"></div>
+      <div class="alert-text">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+      </div>
+      ${a.time ? `<div class="alert-time">${a.time}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderAlerts(data = allData) {
+  const today = new Date();
+  const alerts = [];
+
+  // ── สัญญาบริษัท: ดูแลทรัพย์ ──────────────────────────────
+  maintContracts.forEach(r => {
+    if (!r.end) return;
+    const d = new Date(r.end);
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff < 0)        alerts.push({ cat:'contract', type:'danger',  title:`🏠 สัญญาดูแลทรัพย์เกินกำหนด`, desc:`${r.company} · ${r.zone} — เกินมา ${Math.abs(diff)} วัน`, time: fmtDate(r.end) });
+    else if (diff <= 7)  alerts.push({ cat:'contract', type:'danger',  title:`🏠 สัญญาดูแลทรัพย์ใกล้หมดมาก`, desc:`${r.company} · ${r.zone} — อีก ${diff} วัน`, time: fmtDate(r.end) });
+    else if (diff <= 30) alerts.push({ cat:'contract', type:'warning', title:`🏠 สัญญาดูแลทรัพย์ใกล้หมด`, desc:`${r.company} · ${r.zone} — อีก ${diff} วัน`, time: fmtDate(r.end) });
+  });
+
+  // ── สัญญาบริษัท: รักษาความปลอดภัย ───────────────────────
+  secContracts.forEach(r => {
+    if (!r.end) return;
+    const d = new Date(r.end);
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff < 0)        alerts.push({ cat:'contract', type:'danger',  title:`🛡️ สัญญา รปภ. เกินกำหนด`, desc:`${r.company} — เกินมา ${Math.abs(diff)} วัน`, time: fmtDate(r.end) });
+    else if (diff <= 7)  alerts.push({ cat:'contract', type:'danger',  title:`🛡️ สัญญา รปภ. ใกล้หมดมาก`, desc:`${r.company} — อีก ${diff} วัน`, time: fmtDate(r.end) });
+    else if (diff <= 30) alerts.push({ cat:'contract', type:'warning', title:`🛡️ สัญญา รปภ. ใกล้หมด`, desc:`${r.company} — อีก ${diff} วัน`, time: fmtDate(r.end) });
+  });
+
+  // ── ปัญหาทรัพย์ ───────────────────────────────────────────
+  const issueLevel = {
+    'มีปัญหากฎหมาย':               'danger',
+    'รอซ่อมแซม':                   'warning',
+    'รอรังวัด':                     'warning',
+    'ทรัพย์สินถูกรื้อถอน/โจรกรรม': 'danger',
+  };
+  const issueIcon = {
+    'มีปัญหากฎหมาย':               '⚖️',
+    'รอซ่อมแซม':                   '🔧',
+    'รอรังวัด':                     '📐',
+    'ทรัพย์สินถูกรื้อถอน/โจรกรรม': '🚨',
+  };
+  data.forEach(r => {
+    const lvl = issueLevel[r.issue];
+    if (lvl) {
+      const icon = issueIcon[r.issue] || '⚠️';
+      alerts.push({ cat:'issue', type: lvl, title: `${icon} ${r.issue}: ${r.id}`, desc: r.name, time: r.province || '' });
+    }
+  });
+
+  // ── งานสำรวจ: ขาดสำรวจ ≥2 ไตรมาส ────────────────────────
+  if (typeof surveyData !== 'undefined' && surveyData.length > 0) {
+    const currentQ = getCurrentQuarter();
+    const prevQ    = getPrevQuarter(currentQ);
+    const doneInCurrent = new Set(surveyData.filter(r => getQuarterLabel(r.date) === currentQ).map(r => r.id));
+    const doneInPrev    = new Set(surveyData.filter(r => getQuarterLabel(r.date) === prevQ).map(r => r.id));
+    data.forEach(r => {
+      if (!doneInCurrent.has(r.id) && !doneInPrev.has(r.id) && surveyData.some(s => s.id === r.id))
+        alerts.push({ cat:'survey', type:'danger', title:`🔍 ขาดสำรวจ ≥2 ไตรมาส`, desc:`${r.id} · ${r.name}`, time: r.province || '' });
+    });
+  }
+
+  _allAlerts = alerts;
+
+  // badge count + color
+  const dangerCount = alerts.filter(a => a.type === 'danger').length;
+  document.getElementById('alertCount').textContent = `${alerts.length} รายการ`;
+  document.getElementById('alertCount').className   = `panel-badge ${dangerCount > 0 ? 'danger' : alerts.length > 0 ? 'warning' : 'muted'}`;
+
+  if (alerts.length === 0) {
+    document.getElementById('alertList').innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-sub">✅ ไม่มีการแจ้งเตือน</div></div>';
+    return;
+  }
+  renderAlertList();
+}
+
+// ═══════════════════════════════════════════
+//  UPCOMING EVENTS
+// ═══════════════════════════════════════════
+function renderUpcoming(data = allData) {
+  const today = new Date();
+  const horizon = 60; // วันข้างหน้า
+  const events = [];
+
+  // ═══════════════════════════════════════════
+  // กฎ: Upcoming แสดงเฉพาะ 31–60 วัน
+  //     ≤ 30 วัน = Alert รับหน้าที่แทน
+  //     สัญญาทรัพย์ (contractEnd) ถูกตัดออกแล้ว — อิงจากตารางบริษัทเท่านั้น
+  // ═══════════════════════════════════════════
+
+  // 1. สัญญาผู้รับจ้างดูแลทรัพย์ใกล้หมด
+  maintContracts.forEach(r => {
+    if (!r.end) return;
+    const d = new Date(r.end);
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff > 30 && diff <= horizon) {
+      events.push({
+        date: d, diff,
+        icon: '🏠',
+        category: 'สัญญาดูแลทรัพย์',
+        title: `ต่อสัญญา: ${r.company}`,
+        desc: r.zone,
+        urgency: 'info',
+      });
+    }
+  });
+
+  // 3. สัญญา รปภ. ใกล้หมด
+  secContracts.forEach(r => {
+    if (!r.end) return;
+    const d = new Date(r.end);
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff > 30 && diff <= horizon) {
+      events.push({
+        date: d, diff,
+        icon: '🛡️',
+        category: 'สัญญา รปภ.',
+        title: `ต่อสัญญา: ${r.company}`,
+        desc: Array.isArray(r.properties) ? r.properties.join(', ') : '',
+        urgency: 'info',
+      });
+    }
+  });
+
+  // 3. นัดรังวัด (คอลัมน์ วันนัดรังวัด ใน CSV ทรัพย์) — แสดงทุกวันใน 0–60 วัน
+  //    (ไม่มีใน Alert logic จึงไม่มี overlap)
+  data.forEach(r => {
+    if (!r.surveyDate) return;
+    const d = new Date(r.surveyDate);
+    if (isNaN(d)) return;
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff >= 0 && diff <= horizon) {
+      events.push({
+        date: d, diff,
+        icon: '📐',
+        category: 'นัดรังวัด',
+        title: `นัดรังวัด: ${r.id}`,
+        desc: `${r.name} · ${r.province || '-'}`,
+        urgency: diff <= 30 ? 'warning' : 'info',
+      });
+    }
+  });
+
+  // 4. นัดสำรวจด้วยตนเอง — แสดงทุกวันใน 0–60 วัน
+  data.forEach(r => {
+    if (!r.selfSurveyDate) return;
+    const d = new Date(r.selfSurveyDate);
+    if (isNaN(d)) return;
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff >= 0 && diff <= horizon) {
+      events.push({
+        date: d, diff,
+        icon: '🚶',
+        category: 'นัดสำรวจด้วยตนเอง',
+        title: `สำรวจด้วยตนเอง: ${r.id}`,
+        desc: `${r.name} · ${r.province || '-'} · 📅 ${fmtDate(r.selfSurveyDate)}`,
+        urgency: diff <= 7 ? 'warning' : 'info',
+      });
+    }
+  });
+
+  // 5. นัดประชุม — แสดงทุกวันใน 0–60 วัน เลยวันแล้วหายไปเลย
+  if (typeof meetingData !== 'undefined') {
+    meetingData.forEach(r => {
+      if (!r.date) return;
+      const d = new Date(r.date);
+      if (isNaN(d)) return;
+      const diff = Math.ceil((d - today) / 86400000);
+      if (diff >= 0 && diff <= horizon) {
+        events.push({
+          date: d, diff,
+          icon: '📋',
+          category: 'นัดประชุม',
+          title: `ประชุม: ${r.topic || 'ไม่ระบุหัวข้อ'}`,
+          desc: `📅 ${fmtDate(r.date)}${r.room ? ` · 🏢 ${r.room}` : ''}`,
+          urgency: diff <= 7 ? 'warning' : 'info',
+        });
+      }
+    });
+  }
+
+  // 6. (งานทำความสะอาดไม่เชื่อม Upcoming)
+
+  // เรียงตามวันที่ใกล้สุด (null ไว้ท้าย)
+  events.sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return a.date - b.date;
+  });
+
+  document.getElementById('upcomingCount').textContent = `${events.length} รายการ`;
+  document.getElementById('upcomingCount').className = `panel-badge ${events.length > 0 ? 'blue' : 'muted'}`;
+
+  if (events.length === 0) {
+    document.getElementById('upcomingList').innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-sub">✅ ไม่มีกำหนดการใน 60 วัน</div></div>';
+    return;
+  }
+
+  const colorMap = { warning: 'var(--warning)', info: 'var(--accent)' };
+
+  document.getElementById('upcomingList').innerHTML = events.slice(0, 10).map((e, i) => {
+    const color = colorMap[e.urgency] || 'var(--accent)';
+    const diffStr = e.diff !== null ? `อีก ${e.diff} วัน` : 'ยังไม่มีกำหนด';
+    return `
+    <div class="alert-item" style="animation-delay:${i*0.04}s">
+      <div style="font-size:16px;flex-shrink:0;">${e.icon}</div>
+      <div class="alert-text" style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;background:rgba(88,166,255,0.15);color:var(--accent);padding:1px 6px;border-radius:3px;">${e.category}</span>
+          <span class="alert-title">${e.title}</span>
+        </div>
+        <div class="alert-desc">${e.desc}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};flex-shrink:0;text-align:right;white-space:nowrap;">${diffStr}</div>
+    </div>`;
+  }).join('');
+}
+
+
+// ═══════════════════════════════════════════
+function renderTypeChart(data = allData) {
+  const counts = {};
+  data.forEach(r => { counts[r.type || 'ไม่ระบุ'] = (counts[r.type || 'ไม่ระบุ'] || 0) + 1; });
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  const labels = sorted.map(e => e[0]);
+  const values = sorted.map(e => e[1]);
+  const colors = ['#58a6ff','#f0883e','#3fb950','#d29922','#f85149','#79c0ff','#56d364','#e3b341'];
+
+  if (charts.type) charts.type.destroy();
+  charts.type = new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth: 0, hoverOffset: 4 }] },
+    options: {
+      cutout: '70%',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} รายการ` } } },
+      animation: { duration: 600 }
+    }
+  });
+
+  document.getElementById('typeLegend').innerHTML = labels.map((l, i) => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${colors[i]}"></div>
+      <div class="legend-label">${l}</div>
+      <div class="legend-val">${values[i]}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+//  STATUS CHART (Horizontal Bar)
+// ═══════════════════════════════════════════
+function renderStatusChart(data = allData) {
+  const counts = {};
+  data.forEach(r => { const s = r.status || 'ไม่ระบุ'; counts[s] = (counts[s] || 0) + 1; });
+  // เรียงจากมากไปน้อย
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  const labels = sorted.map(e => e[0]);
+  const values = sorted.map(e => e[1]);
+  const colorMap = {
+    'ทรัพย์ NPA':           '#58a6ff',
+    'รอการขาย':             '#58a6ff',
+    'อยู่ระหว่างเจรจา':    '#3fb950',
+    'รอซ่อมแซม':           '#d29922',
+    'มีปัญหากฎหมาย':       '#f85149',
+    'ไม่ระบุ':              '#8b949e',
+  };
+  const colors = labels.map(l => colorMap[l] || '#79c0ff');
+
+  if (charts.status) charts.status.destroy();
+  charts.status = new Chart(document.getElementById('statusChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 6, borderWidth: 0 }] },
+    options: {
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        datalabels: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} รายการ` } },
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.06)', lineWidth: 1, borderDash: [4, 4] },
+          ticks: { color: '#8b949e', font: { size: 12 }, stepSize: 50 },
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: '#8b949e', font: { family: "'IBM Plex Sans Thai'", size: 12 } }
+        }
+      },
+      animation: { duration: 600 },
+      layout: { padding: { right: 40 } },
+    },
+    plugins: [{
+      id: 'barLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset, i) => {
+          chart.getDatasetMeta(i).data.forEach((bar, idx) => {
+            const val = dataset.data[idx];
+            const color = dataset.backgroundColor[idx] || '#8b949e';
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.font = 'bold 13px "IBM Plex Mono", monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(val, bar.x + 6, bar.y);
+            ctx.restore();
+          });
+        });
+      }
+    }]
+  });
+}
+
+// ═══════════════════════════════════════════
+//  AGING
+// ═══════════════════════════════════════════
+function renderAging(data = allData) {
+  const today = new Date();
+  const buckets = [
+    { label: '< 1 ปี', color: '#3fb950', min: 0, max: 1 },
+    { label: '1–3 ปี', color: '#58a6ff', min: 1, max: 3 },
+    { label: '3–5 ปี', color: '#d29922', min: 3, max: 5 },
+    { label: '5–7 ปี', color: '#f0883e', min: 5, max: 7 },
+    { label: '> 7 ปี', color: '#f85149', min: 7, max: 999 },
+  ];
+  buckets.forEach(b => {
+    b.count = data.filter(r => {
+      if (!r.acquired) return false;
+      const yrs = (today - new Date(r.acquired)) / (365.25 * 86400000);
+      return yrs >= b.min && yrs < b.max;
+    }).length;
+  });
+  const total = data.filter(r => r.acquired).length || 1;
+
+  document.getElementById('agingList').innerHTML = buckets.map(b => {
+    const pct = (b.count / total * 100).toFixed(1);
+    return `
+    <div class="aging-item">
+      <div class="aging-header">
+        <span class="aging-label">${b.label}</span>
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span class="aging-count">${b.count} รายการ</span>
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text);min-width:42px;text-align:right;">${pct}%</span>
+        </span>
+      </div>
+      <div class="aging-bar-track">
+        <div class="aging-bar-fill" style="width:${pct}%; background:var(--accent2);"></div>
+      </div>
+    </div>`
+  }).join('');
+
+  // TOP 5 ถือครองนานที่สุด
+  const today2 = new Date();
+  const top5 = data
+    .filter(r => r.acquired)
+    .map(r => ({ ...r, ageYrs: (today2 - new Date(r.acquired)) / (365.25 * 86400000) }))
+    .sort((a,b) => b.ageYrs - a.ageYrs)
+    .slice(0, 5);
+
+  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  document.getElementById('agingTop5').innerHTML = top5.length === 0
+    ? '<div style="font-size:12px;color:var(--text-dim);text-align:center;">ไม่มีข้อมูล</div>'
+    : top5.map((r, i) => {
+        const yrs = Math.floor(r.ageYrs);
+        const mos = Math.floor((r.ageYrs - yrs) * 12);
+        const ageStr = yrs > 0 ? `${yrs} ปี${mos > 0 ? ' '+mos+' เดือน' : ''}` : `${mos} เดือน`;
+        return `
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;${i < top5.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">
+          <span style="font-size:15px;flex-shrink:0;">${medals[i]}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${r.name || r.id}">${r.name || r.id}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${r.id} · ${r.province || '-'}</div>
+          </div>
+          <div style="font-family:var(--mono);font-size:12px;color:var(--warning);font-weight:700;flex-shrink:0;text-align:right;">${ageStr}</div>
+        </div>`;
+      }).join('');
+
+}
+
+// ═══════════════════════════════════════════
+//  REGIONS
+// ═══════════════════════════════════════════
+function renderProvinces() {
+  const regionMap = {
+    'กรุงเทพฯ และปริมณฑล': ['กรุงเทพมหานคร','นนทบุรี','ปทุมธานี','สมุทรปราการ'],
+    'ภาคกลาง': ['สมุทรสาคร','สมุทรสงคราม','นครปฐม','สุพรรณบุรี','อ่างทอง','พระนครศรีอยุธยา','ลพบุรี','สระบุรี','สิงห์บุรี','ชัยนาท','นครนายก','ฉะเชิงเทรา','ปราจีนบุรี','สระแก้ว'],
+    'ภาคเหนือ': ['เชียงใหม่','เชียงราย','แม่ฮ่องสอน','ลำพูน','ลำปาง','พะเยา','แพร่','น่าน','อุตรดิตถ์','สุโขทัย','พิษณุโลก','พิจิตร','กำแพงเพชร','เพชรบูรณ์','นครสวรรค์','อุทัยธานี'],
+    'ภาคตะวันออกเฉียงเหนือ': ['นครราชสีมา','บุรีรัมย์','สุรินทร์','ศรีสะเกษ','อุบลราชธานี','ยโสธร','ร้อยเอ็ด','มหาสารคาม','ขอนแก่น','กาฬสินธุ์','สกลนคร','นครพนม','มุกดาหาร','อำนาจเจริญ','อุดรธานี','หนองคาย','บึงกาฬ','หนองบัวลำภู','เลย','ชัยภูมิ'],
+    'ภาคตะวันออก': ['ชลบุรี','ระยอง','จันทบุรี','ตราด'],
+    'ภาคตะวันตก': ['ตาก','กาญจนบุรี','ราชบุรี','เพชรบุรี','ประจวบคีรีขันธ์'],
+    'ภาคใต้': ['สุราษฎร์ธานี','นครศรีธรรมราช','สงขลา','ตรัง','พัทลุง','สตูล','ปัตตานี','ยะลา','นราธิวาส','กระบี่','ภูเก็ต','พังงา','ระนอง','ชุมพร'],
+  };
+
+  // map each property to a region
+  const regionCount = {};
+  const regionVal = {};
+  Object.keys(regionMap).forEach(r => { regionCount[r] = 0; regionVal[r] = 0; });
+
+  allData.forEach(r => {
+    const prov = r.province || '';
+    let matched = false;
+    for (const [region, provs] of Object.entries(regionMap)) {
+      if (provs.includes(prov)) {
+        regionCount[region] = (regionCount[region] || 0) + 1;
+        regionVal[region] = (regionVal[region] || 0) + r.appraise;
+        matched = true; break;
+      }
+    }
+    if (!matched) {
+      regionCount['อื่นๆ'] = (regionCount['อื่นๆ'] || 0) + 1;
+      regionVal['อื่นๆ'] = (regionVal['อื่นๆ'] || 0) + r.appraise;
+    }
+  });
+
+  const regionColors = {
+    'กรุงเทพฯ และปริมณฑล': '#e879f9',
+    'ภาคกลาง': '#58a6ff',
+    'ภาคเหนือ': '#3fb950',
+    'ภาคตะวันออกเฉียงเหนือ': '#f0883e',
+    'ภาคตะวันออก': '#79c0ff',
+    'ภาคตะวันตก': '#56d364',
+    'ภาคใต้': '#d29922',
+    'อื่นๆ': '#8b949e',
+  };
+
+  const total = allData.length || 1;
+  const entries = Object.entries(regionCount).filter(([,c]) => c > 0).sort((a,b) => b[1]-a[1]);
+
+  document.getElementById('provinceGrid').innerHTML = entries.map(([region, count]) => {
+    const pct = (count / total * 100).toFixed(0);
+    const color = regionColors[region] || '#8b949e';
+    const isActive = activeRegion === region;
+    return `
+      <div class="province-card" onclick="selectRegion('${region}')" style="
+        border-left: 3px solid ${color};
+        cursor: pointer;
+        transition: all 0.15s;
+        outline: ${isActive ? '2px solid '+color : 'none'};
+        background: ${isActive ? 'rgba('+hexToRgb(color)+',0.12)' : 'var(--surface2)'};
+      ">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+          <div class="province-name" style="color:${color};font-weight:600;">${region}</div>
+          ${isActive ? `<span style="font-size:10px;background:${color};color:#000;padding:1px 5px;border-radius:3px;font-weight:700;">กรองอยู่</span>` : ''}
+        </div>
+        <div class="province-count" style="color:${color};">${count}</div>
+        <div class="province-val">${fmtMil(regionVal[region])} บาท</div>
+        <div style="margin-top:6px;height:4px;background:var(--surface);border-radius:2px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${color};border-radius:2px;transition:width 0.8s;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:3px;text-align:right;">${pct}%</div>
+      </div>`;
+  }).join('');
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+// ═══════════════════════════════════════════
+//  CONTRACT DATA (independent from NPA)
+// ═══════════════════════════════════════════
+const sampleMaintContracts = [
+  { company:'บริษัท กรีนเคร์ จำกัด',       zone:'โซน A — กรุงเทพฯ ตะวันออก', start:'2024-01-01', end:'2024-12-31' },
+  { company:'บริษัท พรอพเพอร์ตี้การ์ด จำกัด', zone:'โซน B — กรุงเทพฯ ตะวันตก', start:'2024-03-01', end:'2025-02-28' },
+  { company:'บริษัท ไทยเซอร์วิส จำกัด',     zone:'โซน C — ปริมณฑล',           start:'2024-06-01', end:'2025-05-31' },
+  { company:'บริษัท แอสเซทแคร์ จำกัด',      zone:'โซน D — ภาคใต้',            start:'2023-10-01', end:'2024-09-30' },
+  { company:'บริษัท นอร์ทแลนด์ จำกัด',      zone:'โซน E — ภาคเหนือ',          start:'2024-04-01', end:'2025-03-31' },
+  { company:'บริษัท อีสานโปร จำกัด',        zone:'โซน F — ภาคอีสาน',          start:'2024-07-01', end:'2025-06-30' },
+];
+const sampleSecContracts = [
+  { company:'บริษัท การ์เดียน ซีเคียวริตี้ จำกัด', properties:['NPA-001 บ้านเดี่ยว ม.ชัยพฤกษ์', 'NPA-002 ที่ดินเปล่า ถ.สุขุมวิท 71'], start:'2024-01-01', end:'2024-12-31' },
+  { company:'บริษัท เซฟตี้การ์ด จำกัด',            properties:['NPA-004 อาคารพาณิชย์ ตลาดกิมหยง'],                                    start:'2024-02-01', end:'2025-01-31' },
+  { company:'บริษัท โปรเทค จำกัด',                 properties:['NPA-007 โรงงาน อ.บางพลี', 'NPA-009 คลังสินค้า ชลบุรี'],             start:'2024-05-01', end:'2025-04-30' },
+  { company:'บริษัท ไทยการ์ด จำกัด',               properties:['NPA-010 รีสอร์ท เขาลาก'],                                            start:'2023-11-01', end:'2024-10-31' },
+];
+
+let maintContracts = [...sampleMaintContracts];
+let secContracts   = [...sampleSecContracts];
+
+function renderContractTable() {
+  renderMaintContracts();
+  renderSecContracts();
+}
+
+function contractDiffBadge(endStr) {
+  const today = new Date();
+  const d = new Date(endStr);
+  const diff = Math.ceil((d - today) / 86400000);
+  if (diff < 0)    return `<span class="badge badge-red">เกินกำหนด ${Math.abs(diff)} วัน</span>`;
+  if (diff <= 7)   return `<span class="badge badge-red">อีก ${diff} วัน</span>`;
+  if (diff <= 30)  return `<span class="badge badge-yellow">อีก ${diff} วัน</span>`;
+  if (diff <= 90)  return `<span class="badge badge-blue">อีก ${diff} วัน</span>`;
+  return `<span class="badge badge-green">อีก ${diff} วัน</span>`;
+}
+
+function contractAge(startStr, endStr) {
+  const s = new Date(startStr), e = new Date(endStr);
+  if (isNaN(s) || isNaN(e)) return '-';
+  const months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+  return months >= 12 ? `${Math.floor(months/12)} ปี ${months%12 ? months%12+' เดือน' : ''}` : `${months} เดือน`;
+}
+
+function renderMaintContracts() {
+  document.getElementById('maintCount').textContent = `${maintContracts.length} สัญญา`;
+  document.getElementById('maintBody').innerHTML = maintContracts.map(r => `<tr>
+    <td>${r.company}</td>
+    <td>${r.zone}</td>
+    <td style="font-family:var(--mono);font-size:13px;">${fmtDate(r.start)}</td>
+    <td style="font-family:var(--mono);font-size:13px;">${fmtDate(r.end)}</td>
+    <td style="font-family:var(--mono);font-size:13px;">${contractAge(r.start, r.end)}</td>
+    <td>${contractDiffBadge(r.end)}</td>
+  </tr>`).join('') || `<tr><td colspan="6"><div class="empty-state" style="padding:16px"><div class="empty-sub">ไม่มีข้อมูล</div></div></td></tr>`;
+}
+
+function renderSecContracts() {
+  document.getElementById('secCount').textContent = `${secContracts.length} สัญญา`;
+  document.getElementById('secBody').innerHTML = secContracts.map(r => {
+    const props = Array.isArray(r.properties)
+      ? r.properties.map(p => `<div style="font-size:12px;color:var(--text-muted);line-height:1.6;">🏠 ${p}</div>`).join('')
+      : `<div style="font-size:12px;color:var(--text-dim);">—</div>`;
+    return `<tr>
+      <td>${r.company}</td>
+      <td>${props}</td>
+      <td style="font-family:var(--mono);font-size:13px;">${fmtDate(r.start)}</td>
+      <td style="font-family:var(--mono);font-size:13px;">${fmtDate(r.end)}</td>
+      <td style="font-family:var(--mono);font-size:13px;">${contractAge(r.start, r.end)}</td>
+      <td>${contractDiffBadge(r.end)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6"><div class="empty-state" style="padding:16px"><div class="empty-sub">ไม่มีข้อมูล</div></div></td></tr>`;
+}
+
+// ═══════════════════════════════════════════
+//  PROPERTY TABLE
+// ═══════════════════════════════════════════
+function renderPropTable(data) {
+  const today = new Date();
+  document.getElementById('propCount').textContent = `${data.length} รายการ`;
+  document.getElementById('propBody').innerHTML = data.map(r => {
+    const age = r.acquired ? ((today - new Date(r.acquired)) / (365.25 * 86400000)).toFixed(1) : '-';
+    const statusColor = { 'ทรัพย์ NPA':'blue','รอการขาย':'blue','อยู่ระหว่างเจรจา':'green','รอซ่อมแซม':'yellow','มีปัญหากฎหมาย':'red' }[r.status] || 'gray';
+    const issueColor  = { 'มีปัญหากฎหมาย':'red','ทรัพย์สินถูกรื้อถอน/โจรกรรม':'red','รอซ่อมแซม':'yellow','รอรังวัด':'yellow','มีผู้ใช้ประโยชน์':'gray','ปกติ':'green' }[r.issue] || 'gray';
+    const issueLabel  = r.issue || '-';
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:13px;color:var(--text-muted)">${r.id}</td>
+      <td>${r.name}</td>
+      <td><span class="badge badge-gray">${r.type || '-'}</span></td>
+      <td>${r.province}</td>
+      <td style="font-family:var(--mono);text-align:right;">${r.appraise > 0 ? r.appraise.toLocaleString() : '-'}</td>
+      <td style="font-family:var(--mono);text-align:right;">${r.price > 0 ? r.price.toLocaleString() : '-'}</td>
+      <td><span class="badge badge-${statusColor}">${r.status || '-'}</span></td>
+      <td><span class="badge badge-${issueColor}">${issueLabel}</span></td>
+      <td style="font-family:var(--mono);font-size:12px;text-align:center;">${r.surveyDate ? fmtDate(r.surveyDate) : '-'}</td>
+      <td style="font-family:var(--mono);text-align:center;">${age}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="9"><div class="empty-state" style="padding:16px"><div class="empty-sub">ไม่พบข้อมูล</div></div></td></tr>`;
+}
+
+// ═══════════════════════════════════════════
+//  FILTERS
+// ═══════════════════════════════════════════
+function populateFilters(data = allData) {
+  const types = [...new Set(data.map(r => r.type).filter(Boolean))];
+  const statuses = [...new Set(data.map(r => r.status).filter(Boolean))];
+  const provinces = [...new Set(data.map(r => r.province).filter(Boolean))];
+
+  document.getElementById('filterType').innerHTML = '<option value="">ประเภท: ทั้งหมด</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+  document.getElementById('filterStatus').innerHTML = '<option value="">สถานะ: ทั้งหมด</option>' + statuses.map(s => `<option value="${s}">${s}</option>`).join('');
+  document.getElementById('filterProvince').innerHTML = '<option value="">จังหวัด: ทั้งหมด</option>' + provinces.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const type = document.getElementById('filterType').value;
+  const status = document.getElementById('filterStatus').value;
+  const province = document.getElementById('filterProvince').value;
+  const base = getFilteredData();
+
+  const filtered = base.filter(r => {
+    const matchQ = !q || (r.id + r.name + r.province).toLowerCase().includes(q);
+    const matchT = !type || r.type === type;
+    const matchS = !status || r.status === status;
+    const matchP = !province || r.province === province;
+    return matchQ && matchT && matchS && matchP;
+  });
+  renderPropTable(filtered);
+}
+
+// ═══════════════════════════════════════════
+//  CLEANING PANEL
+// ═══════════════════════════════════════════
+let cleanFilter = 'all';
+
+function setCleanFilter(f) {
+  cleanFilter = f;
+  ['all','na','waiting','ordered','done'].forEach(k => {
+    const el = document.getElementById('cf' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (el) el.classList.toggle('sf-active', k === f);
+  });
+  renderCleaningPanel();
+}
+
+function renderCleaningPanel() {
+  const today = new Date();
+  const q = (document.getElementById('cleanSearch')?.value || '').toLowerCase();
+
+  const STATUS_MAP = {
+    'ไม่ต้องทำความสะอาด': 'na',
+    'ไม่ต้องทำ':           'na',
+    'รอสั่งงาน':           'waiting',
+    'สั่งงานแล้ว':         'ordered',
+    'สั่งงานแล้ว รอทำ':   'ordered',
+    'ทำความสะอาดแล้ว':    'done',
+    'ทำแล้ว':              'done',
+  };
+  const STATUS_LABEL = {
+    na:      { label:'⛔ ไม่ต้องทำ',        color:'#8b949e' },
+    waiting: { label:'⏳ รอสั่งงาน',         color:'#d29922' },
+    ordered: { label:'📋 สั่งงานแล้ว รอทำ', color:'#79c0ff' },
+    done:    { label:'✅ ทำความสะอาดแล้ว',  color:'#3fb950' },
+    nodata:  { label:'— ไม่มีข้อมูล',       color:'#484f58' },
+  };
+
+  const rows = allData.map(r => {
+    const raw       = (r.cleanStatus || '').trim();
+    const woDate    = r.cleanWODate    ? new Date(r.cleanWODate)    : null;
+    const cleanDate = r.firstCleanDate ? new Date(r.firstCleanDate) : null;
+
+    let statusKey;
+
+    if (raw === 'ไม่ต้องทำความสะอาด' || raw === 'ไม่ต้องทำ') {
+      // ไม่ต้องทำ — ใช้ column สถานะ
+      statusKey = 'na';
+    } else if (woDate && cleanDate) {
+      // มีทั้ง WO และวันทำ — เปรียบเทียบวันที่
+      statusKey = woDate > cleanDate ? 'ordered' : 'done';
+    } else if (woDate && !cleanDate) {
+      // มี WO แต่ยังไม่มีวันทำ → สั่งงานแล้ว รอทำ
+      statusKey = 'ordered';
+    } else if (!woDate && cleanDate) {
+      // มีวันทำแต่ไม่มี WO → ถือว่าเสร็จแล้ว
+      statusKey = 'done';
+    } else if (!woDate && !cleanDate) {
+      // ไม่มีวันที่เลย → ไม่ต้องทำ
+      statusKey = 'na';
+    } else {
+      statusKey = STATUS_MAP[raw] || 'waiting';
+    }
+
+    let region = 'อื่นๆ';
+    for (const [reg, provs] of Object.entries(REGION_MAP))
+      if (provs.includes(r.province)) { region = reg; break; }
+
+    return { ...r, statusKey, region };
+  });
+
+  // KPI
+  const nNA      = rows.filter(r => r.statusKey === 'na').length;
+  const nWaiting = rows.filter(r => r.statusKey === 'waiting').length;
+  const nNodata  = rows.filter(r => r.statusKey === 'nodata').length;
+  const nOrdered = rows.filter(r => r.statusKey === 'ordered').length;
+  const nDone    = rows.filter(r => r.statusKey === 'done').length;
+  const applicable = rows.length - nNA;
+  const pct = applicable > 0 ? Math.round(nDone / applicable * 100) : 0;
+
+  document.getElementById('cleanCount').textContent    = `${rows.length} รายการ`;
+  document.getElementById('cleanNA').textContent       = nNA;
+  document.getElementById('cleanWaiting').textContent  = nWaiting + nNodata;
+  document.getElementById('cleanOrdered').textContent  = nOrdered;
+  document.getElementById('cleanDone').textContent     = nDone;
+  document.getElementById('cleanProgressBar').style.width = pct + '%';
+  document.getElementById('cleanPctLabel').textContent = `ทำแล้ว ${nDone} จาก ${applicable} รายการที่ต้องดำเนินการ (${pct}%)`;
+
+  // filter + search
+  const filtered = rows
+    .filter(r => cleanFilter === 'all' ? true : cleanFilter === 'waiting' ? (r.statusKey === 'waiting' || r.statusKey === 'nodata') : r.statusKey === cleanFilter)
+    .filter(r => !q || (r.id + r.name + r.province).toLowerCase().includes(q));
+
+  document.getElementById('cleanBody').innerHTML = filtered.length === 0
+    ? `<tr><td colspan="7"><div class="empty-state" style="padding:16px"><div class="empty-sub">ไม่พบข้อมูล</div></div></td></tr>`
+    : filtered.map(r => {
+        const s = STATUS_LABEL[r.statusKey];
+        return `<tr>
+          <td style="font-family:var(--mono);font-size:13px;color:var(--text-muted);">${r.id}</td>
+          <td>${r.name}</td>
+          <td>${r.province || '-'}</td>
+          <td style="font-size:12px;">${r.region}</td>
+          <td style="font-family:var(--mono);font-size:12px;text-align:center;color:#79c0ff;">${r.cleanWODate    ? fmtDate(r.cleanWODate)    : '—'}</td>
+          <td style="font-family:var(--mono);font-size:12px;text-align:center;color:#3fb950;">${r.firstCleanDate ? fmtDate(r.firstCleanDate) : '—'}</td>
+          <td><span style="font-size:12px;font-weight:600;color:${s.color};">${s.label}</span></td>
+        </tr>`;
+      }).join('');
+}
+
+
+let surveyData = [];      // ข้อมูลจาก CSV สำรวจ
+let surveyFilter = 'all'; // all | done | pending | overdue
+
+function getQuarterLabel(date) {
+  const d = new Date(date);
+  const q = Math.floor(d.getMonth() / 3) + 1;
+  const y = d.getFullYear() + 543; // พ.ศ.
+  return `Q${q}/${y}`;
+}
+
+function getCurrentQuarter() {
+  return getQuarterLabel(new Date());
+}
+
+function getPrevQuarter(qLabel) {
+  // Q2/2568 → Q1/2568, Q1/2568 → Q4/2567
+  const [q, y] = qLabel.replace('Q','').split('/').map(Number);
+  if (q === 1) return `Q4/${y - 1}`;
+  return `Q${q - 1}/${y}`;
+}
+
+function populateSurveyQuarters() {
+  const today = new Date();
+  const quarters = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i * 3, 1);
+    quarters.push(getQuarterLabel(d));
+  }
+  const sel = document.getElementById('surveyQuarterSelect');
+  sel.innerHTML = quarters.map((q, i) => `<option value="${q}"${i===0?' selected':''}>${q}${i===0?' (ปัจจุบัน)':''}</option>`).join('');
+}
+
+function loadSurveyCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: (res) => {
+      surveyData = res.data.map(r => {
+        const get = (...keys) => {
+          for (const k of keys)
+            for (const rk of Object.keys(r))
+              if (rk.replace(/\s/g,'').toLowerCase().includes(k.toLowerCase())) return r[rk] || '';
+          return '';
+        };
+        return {
+          id:     get('รหัสทรัพย์','id','รหัส'),
+          date:   get('วันที่สำรวจ','date','วันที่'),
+          result: get('ผลการสำรวจ','result','ผล'),
+          note:   get('หมายเหตุ','note','remark'),
+        };
+      }).filter(r => r.id && r.date);
+      renderSurveyPanel();
+    }
+  });
+}
+
+function setSurveyFilter(f) {
+  surveyFilter = f;
+  document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('sf-active'));
+  const idMap = { all:'sfAll', done:'sfDone', ordered:'sfOrdered', pending:'sfPending', overdue:'sfOverdue' };
+  document.getElementById(idMap[f]).classList.add('sf-active');
+  renderSurveyPanel();
+}
+
+// ═══════════════════════════════════════════
+//  QUARTERLY SUMMARY PANEL
+// ═══════════════════════════════════════════
+function renderQuarterlySummary() {
+  const currentQ = getCurrentQuarter();
+  const prevQ    = getPrevQuarter(currentQ);
+  const showComparison = currentQ !== 'Q1/2569'; // เปรียบเทียบตั้งแต่ Q2/2569 เป็นต้นไป
+
+  document.getElementById('quarterlyLabel').textContent = showComparison ? `${prevQ} → ${currentQ}` : currentQ;
+
+  const total = allData.length;
+
+  // ── สำรวจ ────────────────────────────────
+  const surveyInQ = (q) => new Set(
+    (typeof surveyData !== 'undefined' ? surveyData : [])
+      .filter(r => getQuarterLabel(r.date) === q)
+      .map(r => r.id)
+  );
+
+  const lastSurveyMap = {};
+  (typeof surveyData !== 'undefined' ? surveyData : []).forEach(r => {
+    if (!lastSurveyMap[r.id] || new Date(r.date) > new Date(lastSurveyMap[r.id])) lastSurveyMap[r.id] = r.date;
+  });
+
+  const curSurveyDone  = surveyInQ(currentQ).size;
+  const prevSurveyDone = surveyInQ(prevQ).size;
+
+  // นับสถานะสำรวจแต่ละแบบ
+  const doneInQ = surveyInQ(currentQ);
+  let surveyOrdered = 0, surveyPending = 0;
+  allData.forEach(r => {
+    if (doneInQ.has(r.id)) return;
+    const woDate   = r.workOrderDate ? new Date(r.workOrderDate) : null;
+    const lastDate = lastSurveyMap[r.id] ? new Date(lastSurveyMap[r.id]) : null;
+    if (woDate && (!lastDate || woDate > lastDate)) surveyOrdered++;
+    else surveyPending++;
+  });
+
+  const surveyTarget   = total;
+  const curSurveyPct   = surveyTarget > 0 ? Math.floor(curSurveyDone  / surveyTarget * 100) : 0;
+  const prevSurveyPct  = surveyTarget > 0 ? Math.floor(prevSurveyDone / surveyTarget * 100) : 0;
+
+  // ── ทำความสะอาด ──────────────────────────
+  const cleanRows = allData.map(r => {
+    const raw       = (r.cleanStatus || '').trim();
+    const woDate    = r.cleanWODate    ? new Date(r.cleanWODate)    : null;
+    const cleanDate = r.firstCleanDate ? new Date(r.firstCleanDate) : null;
+    let sk;
+    if (raw === 'ไม่ต้องทำความสะอาด' || raw === 'ไม่ต้องทำ') sk = 'na';
+    else if (woDate && cleanDate) sk = woDate > cleanDate ? 'ordered' : 'done';
+    else if (woDate && !cleanDate) sk = 'ordered';
+    else if (!woDate && cleanDate) sk = 'done';
+    else sk = ({ 'รอสั่งงาน':'waiting','สั่งงานแล้ว':'ordered','สั่งงานแล้ว รอทำ':'ordered','ทำความสะอาดแล้ว':'done','ทำแล้ว':'done' }[raw]) || 'na';
+    return sk;
+  });
+  const cleanDone    = cleanRows.filter(s => s === 'done').length;
+  const cleanOrdered = cleanRows.filter(s => s === 'ordered').length;
+  const cleanNA      = cleanRows.filter(s => s === 'na').length;
+  const cleanWaiting = cleanRows.filter(s => s === 'waiting').length;
+  const cleanApply   = cleanDone + cleanOrdered;
+  const cleanPct     = cleanApply > 0 ? Math.floor(cleanDone / cleanApply * 100) : 0;
+
+  const barColor  = (pct) => pct >= 80 ? '#3fb950' : pct >= 50 ? '#d29922' : '#f85149';
+  const diffColor = (d) => d > 0 ? '#3fb950' : d < 0 ? '#f85149' : '#8b949e';
+  const diffArrow = (d) => d > 0 ? '▲' : d < 0 ? '▼' : '—';
+
+  const card = (icon, title, cur, curPct, target, unit, prev, prevPct, extra = '') => {
+    const diff    = cur - prev;
+    const pctDiff = curPct - prevPct;
+    const valueBlock = showComparison ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:3px;">${prevQ}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);">${prev}<span style="font-size:13px;color:var(--text-muted);"> ${unit}</span></div>
+          <div style="font-size:12px;color:var(--text-muted);">${prevPct}% ของเป้า</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:3px;">${currentQ} <span style="font-size:10px;background:var(--accent);color:#000;padding:1px 5px;border-radius:3px;">ปัจจุบัน</span></div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);">${cur}<span style="font-size:13px;color:var(--text-muted);"> ${unit}</span></div>
+          <div style="font-size:12px;color:${diffColor(diff)};">${diffArrow(diff)} ${Math.abs(diff)} ${unit} · ${diffArrow(pctDiff)} ${Math.abs(pctDiff)}%</div>
+        </div>
+      </div>` : `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">${currentQ} <span style="font-size:10px;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:600;">ปัจจุบัน</span></div>
+        <div style="font-size:28px;font-weight:700;color:var(--text);line-height:1.1;">
+          ${cur}<span style="font-size:14px;color:var(--text-muted);font-weight:400;"> / ${target} ${unit}</span>
+        </div>
+      </div>`;
+
+    return `
+    <div style="background:var(--surface2);border-radius:10px;padding:16px;border:1px solid var(--border);">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">${icon} ${title}</div>
+      ${valueBlock}
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px;">
+          <span>ความคืบหน้า</span>
+          <span style="font-weight:600;color:${barColor(curPct)};">${curPct}%</span>
+        </div>
+        <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">
+          <div style="width:${curPct}%;height:100%;background:${barColor(curPct)};border-radius:4px;transition:width 0.8s;"></div>
+        </div>
+      </div>
+      ${extra}
+    </div>`;
+  };
+
+  const cleanExtra = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(63,185,80,0.15);color:#3fb950;">✅ เสร็จแล้ว ${cleanDone}</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(121,192,255,0.15);color:#79c0ff;">📋 สั่งงานแล้ว รอทำ ${cleanOrdered}</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(210,153,34,0.15);color:#d29922;">⏳ รอสั่งงาน ${cleanWaiting}</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(139,148,158,0.15);color:#8b949e;">⛔ ไม่ต้องทำ ${cleanNA}</span>
+    </div>`;
+
+  const surveyExtra = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(63,185,80,0.15);color:#3fb950;">✅ สำรวจแล้ว ${curSurveyDone}</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(121,192,255,0.15);color:#79c0ff;">📋 สั่งงานแล้ว อยู่ระหว่างสำรวจ ${surveyOrdered}</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(210,153,34,0.15);color:#d29922;">⏳ รอสั่งงาน ${surveyPending}</span>
+    </div>`;
+
+  document.getElementById('quarterlyGrid').innerHTML =
+    card('🔍', 'การสำรวจทรัพย์', curSurveyDone, curSurveyPct, surveyTarget, 'ชิ้น', prevSurveyDone, prevSurveyPct, surveyExtra) +
+    card('🧹', 'การทำความสะอาด', cleanDone, cleanPct, cleanApply, 'ชิ้น', cleanDone, cleanPct, cleanExtra);
+}
+
+function renderSurveyPanel() {
+  const selectedQ = document.getElementById('surveyQuarterSelect')?.value || getCurrentQuarter();
+  const prevQ     = getPrevQuarter(selectedQ);
+
+  // index: id → มีผลสำรวจใน selectedQ แล้ว (สำรวจเสร็จแล้ว)
+  const doneInQ = {};
+  surveyData.forEach(r => {
+    if (getQuarterLabel(r.date) === selectedQ) {
+      if (!doneInQ[r.id] || new Date(r.date) > new Date(doneInQ[r.id].date))
+        doneInQ[r.id] = r;
+    }
+  });
+
+  // index: id → ผลสำรวจล่าสุดทุกไตรมาส
+  const lastSurvey = {};
+  surveyData.forEach(r => {
+    if (!lastSurvey[r.id] || new Date(r.date) > new Date(lastSurvey[r.id].date))
+      lastSurvey[r.id] = r;
+  });
+
+  // index: มีผลสำรวจในไตรมาสก่อนหน้าไหม
+  const doneInPrevQ = {};
+  surveyData.forEach(r => {
+    if (getQuarterLabel(r.date) === prevQ) doneInPrevQ[r.id] = true;
+  });
+
+  // build rows — ผสาน allData กับ workOrderDate จาก CSV ทรัพย์
+  const rows = allData.map(r => {
+    const last     = lastSurvey[r.id];
+    const woDate   = r.workOrderDate ? new Date(r.workOrderDate) : null;
+    const lastDate = last ? new Date(last.date) : null;
+    const done    = !!doneInQ[r.id];
+    const ordered = !done && !!woDate && (!lastDate || woDate > lastDate); // WO ใหม่กว่าสำรวจล่าสุด หรือยังไม่เคยสำรวจ
+    const overdue = !done && !ordered && !!last && !doneInPrevQ[r.id];
+    const pending = !done && !ordered && !overdue;
+
+    let statusKey, statusLabel, statusColor;
+    if (done)         { statusKey='done';    statusLabel='✅ สำรวจเสร็จแล้ว';      statusColor='#3fb950'; }
+    else if (ordered) { statusKey='ordered'; statusLabel='📋 สั่งสำรวจแล้ว';       statusColor='#79c0ff'; }
+    else if (overdue) { statusKey='overdue'; statusLabel='❌ ขาดสำรวจ ≥2 ไตรมาส'; statusColor='#f85149'; }
+    else              { statusKey='pending'; statusLabel='⏳ ยังไม่สั่งงาน';        statusColor='#d29922'; }
+
+    let region = 'อื่นๆ';
+    for (const [reg, provs] of Object.entries(REGION_MAP))
+      if (provs.includes(r.province)) { region = reg; break; }
+
+    return { ...r, done, ordered, overdue, pending, statusKey, statusLabel, statusColor, region,
+             lastDate: last?.date || null,
+             lastQ:    last ? getQuarterLabel(last.date) : '-',
+             lastResult: last?.result || '-' };
+  });
+
+  // KPI
+  const nDone    = rows.filter(r => r.done).length;
+  const nOrdered = rows.filter(r => r.ordered).length;
+  const nPending = rows.filter(r => r.pending).length;
+  const nOverdue = rows.filter(r => r.overdue).length;
+  const pct      = rows.length > 0 ? Math.round((nDone + nOrdered) / rows.length * 100) : 0;
+
+  document.getElementById('surveyDone').textContent    = nDone;
+  document.getElementById('surveyOrdered').textContent = nOrdered;
+  document.getElementById('surveyPending').textContent = nPending;
+  document.getElementById('surveyOverdue').textContent = nOverdue;
+  document.getElementById('surveyPct').textContent     = pct + '%';
+  document.getElementById('surveyProgressBar').style.width = pct + '%';
+
+  // filter rows
+  const q = (document.getElementById('surveySearch')?.value || '').toLowerCase();
+  const filtered = rows
+    .filter(r => surveyFilter === 'all'     ? true
+               : surveyFilter === 'done'    ? r.done
+               : surveyFilter === 'ordered' ? r.ordered
+               : surveyFilter === 'pending' ? r.pending
+               : r.overdue)
+    .filter(r => !q || (r.id + r.name + r.province).toLowerCase().includes(q));
+
+  document.getElementById('surveyBody').innerHTML = filtered.length === 0
+    ? `<tr><td colspan="8"><div class="empty-state" style="padding:16px"><div class="empty-sub">ไม่พบข้อมูล</div></div></td></tr>`
+    : filtered.map(r => `
+      <tr>
+        <td style="font-family:var(--mono);font-size:13px;color:var(--text-muted);">${r.id}</td>
+        <td>${r.name}</td>
+        <td>${r.province || '-'}</td>
+        <td style="font-size:12px;">${r.region}</td>
+        <td style="font-family:var(--mono);font-size:12px;text-align:center;color:var(--accent2);">${r.workOrderDate ? fmtDate(r.workOrderDate) : '—'}</td>
+        <td style="font-family:var(--mono);font-size:12px;text-align:center;">${r.lastDate ? fmtDate(r.lastDate) : '—'}</td>
+        <td style="font-family:var(--mono);font-size:12px;text-align:center;color:var(--text-muted);">${r.lastQ}</td>
+        <td><span style="font-size:12px;font-weight:600;color:${r.statusColor};">${r.statusLabel}</span></td>
+      </tr>`).join('');
+}
+
+
+function fmtMil(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+  return n.toFixed(0);
+}
+function fmtDate(s) {
+  if (!s) return '-';
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  return d.toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'2-digit' });
+}
+</script>
+</body>
+</html>
