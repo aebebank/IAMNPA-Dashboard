@@ -389,6 +389,8 @@
   .province-card:hover { filter: brightness(1.1); transform: translateY(-1px); }
   .sf-btn { font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);cursor:pointer; }
   .sf-btn.sf-active { background:var(--accent);color:#000;border-color:var(--accent);font-weight:700; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .today-blink { animation: blink 1.2s ease-in-out infinite; }
   .province-name { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
   .province-count { font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--accent2); }
   .province-val { font-size: 12px; color: var(--text-dim); }
@@ -1133,6 +1135,7 @@ async function _doLoadAllSheets() {
         return {
           topic: g('หัวข้อการประชุม','topic','หัวข้อ','ชื่อ','คณะ'),
           date:  g('วันนัดประชุม','date','วันที่','วัน'),
+          time:  g('เวลา','time','เวลาประชุม'),
           room:  g('ห้องประชุม','room','ห้อง'),
         };
       }).filter(r => r.date);
@@ -1532,7 +1535,7 @@ function renderUpcoming(data = allData) {
           icon: '📋',
           category: 'นัดประชุม',
           title: `ประชุม: ${r.topic || 'ไม่ระบุหัวข้อ'}`,
-          desc: `📅 ${fmtDate(r.date)}${r.room ? ` · 🏢 ${r.room}` : ''}`,
+          desc: `📅 ${fmtDate(r.date)}${r.time ? ` · ⏰ ${r.time}` : ''}${r.room ? ` · 🏢 ${r.room}` : ''}`,
           urgency: diff <= 7 ? 'warning' : 'info',
         });
       }
@@ -1556,14 +1559,16 @@ function renderUpcoming(data = allData) {
     return;
   }
 
-  const colorMap = { warning: 'var(--warning)', info: 'var(--accent)' };
+  const colorMap = { warning: 'var(--warning)', info: 'var(--accent)', today: '#f85149' };
 
   document.getElementById('upcomingList').innerHTML = events.slice(0, 10).map((e, i) => {
-    const color = colorMap[e.urgency] || 'var(--accent)';
-    const diffStr = e.diff !== null ? `อีก ${e.diff} วัน` : 'ยังไม่มีกำหนด';
+    const isToday = e.diff === 0;
+    const color   = isToday ? '#f85149' : (colorMap[e.urgency] || 'var(--accent)');
+    const diffStr = isToday ? '🔴 วันนี้' : `อีก ${e.diff} วัน`;
+    const blinkClass = isToday ? ' today-blink' : '';
     return `
-    <div class="alert-item" style="animation-delay:${i*0.04}s">
-      <div style="font-size:16px;flex-shrink:0;">${e.icon}</div>
+    <div class="alert-item" style="animation-delay:${i*0.04}s${isToday ? ';border-left:2px solid #f85149;' : ''}">
+      <div style="font-size:16px;flex-shrink:0;" class="${blinkClass}">${e.icon}</div>
       <div class="alert-text" style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span style="font-size:11px;background:rgba(88,166,255,0.15);color:var(--accent);padding:1px 6px;border-radius:3px;">${e.category}</span>
@@ -1571,7 +1576,7 @@ function renderUpcoming(data = allData) {
         </div>
         <div class="alert-desc">${e.desc}</div>
       </div>
-      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};flex-shrink:0;text-align:right;white-space:nowrap;">${diffStr}</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};flex-shrink:0;text-align:right;white-space:nowrap;" class="${blinkClass}">${diffStr}</div>
     </div>`;
   }).join('');
 }
