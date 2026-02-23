@@ -11,23 +11,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface2: #21262d;
-    --border: #30363d;
-    --accent: #f0883e;
-    --accent2: #58a6ff;
-    --accent3: #3fb950;
-    --danger: #f85149;
-    --warning: #d29922;
-    --text: #e6edf3;
-    --text-muted: #8b949e;
-    --text-dim: #484f58;
-    --font: 'IBM Plex Sans Thai', sans-serif;
-    --mono: 'IBM Plex Mono', monospace;
-  }
-
-  body.light {
     --bg: #f6f8fa;
     --surface: #ffffff;
     --surface2: #f0f2f5;
@@ -40,6 +23,23 @@
     --text: #1f2328;
     --text-muted: #636c76;
     --text-dim: #b0b8c0;
+    --font: 'IBM Plex Sans Thai', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  body.dark {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #f0883e;
+    --accent2: #58a6ff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warning: #d29922;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #484f58;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -739,7 +739,7 @@
         </div>
         <div style="background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.3);border-radius:8px;padding:12px;text-align:center;">
           <div style="font-size:22px;font-weight:700;color:#f85149;font-family:var(--mono);" id="surveyOverdue">—</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">❌ ขาดสำรวจ ≥2 ไตรมาส</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">❌ ยังไม่สั่งงานสำรวจ >7 วัน</div>
           <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">ต้องเร่งดำเนินการ</div>
         </div>
         <div style="background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);border-radius:8px;padding:12px;text-align:center;">
@@ -912,10 +912,9 @@ let allData = [];
 let charts = {};
 
 function toggleTheme() {
-  const isLight = document.body.classList.toggle('light');
-  document.getElementById('themeIcon').textContent = isLight ? '☀️' : '🌙';
-  document.getElementById('themeLabel').textContent = isLight ? 'Light Mode' : 'Dark Mode';
-  // re-render charts so they pick up new colors
+  const isDark = document.body.classList.toggle('dark');
+  document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('themeLabel').textContent = isDark ? 'Light Mode' : 'Dark Mode';
   if (allData.length > 0) {
     renderTypeChart();
     renderStatusChart();
@@ -2280,20 +2279,25 @@ function renderSurveyPanel() {
   });
 
   // build rows — ผสาน allData กับ workOrderDate จาก CSV ทรัพย์
+  const today7 = new Date();
   const rows = allData.map(r => {
     const last     = lastSurvey[r.id];
     const woDate   = r.workOrderDate ? new Date(r.workOrderDate) : null;
     const lastDate = last ? new Date(last.date) : null;
     const done    = !!doneInQ[r.id];
-    const ordered = !done && !!woDate && (!lastDate || woDate > lastDate); // WO ใหม่กว่าสำรวจล่าสุด หรือยังไม่เคยสำรวจ
-    const overdue = !done && !ordered && !!last && !doneInPrevQ[r.id];
+    const ordered = !done && !!woDate && (!lastDate || woDate > lastDate);
+
+    // overdue = ยังไม่สั่ง WO และ วันที่รับทรัพย์เกิน 7 วันแล้ว
+    const acquiredDate = r.acquired ? new Date(r.acquired) : null;
+    const daysSinceAcquired = acquiredDate ? Math.floor((today7 - acquiredDate) / 86400000) : null;
+    const overdue = !done && !ordered && acquiredDate !== null && daysSinceAcquired > 7;
     const pending = !done && !ordered && !overdue;
 
     let statusKey, statusLabel, statusColor;
-    if (done)         { statusKey='done';    statusLabel='✅ สำรวจเสร็จแล้ว';      statusColor='#3fb950'; }
-    else if (ordered) { statusKey='ordered'; statusLabel='📋 สั่งสำรวจแล้ว';       statusColor='#79c0ff'; }
-    else if (overdue) { statusKey='overdue'; statusLabel='❌ ขาดสำรวจ ≥2 ไตรมาส'; statusColor='#f85149'; }
-    else              { statusKey='pending'; statusLabel='⏳ ยังไม่สั่งงาน';        statusColor='#d29922'; }
+    if (done)         { statusKey='done';    statusLabel='✅ สำรวจเสร็จแล้ว';                          statusColor='#3fb950'; }
+    else if (ordered) { statusKey='ordered'; statusLabel='📋 สั่งสำรวจแล้ว';                           statusColor='#79c0ff'; }
+    else if (overdue) { statusKey='overdue'; statusLabel=`❌ ยังไม่สั่งงานสำรวจ (${daysSinceAcquired} วัน)`; statusColor='#f85149'; }
+    else              { statusKey='pending'; statusLabel='⏳ ยังไม่สั่งงาน';                            statusColor='#d29922'; }
 
     let region = 'อื่นๆ';
     for (const [reg, provs] of Object.entries(REGION_MAP))
@@ -2310,7 +2314,7 @@ function renderSurveyPanel() {
   const nOrdered = rows.filter(r => r.ordered).length;
   const nPending = rows.filter(r => r.pending).length;
   const nOverdue = rows.filter(r => r.overdue).length;
-  const pct      = rows.length > 0 ? Math.round((nDone + nOrdered) / rows.length * 100) : 0;
+  const pct      = rows.length > 0 ? Math.floor((nDone + nOrdered) / rows.length * 100) : 0;
 
   document.getElementById('surveyDone').textContent    = nDone;
   document.getElementById('surveyOrdered').textContent = nOrdered;
