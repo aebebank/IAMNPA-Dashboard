@@ -1528,16 +1528,27 @@ function renderUpcoming(data = allData) {
       const d = new Date(r.date);
       if (isNaN(d)) return;
       const diff = Math.ceil((d - today) / 86400000);
-      if (diff >= 0 && diff <= horizon) {
-        events.push({
-          date: d, diff,
-          icon: '📋',
-          category: 'นัดประชุม',
-          title: `ประชุม: ${r.topic || 'ไม่ระบุหัวข้อ'}`,
-          desc: `📅 ${fmtDate(r.date)}${r.time ? ` · ⏰ ${r.time}` : ''}${r.room ? ` · 🏢 ${r.room}` : ''}`,
-          urgency: diff <= 7 ? 'warning' : 'info',
-        });
+      if (diff < 0 || diff > horizon) return;
+
+      // ถ้าเป็นวันนี้และมีเวลา — เช็คว่าเกิน 1 ชั่วโมงหลังเวลาประชุมแล้วหรือยัง
+      if (diff === 0 && r.time) {
+        const [hh, mm] = r.time.split(':').map(Number);
+        if (!isNaN(hh) && !isNaN(mm)) {
+          const meetingTime = new Date(d);
+          meetingTime.setHours(hh, mm, 0, 0);
+          const cutoff = new Date(meetingTime.getTime() + 60 * 60 * 1000); // +1 ชั่วโมง
+          if (today >= cutoff) return; // ผ่านไปแล้ว 1 ชั่วโมง — ซ่อน
+        }
       }
+
+      events.push({
+        date: d, diff,
+        icon: '📋',
+        category: 'นัดประชุม',
+        title: `ประชุม: ${r.topic || 'ไม่ระบุหัวข้อ'}`,
+        desc: `📅 ${fmtDate(r.date)}${r.time ? ` · ⏰ ${r.time}` : ''}${r.room ? ` · 🏢 ${r.room}` : ''}`,
+        urgency: diff <= 7 ? 'warning' : 'info',
+      });
     });
   }
 
