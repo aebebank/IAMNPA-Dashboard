@@ -37,6 +37,7 @@
     --accent3: #3fb950;
     --danger: #f85149;
     --warning: #d29922;
+    --never: #a78bfa;
     --text: #e6edf3;
     --text-muted: #8b949e;
     --text-dim: #484f58;
@@ -451,6 +452,455 @@
   @media (max-width: 900px) {
     .row-2, .row-3, .row-alert { grid-template-columns: 1fr; }
   }
+
+  /* ══════════════════════════════════════════
+     SIDEBAR NAVIGATION
+  ══════════════════════════════════════════ */
+  .app-shell {
+    display: flex;
+    min-height: calc(100vh - 56px); /* below header */
+  }
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+    gap: 2px;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 8px 10px 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    text-decoration: none;
+    user-select: none;
+  }
+  .nav-item:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+  .nav-item.active {
+    background: rgba(88,166,255,0.1);
+    color: var(--accent2);
+    border-color: rgba(88,166,255,0.2);
+    font-weight: 600;
+  }
+  body.dark .nav-item.active {
+    background: rgba(88,166,255,0.1);
+    color: var(--accent2);
+    border-color: rgba(88,166,255,0.2);
+  }
+  .nav-icon {
+    font-size: 15px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .nav-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: rgba(248,81,73,0.15);
+    color: var(--danger);
+  }
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 4px;
+  }
+
+  /* ── page content areas ── */
+  .page-content {
+    flex: 1;
+    overflow-y: auto;
+    min-width: 0;
+  }
+  .page-view { display: none; }
+  .page-view.active { display: block; }
+
+  /* ══════════════════════════════════════════
+     PAGE 2: ประวัติการทำความสะอาด (Mixed Panel)
+  ══════════════════════════════════════════ */
+  .hist-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .hist-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    flex-wrap: wrap;
+  }
+  .hist-title {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hist-icon {
+    width: 26px; height: 26px;
+    background: var(--accent2);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .hist-chips {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+  .hchip {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .hchip.all   { background: var(--accent2); color: #000; }
+  .hchip.done  { background: rgba(63,185,80,0.12); color: var(--accent3); border-color: rgba(63,185,80,0.3); }
+  .hchip.ord   { background: rgba(88,166,255,0.12); color: var(--accent2); border-color: rgba(88,166,255,0.3); }
+  .hchip.ovd   { background: rgba(248,81,73,0.12); color: var(--danger); border-color: rgba(248,81,73,0.3); }
+  .hchip.nev   { background: rgba(167,139,250,0.12); color: #a78bfa; border-color: rgba(167,139,250,0.3); }
+  .hchip.off   { opacity: 0.45; }
+
+  /* summary bar */
+  .hist-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .hist-sum-item {
+    padding: 14px 18px;
+    border-right: 1px solid var(--border);
+  }
+  .hist-sum-item:last-child { border-right: none; }
+  .hist-sum-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .hist-sum-label { font-size: 11px; color: var(--text-muted); }
+
+  /* body: list + detail */
+  .hist-body { display: flex; min-height: 420px; }
+  .hist-list {
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .hist-list-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hist-list-search input {
+    width: 100%;
+    padding: 6px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+  }
+  .hist-list-search input:focus { border-color: var(--accent2); }
+  .hist-list-search input::placeholder { color: var(--text-dim); }
+  .hist-list-items { overflow-y: auto; flex: 1; }
+  .hist-asset-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(48,54,61,0.4);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .hist-asset-item:hover { background: var(--surface2); }
+  .hist-asset-item.selected {
+    background: rgba(88,166,255,0.08);
+    border-left: 2px solid var(--accent2);
+    padding-left: 12px;
+  }
+  .hai-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .hai-code { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--accent2); }
+  .hai-name { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+  .hai-count { margin-left: auto; font-size: 11px; color: var(--text-muted); font-family: var(--mono); flex-shrink: 0; }
+
+  /* detail pane */
+  .hist-detail { flex: 1; overflow-y: auto; }
+  .hist-detail-inner { padding: 16px; }
+  .hd-asset-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hd-code { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--accent2); }
+  .hd-name { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .hd-stats { display: flex; gap: 16px; margin-left: auto; flex-shrink: 0; }
+  .hd-stat .v { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--accent3); text-align: right; }
+  .hd-stat .l { font-size: 10px; color: var(--text-muted); text-align: right; }
+
+  .hist-rows { display: flex; flex-direction: column; gap: 7px; }
+  .hist-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border-radius: 7px;
+    padding: 9px 12px;
+  }
+  .hr-quarter { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text-muted); width: 38px; flex-shrink: 0; }
+  .hr-bar-wrap { flex: 1; }
+  .hr-type { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+  .hr-bar { height: 3px; background: var(--border); border-radius: 2px; }
+  .hr-bar .fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+  .hr-cost { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--warning); white-space: nowrap; flex-shrink: 0; }
+  .hr-badge { flex-shrink: 0; }
+  .hbadge {
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .hbadge.done    { background: rgba(63,185,80,0.12);  color: var(--accent3); }
+  .hbadge.ordered { background: rgba(88,166,255,0.12); color: var(--accent2); }
+  .hbadge.waiting { background: rgba(210,153,34,0.12); color: var(--warning); }
+  .hbadge.never   { background: rgba(167,139,250,0.12); color: #a78bfa; }
+
+  .next-schedule-bar {
+    margin-top: 12px;
+    background: rgba(210,153,34,0.06);
+    border: 1px dashed rgba(210,153,34,0.35);
+    border-radius: 7px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .nsb-label { color: var(--text-muted); font-size: 11px; }
+  .nsb-val { color: var(--warning); font-family: var(--mono); font-weight: 600; }
+  .nsb-btn {
+    margin-left: auto;
+    padding: 4px 12px;
+    border-radius: 5px;
+    background: var(--accent2);
+    color: #000;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: var(--font);
+  }
+  .hist-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 40px;
+    color: var(--text-muted);
+    text-align: center;
+    gap: 8px;
+  }
+  .hist-empty .ei { font-size: 32px; }
+  .hist-empty .et { font-size: 13px; font-weight: 600; }
+  .hist-empty .es { font-size: 12px; color: var(--text-dim); }
+
+  /* ══════════════════════════════════════════
+     PAGE 3: TIMELINE การทำความสะอาด
+  ══════════════════════════════════════════ */
+  .tl-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .tl-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    flex-wrap: wrap;
+  }
+  .tl-title {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tl-icon {
+    width: 26px; height: 26px;
+    background: var(--accent3);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .tl-asset-pills {
+    display: flex;
+    gap: 6px;
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .tl-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    transition: all 0.15s;
+  }
+  .tl-pill.selected {
+    background: rgba(88,166,255,0.12);
+    border-color: var(--accent2);
+    color: var(--accent2);
+    font-weight: 600;
+  }
+  .tl-pill-search {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    outline: none;
+    min-width: 130px;
+  }
+  .tl-pill-search:focus { border-color: var(--accent2); }
+  .tl-pill-search::placeholder { color: var(--text-dim); }
+
+  .tl-body { padding: 20px 24px; }
+  .tl-asset-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tl-a-code { font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--accent2); }
+  .tl-a-name { font-size: 13px; color: var(--text-muted); }
+  .tl-a-stats { margin-left: auto; display: flex; gap: 20px; }
+  .tl-a-stat .v { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--accent3); line-height: 1; }
+  .tl-a-stat .l { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+  .tl-list { position: relative; padding-left: 32px; }
+  .tl-list::before {
+    content: '';
+    position: absolute;
+    left: 9px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent2), var(--border));
+    border-radius: 2px;
+  }
+  .tl-item { position: relative; padding-bottom: 20px; }
+  .tl-dot {
+    position: absolute;
+    left: -27px; top: 3px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700;
+    z-index: 1;
+  }
+  .tl-dot.done    { background: var(--accent3); }
+  .tl-dot.ordered { background: var(--accent2); }
+  .tl-dot.next    { background: var(--warning); }
+  .tl-dot.never   { background: #a78bfa; }
+
+  .tl-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .tl-card.next-card {
+    border-style: dashed;
+    border-color: rgba(210,153,34,0.5);
+    background: rgba(210,153,34,0.04);
+  }
+  .tl-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .tl-date { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+  .tl-type { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .tl-meta { font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
+  .tl-cost { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--warning); }
+
+  .status-pill {
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .sp-done    { background: rgba(63,185,80,0.12);  color: var(--accent3); }
+  .sp-ordered { background: rgba(88,166,255,0.12); color: var(--accent2); }
+  .sp-next    { background: rgba(210,153,34,0.12); color: var(--warning); }
+  .sp-never   { background: rgba(167,139,250,0.12); color: #a78bfa; }
+
+  .tl-empty-asset {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+  }
+  .tl-empty-asset .ei { font-size: 36px; margin-bottom: 8px; }
+  .tl-empty-asset .et { font-size: 13px; font-weight: 600; }
+  .tl-empty-asset .es { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -514,8 +964,38 @@
   </div>
 </div>
 
-<!-- MAIN CONTENT -->
-<div class="main" id="mainContent">
+<!-- APP SHELL: sidebar + page content -->
+<div class="app-shell">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-section-label">เมนูหลัก</div>
+    <div class="nav-item active" id="nav-summary" onclick="switchPage('summary')">
+      <span class="nav-icon">📊</span>
+      <span>Summary</span>
+    </div>
+    <div class="nav-item" id="nav-history" onclick="switchPage('history')">
+      <span class="nav-icon">🧹</span>
+      <span>ประวัติการทำความสะอาด</span>
+    </div>
+    <div class="nav-item" id="nav-timeline" onclick="switchPage('timeline')">
+      <span class="nav-icon">📅</span>
+      <span>Timeline การทำความสะอาด</span>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">ข้อมูล</div>
+    <div class="nav-item" id="nav-datasource" onclick="window.scrollTo(0,0)">
+      <span class="nav-icon">📂</span>
+      <span>แหล่งข้อมูล</span>
+    </div>
+  </nav>
+
+  <!-- ── PAGE CONTENT ── -->
+  <div class="page-content">
+
+    <!-- PAGE 1: Summary (หน้าเดิม) -->
+    <div class="page-view active" id="page-summary">
+      <div class="main" id="mainContent">
 
   <!-- EMPTY STATE -->
   <div class="empty-state" id="emptyState">
@@ -798,11 +1278,15 @@
         <span class="panel-badge muted" id="cleanCount">0 รายการ</span>
       </div>
 
-      <!-- KPI row -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 16px 0;">
+      <!-- KPI row — 5 cards -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:16px 16px 0;">
         <div style="background:rgba(139,148,158,0.1);border:1px solid rgba(139,148,158,0.3);border-radius:8px;padding:12px;text-align:center;">
           <div style="font-size:22px;font-weight:700;color:#8b949e;font-family:var(--mono);" id="cleanNA">—</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">⛔ ไม่ต้องทำ</div>
+        </div>
+        <div style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:12px;text-align:center;cursor:pointer;" onclick="setCleanFilter('never')">
+          <div style="font-size:22px;font-weight:700;color:var(--never);font-family:var(--mono);" id="cleanNever">—</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">🆕 ยังไม่เคยทำ</div>
         </div>
         <div style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);border-radius:8px;padding:12px;text-align:center;">
           <div style="font-size:22px;font-weight:700;color:#d29922;font-family:var(--mono);" id="cleanWaiting">—</div>
@@ -829,14 +1313,23 @@
       <!-- Filter bar -->
       <div style="padding:8px 16px 16px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-          <input id="cleanSearch" class="search-input" style="width:220px;font-size:12px;padding:4px 10px;"
-            placeholder="🔍 ค้นหา รหัส / ชื่อทรัพย์ / จังหวัด..." oninput="renderCleaningPanel()">
+          <!-- Search: รหัสทรัพย์ -->
+          <input id="cleanCodeSearch" class="search-input" style="width:155px;font-size:12px;padding:4px 10px;font-family:var(--mono);"
+            placeholder="🔎 รหัสทรัพย์..." oninput="renderCleaningPanel()">
+          <!-- Search: ชื่อ / จังหวัด -->
+          <input id="cleanSearch" class="search-input" style="width:190px;font-size:12px;padding:4px 10px;"
+            placeholder="🔍 ชื่อทรัพย์ / จังหวัด..." oninput="renderCleaningPanel()">
           <span style="font-size:12px;color:var(--text-muted);">สถานะ:</span>
           <button onclick="setCleanFilter('all')"     id="cfAll"     class="sf-btn sf-active">ทั้งหมด</button>
           <button onclick="setCleanFilter('na')"      id="cfNa"      class="sf-btn">⛔ ไม่ต้องทำ</button>
+          <button onclick="setCleanFilter('never')"   id="cfNever"   class="sf-btn">🆕 ยังไม่เคยทำ</button>
           <button onclick="setCleanFilter('waiting')" id="cfWaiting" class="sf-btn">⏳ รอสั่งงาน</button>
           <button onclick="setCleanFilter('ordered')" id="cfOrdered" class="sf-btn">📋 สั่งงานแล้ว</button>
           <button onclick="setCleanFilter('done')"    id="cfDone"    class="sf-btn">✅ ทำแล้ว</button>
+        </div>
+        <!-- Never-cleaned alert banner -->
+        <div id="cleanNeverBanner" style="display:none;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:8px 14px;margin-bottom:8px;font-size:12px;color:var(--never);">
+          🆕 <strong>ทรัพย์ที่ยังไม่เคยทำความสะอาดเลย</strong> — ไม่มีทั้งวันออก WO และวันทำความสะอาด และสถานะไม่ใช่ "ไม่ต้องทำ"
         </div>
         <div class="prop-table-wrap">
           <table>
@@ -901,6 +1394,120 @@
 
   </div><!-- /dashboard -->
 </div><!-- /main -->
+    </div><!-- /page-summary -->
+
+    <!-- PAGE 2: ประวัติการทำความสะอาด -->
+    <div class="page-view" id="page-history">
+      <div class="main">
+
+        <!-- Summary KPIs -->
+        <div id="histSummaryBar" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+          <div class="kpi-card blue">
+            <div class="kpi-label">ครั้งทั้งหมด</div>
+            <div class="kpi-value blue" id="hKpiTotal">—</div>
+            <div class="kpi-sub">รวมทุกทรัพย์</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">เสร็จสิ้น</div>
+            <div class="kpi-value green" id="hKpiDone">—</div>
+            <div class="kpi-sub" id="hKpiDonePct">—</div>
+          </div>
+          <div class="kpi-card yellow">
+            <div class="kpi-label">ยังไม่เคยทำ</div>
+            <div class="kpi-value yellow" id="hKpiNever">—</div>
+            <div class="kpi-sub">ทรัพย์ที่ต้องดำเนินการ</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-label">เกินกำหนด / รอสั่งงาน</div>
+            <div class="kpi-value red" id="hKpiWaiting">—</div>
+            <div class="kpi-sub">รอดำเนินการ</div>
+          </div>
+        </div>
+
+        <!-- Main mixed panel -->
+        <div class="hist-panel">
+          <div class="hist-topbar">
+            <div class="hist-title">
+              <div class="hist-icon">🧹</div>
+              ประวัติการทำความสะอาดรายทรัพย์
+            </div>
+            <div class="hist-chips">
+              <span class="hchip all" id="hChipAll" onclick="setHistFilter('all')">ทั้งหมด</span>
+              <span class="hchip done" id="hChipDone" onclick="setHistFilter('done')">✅ เสร็จแล้ว</span>
+              <span class="hchip ord" id="hChipOrdered" onclick="setHistFilter('ordered')">📋 สั่งงาน</span>
+              <span class="hchip ovd" id="hChipWaiting" onclick="setHistFilter('waiting')">⏳ รอสั่ง</span>
+              <span class="hchip nev" id="hChipNever" onclick="setHistFilter('never')">🆕 ยังไม่เคย</span>
+            </div>
+          </div>
+
+          <div class="hist-body">
+            <!-- Left: asset list -->
+            <div class="hist-list">
+              <div class="hist-list-search">
+                <input id="histAssetSearch" placeholder="🔎 รหัสทรัพย์..." oninput="renderHistList()">
+              </div>
+              <div class="hist-list-items" id="histListItems">
+                <div class="hist-empty">
+                  <div class="ei">📂</div>
+                  <div class="et">ยังไม่มีข้อมูล</div>
+                  <div class="es">โหลดข้อมูลก่อน</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: detail -->
+            <div class="hist-detail" id="histDetail">
+              <div class="hist-empty" style="height:100%;min-height:360px;">
+                <div class="ei">👆</div>
+                <div class="et">เลือกทรัพย์จากรายการซ้าย</div>
+                <div class="es">เพื่อดูประวัติการทำความสะอาด</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /page-history -->
+
+    <!-- PAGE 3: Timeline การทำความสะอาด -->
+    <div class="page-view" id="page-timeline">
+      <div class="main">
+
+        <div class="tl-panel">
+          <div class="tl-topbar">
+            <div class="tl-title">
+              <div class="tl-icon">📅</div>
+              Timeline การทำความสะอาด
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--text-muted);">กรอง:</span>
+              <select id="tlQuarterFilter" style="font-size:12px;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);" onchange="renderTLPills()">
+                <option value="">ทุกไตรมาส</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Asset pills -->
+          <div class="tl-asset-pills" id="tlPills">
+            <input class="tl-pill-search" id="tlSearch" placeholder="🔎 ค้นหารหัสทรัพย์..." oninput="renderTLPills()">
+            <div style="font-size:12px;color:var(--text-muted);padding:4px 0;">โหลดข้อมูลเพื่อดู Timeline</div>
+          </div>
+
+          <!-- Timeline body -->
+          <div class="tl-body" id="tlBody">
+            <div class="tl-empty-asset">
+              <div class="ei">📅</div>
+              <div class="et">เลือกทรัพย์จากด้านบน</div>
+              <div class="es">เพื่อดู Timeline ประวัติการทำความสะอาด</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /page-timeline -->
+
+  </div><!-- /page-content -->
+</div><!-- /app-shell -->
 
 <div class="footer">NPA Dashboard v1.0 — บสอ. ระบบบริหารทรัพย์สินรอการขาย | สร้างด้วย Claude</div>
 
@@ -1071,14 +1678,18 @@ async function loadAllGSheets() {
 
 // ชื่อ tab ใน Google Sheet
 const SHEET_TABS = {
-  npa:     'ทรัพย์ NPA',
-  maint:   'สัญญาดูแลทรัพย์',
-  sec:     'สัญญา รปภ.',
-  survey:  'ประวัติการสำรวจ',
-  meeting: 'นัดประชุม',
+  npa:          'ทรัพย์ NPA',
+  maint:        'สัญญาดูแลทรัพย์',
+  sec:          'สัญญา รปภ.',
+  survey:       'ประวัติการสำรวจ',
+  meeting:      'นัดประชุม',
+  cleaningWO:   'CleaningWO',
+  cleaningItems:'CleaningItems',
 };
 
 let meetingData = [];
+let cleaningWOData    = [];   // [{wo_number, asset_id_list, wo_date, clean_date, contractor, status, note}]
+let cleaningItemsData = [];   // [{wo_number, asset_id, item_type, cost}]
 
 async function _doLoadAllSheets() {
   const sheetId = extractSheetId(document.getElementById('gsId1')?.value);
@@ -1139,6 +1750,38 @@ async function _doLoadAllSheets() {
         };
       }).filter(r => r.date);
     } catch(e) { console.warn('tab นัดประชุม:', e.message); }
+
+    // Tab 6 — CleaningWO
+    try {
+      const rows = await fetchSheet(sheetId, SHEET_TABS.cleaningWO);
+      cleaningWOData = rows.map(r => {
+        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k.toLowerCase())) return r[rk]||''; return ''; };
+        return {
+          wo_number:  g('wo_number','เลขใบสั่งงาน','wo','ใบสั่งงาน'),
+          wo_date:    g('wo_date','วันออกใบสั่งงาน','วันออกwo','วันwo'),
+          clean_date: g('clean_date','วันทำจริง','วันทำความสะอาด','clean'),
+          contractor: g('contractor','ผู้รับจ้าง','บริษัท'),
+          status:     g('status','สถานะ'),
+          note:       g('note','หมายเหตุ'),
+        };
+      }).filter(r => r.wo_number);
+      console.log(`✅ CleaningWO: ${cleaningWOData.length} รายการ`);
+    } catch(e) { console.warn('tab CleaningWO:', e.message); }
+
+    // Tab 7 — CleaningItems
+    try {
+      const rows = await fetchSheet(sheetId, SHEET_TABS.cleaningItems);
+      cleaningItemsData = rows.map(r => {
+        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k.toLowerCase())) return r[rk]||''; return ''; };
+        return {
+          wo_number: g('wo_number','เลขใบสั่งงาน','wo','ใบสั่งงาน'),
+          asset_id:  g('asset_id','รหัสทรัพย์','รหัส','id'),
+          item_type: g('item_type','ประเภทงาน','ประเภท','งาน'),
+          cost:      parseFloat((g('cost','ค่าใช้จ่าย','ราคา','บาท') || '0').replace(/,/g,'')) || 0,
+        };
+      }).filter(r => r.wo_number && r.asset_id);
+      console.log(`✅ CleaningItems: ${cleaningItemsData.length} รายการ`);
+    } catch(e) { console.warn('tab CleaningItems:', e.message); }
 
     processData(npaData);
     const now = new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
@@ -1971,16 +2614,22 @@ let cleanFilter = 'all';
 
 function setCleanFilter(f) {
   cleanFilter = f;
-  ['all','na','waiting','ordered','done'].forEach(k => {
+  ['all','na','never','waiting','ordered','done'].forEach(k => {
     const el = document.getElementById('cf' + k.charAt(0).toUpperCase() + k.slice(1));
     if (el) el.classList.toggle('sf-active', k === f);
   });
+  // แสดง/ซ่อน banner "ยังไม่เคยทำ"
+  const banner = document.getElementById('cleanNeverBanner');
+  if (banner) banner.style.display = (f === 'never') ? 'block' : 'none';
   renderCleaningPanel();
 }
 
 function renderCleaningPanel() {
   const today = new Date();
-  const q = (document.getElementById('cleanSearch')?.value || '').toLowerCase();
+  // search รหัสทรัพย์ (case-insensitive, contains)
+  const qCode = (document.getElementById('cleanCodeSearch')?.value || '').toLowerCase().trim();
+  // search ชื่อ / จังหวัด
+  const q     = (document.getElementById('cleanSearch')?.value || '').toLowerCase().trim();
 
   const STATUS_MAP = {
     'ไม่ต้องทำความสะอาด': 'na',
@@ -1992,11 +2641,12 @@ function renderCleaningPanel() {
     'ทำแล้ว':              'done',
   };
   const STATUS_LABEL = {
-    na:      { label:'⛔ ไม่ต้องทำ',        color:'#8b949e' },
-    waiting: { label:'⏳ รอสั่งงาน',         color:'#d29922' },
-    ordered: { label:'📋 สั่งงานแล้ว รอทำ', color:'#79c0ff' },
-    done:    { label:'✅ ทำความสะอาดแล้ว',  color:'#3fb950' },
-    nodata:  { label:'— ไม่มีข้อมูล',       color:'#484f58' },
+    na:      { label:'⛔ ไม่ต้องทำ',           color:'#8b949e' },
+    never:   { label:'🆕 ยังไม่เคยทำความสะอาด', color:'#a78bfa' },
+    waiting: { label:'⏳ รอสั่งงาน',            color:'#d29922' },
+    ordered: { label:'📋 สั่งงานแล้ว รอทำ',    color:'#79c0ff' },
+    done:    { label:'✅ ทำความสะอาดแล้ว',     color:'#3fb950' },
+    nodata:  { label:'— ไม่มีข้อมูล',          color:'#484f58' },
   };
 
   const rows = allData.map(r => {
@@ -2007,8 +2657,11 @@ function renderCleaningPanel() {
     let statusKey;
 
     if (raw === 'ไม่ต้องทำความสะอาด' || raw === 'ไม่ต้องทำ') {
-      // ไม่ต้องทำ — ใช้ column สถานะ
+      // ระบุชัดว่าไม่ต้องทำ
       statusKey = 'na';
+    } else if (!woDate && !cleanDate) {
+      // ไม่มีทั้ง WO และวันทำ และไม่ใช่ na → ยังไม่เคยทำเลย
+      statusKey = 'never';
     } else if (woDate && cleanDate) {
       // มีทั้ง WO และวันทำ — เปรียบเทียบวันที่
       statusKey = woDate > cleanDate ? 'ordered' : 'done';
@@ -2018,9 +2671,6 @@ function renderCleaningPanel() {
     } else if (!woDate && cleanDate) {
       // มีวันทำแต่ไม่มี WO → ถือว่าเสร็จแล้ว
       statusKey = 'done';
-    } else if (!woDate && !cleanDate) {
-      // ไม่มีวันที่เลย → ไม่ต้องทำ
-      statusKey = 'na';
     } else {
       statusKey = STATUS_MAP[raw] || 'waiting';
     }
@@ -2034,6 +2684,7 @@ function renderCleaningPanel() {
 
   // KPI
   const nNA      = rows.filter(r => r.statusKey === 'na').length;
+  const nNever   = rows.filter(r => r.statusKey === 'never').length;
   const nWaiting = rows.filter(r => r.statusKey === 'waiting').length;
   const nNodata  = rows.filter(r => r.statusKey === 'nodata').length;
   const nOrdered = rows.filter(r => r.statusKey === 'ordered').length;
@@ -2043,23 +2694,33 @@ function renderCleaningPanel() {
 
   document.getElementById('cleanCount').textContent    = `${rows.length} รายการ`;
   document.getElementById('cleanNA').textContent       = nNA;
+  document.getElementById('cleanNever').textContent    = nNever;
   document.getElementById('cleanWaiting').textContent  = nWaiting + nNodata;
   document.getElementById('cleanOrdered').textContent  = nOrdered;
   document.getElementById('cleanDone').textContent     = nDone;
   document.getElementById('cleanProgressBar').style.width = pct + '%';
   document.getElementById('cleanPctLabel').textContent = `ทำแล้ว ${nDone} จาก ${applicable} รายการที่ต้องดำเนินการ (${pct}%)`;
 
-  // filter + search
+  // filter สถานะ + search รหัสทรัพย์ + search ชื่อ/จังหวัด
   const filtered = rows
-    .filter(r => cleanFilter === 'all' ? true : cleanFilter === 'waiting' ? (r.statusKey === 'waiting' || r.statusKey === 'nodata') : r.statusKey === cleanFilter)
-    .filter(r => !q || (r.id + r.name + r.province).toLowerCase().includes(q));
+    .filter(r => {
+      if (cleanFilter === 'all') return true;
+      if (cleanFilter === 'waiting') return r.statusKey === 'waiting' || r.statusKey === 'nodata';
+      return r.statusKey === cleanFilter;
+    })
+    .filter(r => !qCode || r.id.toLowerCase().includes(qCode))
+    .filter(r => !q    || (r.name + r.province).toLowerCase().includes(q));
 
   document.getElementById('cleanBody').innerHTML = filtered.length === 0
     ? `<tr><td colspan="7"><div class="empty-state" style="padding:16px"><div class="empty-sub">ไม่พบข้อมูล</div></div></td></tr>`
     : filtered.map(r => {
-        const s = STATUS_LABEL[r.statusKey];
+        const s = STATUS_LABEL[r.statusKey] || STATUS_LABEL.nodata;
+        // highlight รหัสทรัพย์ถ้ามี search code
+        const idHtml = qCode && r.id.toLowerCase().includes(qCode)
+          ? r.id.replace(new RegExp(qCode, 'gi'), m => `<mark style="background:rgba(167,139,250,0.3);color:#a78bfa;border-radius:2px;">${m}</mark>`)
+          : r.id;
         return `<tr>
-          <td style="font-family:var(--mono);font-size:13px;color:var(--text-muted);">${r.id}</td>
+          <td style="font-family:var(--mono);font-size:13px;color:var(--text-muted);">${idHtml}</td>
           <td>${r.name}</td>
           <td>${r.province || '-'}</td>
           <td style="font-size:12px;">${r.region}</td>
@@ -2371,6 +3032,524 @@ function fmtDate(s) {
   if (isNaN(d)) return s;
   return d.toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'2-digit' });
 }
+
+
+// ═══ RE-INJECTED SIDEBAR JS ═══
+// ═══════════════════════════════════════════
+//  SIDEBAR NAVIGATION
+// ═══════════════════════════════════════════
+function switchPage(page) {
+  ['summary','history','timeline'].forEach(p => {
+    document.getElementById('page-' + p)?.classList.toggle('active', p === page);
+    document.getElementById('nav-' + p)?.classList.toggle('active', p === page);
+  });
+  if (page === 'history') renderHistPage();
+  if (page === 'timeline') renderTLPills();
+}
+
+// ═══════════════════════════════════════════
+//  PAGE 2: ประวัติการทำความสะอาด (Mixed Panel)
+// ═══════════════════════════════════════════
+let histFilter = 'all';
+let histSelectedId = null;
+
+function renderHistPage() {
+  renderHistKPIs();
+  renderHistList();
+}
+
+function renderHistKPIs() {
+  if (!allData.length) return;
+  const rows = allData.map(r => getCleanStatusKey(r));
+  const total   = rows.length;
+  const nDone   = rows.filter(r => r.statusKey === 'done').length;
+  const nNever  = rows.filter(r => r.statusKey === 'never').length;
+  const nWait   = rows.filter(r => r.statusKey === 'waiting' || r.statusKey === 'ordered').length;
+  const pct = total > 0 ? Math.round(nDone/total*100) : 0;
+  // ค่าใช้จ่ายรวมทั้งหมดจาก CleaningItems
+  const totalCost = cleaningItemsData.reduce((s,i) => s + i.cost, 0);
+  document.getElementById('hKpiTotal').textContent    = total;
+  document.getElementById('hKpiDone').textContent     = nDone;
+  document.getElementById('hKpiDonePct').textContent  = totalCost > 0 ? `฿${totalCost.toLocaleString()}` : `คิดเป็น ${pct}%`;
+  document.getElementById('hKpiNever').textContent    = nNever;
+  document.getElementById('hKpiWaiting').textContent  = nWait;
+}
+
+function getCleanStatusKey(r) {
+  const raw       = (r.cleanStatus || '').trim();
+  const woDate    = r.cleanWODate    ? new Date(r.cleanWODate)    : null;
+  const cleanDate = r.firstCleanDate ? new Date(r.firstCleanDate) : null;
+  let statusKey;
+  if (raw === 'ไม่ต้องทำความสะอาด' || raw === 'ไม่ต้องทำ') {
+    statusKey = 'na';
+  } else if (!woDate && !cleanDate) {
+    statusKey = 'never';
+  } else if (woDate && cleanDate) {
+    statusKey = woDate > cleanDate ? 'ordered' : 'done';
+  } else if (woDate && !cleanDate) {
+    statusKey = 'ordered';
+  } else {
+    statusKey = 'done';
+  }
+  return { ...r, statusKey };
+}
+
+function setHistFilter(f) {
+  histFilter = f;
+  ['all','done','ordered','waiting','never'].forEach(k => {
+    const el = document.getElementById('hChip' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (el) el.classList.toggle('off', k !== f && !(f === 'all'));
+  });
+  const allChip = document.getElementById('hChipAll');
+  if (allChip) allChip.classList.toggle('off', f !== 'all');
+  renderHistList();
+}
+
+function renderHistList() {
+  const q = (document.getElementById('histAssetSearch')?.value || '').toLowerCase().trim();
+  const container = document.getElementById('histListItems');
+  if (!allData.length) {
+    container.innerHTML = `<div class="hist-empty"><div class="ei">📂</div><div class="et">ยังไม่มีข้อมูล</div><div class="es">โหลดข้อมูลก่อน</div></div>`;
+    return;
+  }
+
+  const STATUS_DOT = { na:'#8b949e', never:'#a78bfa', waiting:'#d29922', ordered:'#58a6ff', done:'#3fb950' };
+
+  let rows = allData.map(r => getCleanStatusKey(r));
+
+  // filter status
+  if (histFilter !== 'all') {
+    rows = rows.filter(r => {
+      if (histFilter === 'waiting') return r.statusKey === 'waiting' || r.statusKey === 'ordered';
+      return r.statusKey === histFilter;
+    });
+  }
+
+  // filter search
+  if (q) rows = rows.filter(r => r.id.toLowerCase().includes(q));
+
+  if (!rows.length) {
+    container.innerHTML = `<div class="hist-empty"><div class="ei">🔍</div><div class="et">ไม่พบทรัพย์</div><div class="es">ลองค้นหาใหม่</div></div>`;
+    return;
+  }
+
+  container.innerHTML = rows.map(r => `
+    <div class="hist-asset-item ${histSelectedId === r.id ? 'selected' : ''}" onclick="selectHistAsset('${r.id}')">
+      <div class="hai-dot" style="background:${STATUS_DOT[r.statusKey] || '#8b949e'}"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="hai-code">${r.id}</div>
+        <div class="hai-name">${r.province || r.name || '-'}</div>
+      </div>
+      <div class="hai-count">${r.firstCleanDate ? '✅' : r.cleanWODate ? '📋' : '—'}</div>
+    </div>
+  `).join('');
+}
+
+function selectHistAsset(id) {
+  histSelectedId = id;
+  renderHistList(); // re-render to show selected
+  renderHistDetail(id);
+}
+
+function renderHistDetail(id) {
+  const r = allData.find(d => d.id === id);
+  const detail = document.getElementById('histDetail');
+  if (!r) {
+    detail.innerHTML = `<div class="hist-empty" style="min-height:360px;"><div class="ei">❓</div><div class="et">ไม่พบทรัพย์</div></div>`;
+    return;
+  }
+
+  const { statusKey } = getCleanStatusKey(r);
+  const STATUS_LABEL = {
+    na:      { label:'⛔ ไม่ต้องทำ',            cls:'waiting' },
+    never:   { label:'🆕 ยังไม่เคยทำความสะอาด', cls:'never'   },
+    waiting: { label:'⏳ รอสั่งงาน',              cls:'waiting' },
+    ordered: { label:'📋 สั่งงานแล้ว รอทำ',      cls:'ordered' },
+    done:    { label:'✅ ทำความสะอาดแล้ว',       cls:'done'    },
+  };
+  const s = STATUS_LABEL[statusKey] || STATUS_LABEL.never;
+
+  // ── ดึงประวัติจาก CleaningWO/Items ก่อน fallback ──
+  const history = getCleaningHistoryForAsset(id);
+  const useNewData = history !== null && history.length > 0;
+  const totalCost  = useNewData ? getTotalCostForAsset(id) : 0;
+  const woCount    = useNewData ? history.length : 0;
+
+  let historyHTML = '';
+  if (!useNewData) {
+    // Fallback: ใช้ข้อมูลเดิม (firstCleanDate / cleanWODate)
+    const entries = [];
+    if (r.firstCleanDate) entries.push({ date: r.firstCleanDate, type:'ทำความสะอาด', sts:'done' });
+    if (r.cleanWODate && r.cleanWODate !== r.firstCleanDate) entries.push({ date: r.cleanWODate, type:'ออก WO', sts:'ordered' });
+    entries.sort((a,b) => new Date(b.date)-new Date(a.date));
+    if (!entries.length) {
+      historyHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">ยังไม่มีประวัติการทำความสะอาด<br><span style="font-size:11px;color:var(--text-dim);">กรอกข้อมูลใน Sheet CleaningWO และ CleaningItems</span></div>`;
+    } else {
+      historyHTML = `<div class="hist-rows">` + entries.map((e,i) => `
+        <div class="hist-row">
+          <div class="hr-quarter">${getQLabel(e.date)}</div>
+          <div class="hr-bar-wrap">
+            <div class="hr-type">${e.type}</div>
+            <div class="hr-bar"><div class="fill ${e.sts}" style="width:${Math.max(100-i*20,40)}%;background:${e.sts==='done'?'#3fb950':'#58a6ff'};"></div></div>
+          </div>
+          <div class="hr-cost">${fmtDate(e.date)}</div>
+          <div class="hr-badge"><span class="hbadge ${e.sts}">${e.sts==='done'?'เสร็จ':'สั่งงาน'}</span></div>
+        </div>`).join('') + `</div>`;
+    }
+  } else {
+    // ── ใช้ข้อมูลจาก CleaningWO/Items ──
+    const ITEM_COLORS = {
+      'ทำความสะอาด':   '#3fb950',
+      'กำจัดวัชพืช':   '#58a6ff',
+      'งานขนขยะ/วัชพืช':'#d29922',
+      'ตัดต้นไม้':      '#f0883e',
+    };
+    historyHTML = `<div class="hist-rows">` + history.map(wo => {
+      const stsCls  = wo.status === 'done' ? 'done' : wo.status === 'ordered' ? 'ordered' : 'waiting';
+      const stsLbl  = wo.status === 'done' ? '✅ เสร็จ' : wo.status === 'ordered' ? '📋 สั่งงาน' : '⏳ รอ';
+      const itemsHTML = wo.items.map(it => `
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:2px 0;border-bottom:1px solid var(--border);">
+          <span style="color:${ITEM_COLORS[it.item_type]||'var(--text-muted)'};">▸ ${it.item_type}</span>
+          <span style="font-family:var(--mono);color:var(--warning);">฿${it.cost.toLocaleString()}</span>
+        </div>`).join('');
+      return `
+        <div class="hist-row" style="flex-direction:column;align-items:stretch;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="hr-quarter">${wo.quarter}</div>
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;font-weight:600;color:var(--text);">📋 ${wo.wo_number}</span>
+                <span class="hbadge ${stsCls}">${stsLbl}</span>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">
+                ผู้รับจ้าง: ${wo.contractor}
+                ${wo.clean_date ? ` · วันทำจริง: ${fmtDate(parseDateStr(wo.clean_date))}` : ''}
+                ${wo.wo_date ? ` · WO: ${fmtDate(parseDateStr(wo.wo_date))}` : ''}
+              </div>
+            </div>
+          </div>
+          <div style="padding:4px 8px;background:var(--surface);border-radius:5px;border:1px solid var(--border);">
+            ${itemsHTML}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:4px;margin-top:2px;">
+              <span style="font-size:11px;color:var(--text-muted);">รวม ${wo.items.length} รายการงาน</span>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--warning);">฿${wo.total_cost.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('') + `</div>`;
+  }
+
+  // Next quarter estimate
+  let nextQ = '—';
+  const lastWO = useNewData ? history[0] : null;
+  if (lastWO) {
+    const ld = new Date(parseDateStr(lastWO.clean_date || lastWO.wo_date));
+    if (!isNaN(ld)) { ld.setMonth(ld.getMonth() + 3); nextQ = getQLabel(ld); }
+  } else if (r.firstCleanDate || r.cleanWODate) {
+    const ld = new Date(r.firstCleanDate || r.cleanWODate);
+    ld.setMonth(ld.getMonth() + 3);
+    nextQ = getQLabel(ld);
+  }
+
+  detail.innerHTML = `
+    <div class="hist-detail-inner">
+      <div class="hd-asset-header">
+        <div>
+          <div class="hd-code">${r.id}</div>
+          <div class="hd-name">${r.name||''} · ${r.province||'-'}</div>
+        </div>
+        <div class="hd-stats">
+          <div class="hd-stat">
+            <div class="v">${woCount || '—'}</div>
+            <div class="l">ใบสั่งงาน</div>
+          </div>
+          <div class="hd-stat">
+            <div class="v">${totalCost > 0 ? '฿'+totalCost.toLocaleString() : '—'}</div>
+            <div class="l">ค่าใช้จ่ายรวม</div>
+          </div>
+          <div class="hd-stat">
+            <div class="v"><span class="hbadge ${s.cls}" style="font-size:11px;">${s.label}</span></div>
+            <div class="l">สถานะ</div>
+          </div>
+        </div>
+      </div>
+      ${historyHTML}
+      <div class="next-schedule-bar" style="margin-top:12px;">
+        <span>📅</span>
+        <div>
+          <div class="nsb-label">กำหนดทำความสะอาดครั้งถัดไป (ประมาณการ)</div>
+          <div class="nsb-val">${nextQ}</div>
+        </div>
+        <button class="nsb-btn">+ สั่งงาน</button>
+      </div>
+    </div>`;
+}
+
+function getQLabel(dateStr) {
+  if (!dateStr) return '—';
+  // รองรับทั้ง DD/MM/YYYY และ YYYY-MM-DD
+  let d;
+  if (typeof dateStr === 'string' && dateStr.includes('/')) {
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      // DD/MM/YYYY — ปี ค.ศ.
+      d = new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
+    }
+  } else {
+    d = new Date(dateStr);
+  }
+  if (!d || isNaN(d)) return '—';
+  const q = Math.floor(d.getMonth() / 3) + 1;
+  const y = d.getFullYear() + 543;
+  return `Q${q}/${String(y).slice(-2)}`;
+}
+
+// คืน [{wo_number, wo_date, clean_date, contractor, status, note, items:[{item_type,cost}], total_cost, asset_id}]
+// สำหรับ asset_id หนึ่งรายการ เรียงตามวันที่ใหม่สุดก่อน
+function getCleaningHistoryForAsset(assetId) {
+  if (!cleaningItemsData.length && !cleaningWOData.length) {
+    // Fallback: ใช้ข้อมูลเดิมจาก allData
+    return null;
+  }
+  // หา wo_number ทั้งหมดที่มี asset_id นี้
+  const woNums = [...new Set(
+    cleaningItemsData.filter(i => i.asset_id === assetId).map(i => i.wo_number)
+  )];
+  if (!woNums.length) return [];
+
+  return woNums.map(woNum => {
+    const wo    = cleaningWOData.find(w => w.wo_number === woNum) || {};
+    const items = cleaningItemsData.filter(i => i.wo_number === woNum && i.asset_id === assetId);
+    const total = items.reduce((s, i) => s + i.cost, 0);
+    return {
+      wo_number:  woNum,
+      wo_date:    wo.wo_date    || '',
+      clean_date: wo.clean_date || '',
+      contractor: wo.contractor || '—',
+      status:     wo.status     || 'ordered',
+      note:       wo.note       || '',
+      items,
+      total_cost: total,
+      quarter:    getQLabel(wo.clean_date || wo.wo_date),
+    };
+  }).sort((a, b) => {
+    const da = new Date(parseDateStr(a.clean_date || a.wo_date));
+    const db = new Date(parseDateStr(b.clean_date || b.wo_date));
+    return db - da;
+  });
+}
+
+function parseDateStr(s) {
+  if (!s) return null;
+  if (s.includes('/')) {
+    const p = s.split('/');
+    if (p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  }
+  return s;
+}
+
+// สรุปค่าใช้จ่ายรวมต่อทรัพย์
+function getTotalCostForAsset(assetId) {
+  return cleaningItemsData
+    .filter(i => i.asset_id === assetId)
+    .reduce((s, i) => s + i.cost, 0);
+}
+
+// นับจำนวน WO ต่อทรัพย์
+function getWOCountForAsset(assetId) {
+  return new Set(
+    cleaningItemsData.filter(i => i.asset_id === assetId).map(i => i.wo_number)
+  ).size;
+}
+
+// ═══════════════════════════════════════════
+//  PAGE 3: TIMELINE
+// ═══════════════════════════════════════════
+let tlSelectedId = null;
+
+function renderTLPills() {
+  const q = (document.getElementById('tlSearch')?.value || '').toLowerCase().trim();
+  const pillsContainer = document.getElementById('tlPills');
+  if (!allData.length) {
+    pillsContainer.innerHTML = `<input class="tl-pill-search" id="tlSearch" placeholder="🔎 ค้นหารหัสทรัพย์..." oninput="renderTLPills()"><div style="font-size:12px;color:var(--text-muted);padding:4px 0;">โหลดข้อมูลเพื่อดู Timeline</div>`;
+    return;
+  }
+
+  // assets that have any cleaning activity
+  let assets = allData.filter(r => r.firstCleanDate || r.cleanWODate);
+  if (q) assets = assets.filter(r => r.id.toLowerCase().includes(q));
+
+  // Keep search input and rebuild pills
+  const searchHtml = `<input class="tl-pill-search" id="tlSearch" placeholder="🔎 ค้นหารหัสทรัพย์..." oninput="renderTLPills()" value="${q}">`;
+  const pillsHtml = assets.slice(0, 20).map(r => `
+    <div class="tl-pill ${tlSelectedId === r.id ? 'selected' : ''}" onclick="selectTLAsset('${r.id}')">${r.id}</div>
+  `).join('');
+  const moreHtml = assets.length > 20 ? `<span style="font-size:11px;color:var(--text-muted);padding:4px;">+${assets.length-20} รายการ...</span>` : '';
+  const emptyHtml = assets.length === 0 ? `<span style="font-size:12px;color:var(--text-muted);">ไม่พบทรัพย์ที่มีประวัติ</span>` : '';
+
+  pillsContainer.innerHTML = searchHtml + pillsHtml + moreHtml + emptyHtml;
+  // Re-focus search
+  const inp = document.getElementById('tlSearch');
+  if (inp && q) { inp.focus(); inp.setSelectionRange(q.length, q.length); }
+}
+
+function selectTLAsset(id) {
+  tlSelectedId = id;
+  renderTLPills();
+  renderTLDetail(id);
+}
+
+function renderTLDetail(id) {
+  const r = allData.find(d => d.id === id);
+  const body = document.getElementById('tlBody');
+  if (!r) return;
+
+  const { statusKey } = getCleanStatusKey(r);
+  const history = getCleaningHistoryForAsset(id);
+  const useNewData = history !== null && history.length > 0;
+  const totalCost = useNewData ? getTotalCostForAsset(id) : 0;
+
+  const ITEM_COLORS = {
+    'ทำความสะอาด':    '#3fb950',
+    'กำจัดวัชพืช':    '#58a6ff',
+    'งานขนขยะ/วัชพืช':'#d29922',
+    'ตัดต้นไม้':       '#f0883e',
+  };
+
+  let tlItems = '';
+
+  // ── Next schedule card ──
+  let nextDate = null;
+  if (useNewData && history.length) {
+    const ld = new Date(parseDateStr(history[0].clean_date || history[0].wo_date));
+    if (!isNaN(ld)) { nextDate = new Date(ld); nextDate.setMonth(nextDate.getMonth() + 3); }
+  } else if (r.firstCleanDate || r.cleanWODate) {
+    nextDate = new Date(r.firstCleanDate || r.cleanWODate);
+    nextDate.setMonth(nextDate.getMonth() + 3);
+  }
+
+  if (nextDate && statusKey !== 'na') {
+    tlItems += `
+      <div class="tl-item">
+        <div class="tl-dot next">→</div>
+        <div class="tl-card next-card">
+          <div class="tl-card-top">
+            <span class="tl-date">${getQLabel(nextDate)} (ประมาณการ)</span>
+            <span class="status-pill sp-next">📅 กำหนดการถัดไป</span>
+          </div>
+          <div class="tl-type">ทำความสะอาด (รอดำเนินการ)</div>
+        </div>
+      </div>`;
+  }
+
+  // ── Never cleaned ──
+  if (!useNewData && statusKey === 'never') {
+    tlItems += `
+      <div class="tl-item">
+        <div class="tl-dot never">!</div>
+        <div class="tl-card">
+          <div class="tl-card-top">
+            <span class="tl-date">ยังไม่มีประวัติ</span>
+            <span class="status-pill sp-never">🆕 ยังไม่เคยทำ</span>
+          </div>
+          <div class="tl-type">ยังไม่เคยทำความสะอาดเลย</div>
+          <div class="tl-meta"><span>ควรดำเนินการโดยเร็ว</span></div>
+        </div>
+      </div>`;
+  }
+
+  // ── History from CleaningWO/Items ──
+  if (useNewData) {
+    history.forEach(wo => {
+      const stsCls  = wo.status === 'done' ? 'done' : wo.status === 'ordered' ? 'ordered' : 'next';
+      const stsSpan = wo.status === 'done' ? 'sp-done' : wo.status === 'ordered' ? 'sp-ordered' : 'sp-next';
+      const stsLbl  = wo.status === 'done' ? '✅ เสร็จแล้ว' : wo.status === 'ordered' ? '📋 สั่งงานแล้ว' : '⏳ รอดำเนินการ';
+      const dotChar = wo.status === 'done' ? '✓' : '⋯';
+      const itemsHTML = wo.items.map(it => `
+        <div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-bottom:1px solid var(--border);">
+          <span style="color:${ITEM_COLORS[it.item_type]||'var(--text-muted)'};">▸ ${it.item_type}</span>
+          <span style="font-family:var(--mono);color:var(--warning);">฿${it.cost.toLocaleString()}</span>
+        </div>`).join('');
+      tlItems += `
+        <div class="tl-item">
+          <div class="tl-dot ${stsCls}">${dotChar}</div>
+          <div class="tl-card">
+            <div class="tl-card-top">
+              <span class="tl-date">
+                ${wo.clean_date ? fmtDate(parseDateStr(wo.clean_date)) : fmtDate(parseDateStr(wo.wo_date))}
+                &nbsp;·&nbsp; ${wo.quarter}
+              </span>
+              <span class="status-pill ${stsSpan}">${stsLbl}</span>
+            </div>
+            <div class="tl-type">📋 ${wo.wo_number}</div>
+            <div class="tl-meta" style="margin-bottom:6px;">
+              <span>ผู้รับจ้าง: ${wo.contractor}</span>
+              <span class="tl-cost">฿${wo.total_cost.toLocaleString()}</span>
+            </div>
+            <div style="background:var(--surface);border-radius:5px;padding:4px 8px;border:1px solid var(--border);">
+              ${itemsHTML}
+            </div>
+          </div>
+        </div>`;
+    });
+  } else {
+    // Fallback: ข้อมูลเดิม
+    const events = [];
+    if (r.firstCleanDate) events.push({ date: r.firstCleanDate, type:'ทำความสะอาด', sts:'done' });
+    if (r.cleanWODate && r.cleanWODate !== r.firstCleanDate) events.push({ date: r.cleanWODate, type:'ออก WO', sts:'ordered' });
+    events.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    events.forEach(e => {
+      tlItems += `
+        <div class="tl-item">
+          <div class="tl-dot ${e.sts}">${e.sts==='done'?'✓':'⋯'}</div>
+          <div class="tl-card">
+            <div class="tl-card-top">
+              <span class="tl-date">${fmtDate(e.date)} · ${getQLabel(e.date)}</span>
+              <span class="status-pill ${e.sts==='done'?'sp-done':'sp-ordered'}">${e.sts==='done'?'✅ เสร็จ':'📋 สั่งงาน'}</span>
+            </div>
+            <div class="tl-type">${e.type}</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  const lastDateStr = useNewData && history.length
+    ? (history[0].clean_date || history[0].wo_date)
+    : (r.firstCleanDate || r.cleanWODate || '');
+
+  body.innerHTML = `
+    <div class="tl-asset-header">
+      <div>
+        <div class="tl-a-code">${r.id}</div>
+        <div class="tl-a-name">${r.name||''} · ${r.province||'-'}</div>
+      </div>
+      <div class="tl-a-stats">
+        <div class="tl-a-stat">
+          <div class="v">${useNewData ? history.length : '—'}</div>
+          <div class="l">ใบสั่งงาน</div>
+        </div>
+        <div class="tl-a-stat">
+          <div class="v">${totalCost > 0 ? '฿'+totalCost.toLocaleString() : '—'}</div>
+          <div class="l">ค่าใช้จ่ายรวม</div>
+        </div>
+        <div class="tl-a-stat">
+          <div class="v">${lastDateStr ? fmtDate(parseDateStr(lastDateStr)) : '—'}</div>
+          <div class="l">ล่าสุด</div>
+        </div>
+      </div>
+    </div>
+    <div class="tl-list">${tlItems || '<div class="tl-empty-asset"><div class="ei">📭</div><div class="et">ไม่มีประวัติ</div><div class="es">กรอกข้อมูลใน Sheet CleaningWO และ CleaningItems</div></div>'}</div>`;
+}
+
+// Hook into renderAll to also refresh sidebar pages if active
+const _origRenderAll = renderAll;
+renderAll = function() {
+  _origRenderAll();
+  const activePage = document.querySelector('.page-view.active')?.id;
+  if (activePage === 'page-history') renderHistPage();
+  if (activePage === 'page-timeline') renderTLPills();
+};
+
 </script>
 </body>
 </html>
