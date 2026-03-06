@@ -1426,6 +1426,15 @@
 
         <!-- Main mixed panel -->
         <div class="hist-panel">
+          <!-- DEBUG PANEL — แสดงข้อมูลที่โหลดได้จริง -->
+          <div id="cleanDebugPanel" style="display:none;margin-bottom:12px;background:rgba(88,166,255,0.06);border:1px solid rgba(88,166,255,0.25);border-radius:8px;padding:12px 14px;font-size:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-weight:700;color:var(--accent2);">🔍 Debug: ข้อมูลที่โหลดจาก Google Sheets</span>
+              <button onclick="document.getElementById('cleanDebugPanel').style.display='none'" style="font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text-muted);">ปิด</button>
+            </div>
+            <div id="cleanDebugContent" style="font-family:var(--mono);white-space:pre-wrap;color:var(--text-muted);max-height:200px;overflow-y:auto;font-size:11px;"></div>
+          </div>
+
           <div class="hist-topbar">
             <div class="hist-title">
               <div class="hist-icon">🧹</div>
@@ -1437,6 +1446,7 @@
               <span class="hchip ord" id="hChipOrdered" onclick="setHistFilter('ordered')">📋 สั่งงาน</span>
               <span class="hchip ovd" id="hChipWaiting" onclick="setHistFilter('waiting')">⏳ รอสั่ง</span>
               <span class="hchip nev" id="hChipNever" onclick="setHistFilter('never')">🆕 ยังไม่เคย</span>
+              <span class="hchip" style="background:rgba(88,166,255,0.1);color:var(--accent2);border:1px solid rgba(88,166,255,0.3);" onclick="showCleanDebug()">🔍 Debug</span>
             </div>
           </div>
 
@@ -3109,6 +3119,55 @@ function getCleanStatusKey(r) {
     statusKey = 'done';
   }
   return { ...r, statusKey };
+}
+
+function showCleanDebug() {
+  const panel = document.getElementById('cleanDebugPanel');
+  const content = document.getElementById('cleanDebugContent');
+  if (!panel || !content) return;
+
+  const lines = [];
+  lines.push(`=== CleaningWO (${cleaningWOData.length} รายการ) ===`);
+  if (cleaningWOData.length === 0) {
+    lines.push('  ⚠️ ไม่มีข้อมูล — tab "CleaningWO" อาจไม่พบหรือ column ไม่ตรง');
+  } else {
+    cleaningWOData.slice(0, 5).forEach(r => {
+      lines.push(`  wo_number: "${r.wo_number}" | wo_date: "${r.wo_date}" | clean_date: "${r.clean_date}" | status: "${r.status}"`);
+    });
+  }
+
+  lines.push('');
+  lines.push(`=== CleaningItems (${cleaningItemsData.length} รายการ) ===`);
+  if (cleaningItemsData.length === 0) {
+    lines.push('  ⚠️ ไม่มีข้อมูล — tab "CleaningItems" อาจไม่พบหรือ column ไม่ตรง');
+  } else {
+    cleaningItemsData.slice(0, 5).forEach(r => {
+      lines.push(`  wo_number: "${r.wo_number}" | asset_id: "${r.asset_id}" | item_type: "${r.item_type}" | cost: ${r.cost}`);
+    });
+  }
+
+  // Check asset_id matching
+  lines.push('');
+  lines.push(`=== asset_id จาก allData (5 ตัวอย่าง) ===`);
+  allData.slice(0, 5).forEach(r => lines.push(`  "${r.id}"`));
+
+  lines.push('');
+  lines.push(`=== asset_id ที่มีใน CleaningItems ===`);
+  const ids = [...new Set(cleaningItemsData.map(i => i.asset_id))];
+  lines.push('  ' + ids.slice(0, 10).join(', '));
+
+  lines.push('');
+  lines.push(`=== Match ระหว่าง allData.id ↔ CleaningItems.asset_id ===`);
+  const matched = allData.filter(r => ids.includes(r.id));
+  if (matched.length === 0) {
+    lines.push(`  ❌ ไม่มี match เลย — กรุณาตรวจสอบว่า asset_id ตรงกัน`);
+  } else {
+    lines.push(`  ✅ match ${matched.length} รายการ: ${matched.map(r=>r.id).slice(0,5).join(', ')}`);
+  }
+
+  content.textContent = lines.join('\n');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior:'smooth' });
 }
 
 function setHistFilter(f) {
