@@ -1751,36 +1751,49 @@ async function _doLoadAllSheets() {
       }).filter(r => r.date);
     } catch(e) { console.warn('tab นัดประชุม:', e.message); }
 
-    // Tab 6 — CleaningWO
+    // Tab 6 — CleaningWO (exact column match เพื่อกันการ fuzzy-match ผิด)
     try {
       const rows = await fetchSheet(sheetId, SHEET_TABS.cleaningWO);
       cleaningWOData = rows.map(r => {
-        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k.toLowerCase())) return r[rk]||''; return ''; };
+        // exact key ก่อน, fallback fuzzy
+        const pick = (exact, ...fuzzy) => {
+          if (r[exact] !== undefined && r[exact] !== '') return r[exact];
+          for (const k of fuzzy)
+            for (const rk of Object.keys(r))
+              if (rk.replace(/\s/g,'').toLowerCase() === k.toLowerCase()) return r[rk]||'';
+          return '';
+        };
         return {
-          wo_number:  g('wo_number','เลขใบสั่งงาน','wo','ใบสั่งงาน'),
-          wo_date:    g('wo_date','วันออกใบสั่งงาน','วันออกwo','วันwo'),
-          clean_date: g('clean_date','วันทำจริง','วันทำความสะอาด','clean'),
-          contractor: g('contractor','ผู้รับจ้าง','บริษัท'),
-          status:     g('status','สถานะ'),
-          note:       g('note','หมายเหตุ'),
+          wo_number:  pick('wo_number',  'เลขใบสั่งงาน','ใบสั่งงาน'),
+          wo_date:    pick('wo_date',    'วันออกใบสั่งงาน','วันออกwo'),
+          clean_date: pick('clean_date', 'วันทำจริง','วันทำความสะอาด'),
+          contractor: pick('contractor', 'ผู้รับจ้าง','บริษัท'),
+          status:     pick('status',     'สถานะ'),
+          note:       pick('note',       'หมายเหตุ'),
         };
       }).filter(r => r.wo_number);
-      console.log(`✅ CleaningWO: ${cleaningWOData.length} รายการ`);
+      console.log(`✅ CleaningWO: ${cleaningWOData.length} รายการ`, cleaningWOData[0]);
     } catch(e) { console.warn('tab CleaningWO:', e.message); }
 
-    // Tab 7 — CleaningItems
+    // Tab 7 — CleaningItems (exact column match)
     try {
       const rows = await fetchSheet(sheetId, SHEET_TABS.cleaningItems);
       cleaningItemsData = rows.map(r => {
-        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k.toLowerCase())) return r[rk]||''; return ''; };
+        const pick = (exact, ...fuzzy) => {
+          if (r[exact] !== undefined && r[exact] !== '') return r[exact];
+          for (const k of fuzzy)
+            for (const rk of Object.keys(r))
+              if (rk.replace(/\s/g,'').toLowerCase() === k.toLowerCase()) return r[rk]||'';
+          return '';
+        };
         return {
-          wo_number: g('wo_number','เลขใบสั่งงาน','wo','ใบสั่งงาน'),
-          asset_id:  g('asset_id','รหัสทรัพย์','รหัส','id'),
-          item_type: g('item_type','ประเภทงาน','ประเภท','งาน'),
-          cost:      parseFloat((g('cost','ค่าใช้จ่าย','ราคา','บาท') || '0').replace(/,/g,'')) || 0,
+          wo_number: pick('wo_number', 'เลขใบสั่งงาน','ใบสั่งงาน'),
+          asset_id:  pick('asset_id',  'รหัสทรัพย์','รหัส'),
+          item_type: pick('item_type', 'ประเภทงาน','ประเภท'),
+          cost:      parseFloat((String(pick('cost','ค่าใช้จ่าย','ราคา','บาท') || '0')).replace(/,/g,'')) || 0,
         };
       }).filter(r => r.wo_number && r.asset_id);
-      console.log(`✅ CleaningItems: ${cleaningItemsData.length} รายการ`);
+      console.log(`✅ CleaningItems: ${cleaningItemsData.length} รายการ`, cleaningItemsData[0]);
     } catch(e) { console.warn('tab CleaningItems:', e.message); }
 
     processData(npaData);
@@ -3030,7 +3043,11 @@ function fmtDate(s) {
   if (!s) return '-';
   const d = new Date(s);
   if (isNaN(d)) return s;
-  return d.toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'2-digit' });
+  // บังคับแสดงเป็น พ.ศ. เต็ม เช่น 15 มี.ค. 2568
+  const day   = d.getDate().toString().padStart(2, '0');
+  const month = d.toLocaleDateString('th-TH', { month: 'short' });
+  const yearBE = d.getFullYear() + 543;
+  return `${day} ${month} ${yearBE}`;
 }
 
 
@@ -3287,17 +3304,9 @@ function renderHistDetail(id) {
 
 function getQLabel(dateStr) {
   if (!dateStr) return '—';
-  // รองรับทั้ง DD/MM/YYYY และ YYYY-MM-DD
-  let d;
-  if (typeof dateStr === 'string' && dateStr.includes('/')) {
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      // DD/MM/YYYY — ปี ค.ศ.
-      d = new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
-    }
-  } else {
-    d = new Date(dateStr);
-  }
+  const iso = parseDateStr(dateStr);
+  if (!iso) return '—';
+  const d = new Date(iso);
   if (!d || isNaN(d)) return '—';
   const q = Math.floor(d.getMonth() / 3) + 1;
   const y = d.getFullYear() + 543;
@@ -3341,11 +3350,40 @@ function getCleaningHistoryForAsset(assetId) {
 
 function parseDateStr(s) {
   if (!s) return null;
-  if (s.includes('/')) {
-    const p = s.split('/');
-    if (p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  const str = String(s).trim();
+  if (!str || str === '—' || str === '-') return null;
+
+  // YYYY-MM-DD (ISO) — ส่งตรงได้เลย
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str;
+
+  // DD/MM/YYYY (ค.ศ.) — แปลงเป็น ISO
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d, m, y] = str.split('/');
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
   }
-  return s;
+
+  // M/D/YYYY (Google Sheets US format)
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [m, d, y] = str.split('/');
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+
+  // DD/MM/YY (ค.ศ. 2 หลัก)
+  if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(str)) {
+    const [d, m, y] = str.split('/');
+    const fullY = parseInt(y) < 70 ? `20${y}` : `19${y}`;
+    return `${fullY}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+
+  // Google Sheets serial number (วันที่เป็นตัวเลข เช่น 44987)
+  if (/^\d{4,6}$/.test(str)) {
+    const serial = parseInt(str);
+    // Excel/Sheets serial: วันที่ 1 = 1900-01-01 (มี bug ที่ปี 1900 ให้ +1)
+    const d = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+    if (!isNaN(d)) return d.toISOString().split('T')[0];
+  }
+
+  return str;
 }
 
 // สรุปค่าใช้จ่ายรวมต่อทรัพย์
@@ -3375,8 +3413,11 @@ function renderTLPills() {
     return;
   }
 
-  // assets that have any cleaning activity
-  let assets = allData.filter(r => r.firstCleanDate || r.cleanWODate);
+  // assets ที่มีประวัติจาก CleaningItems หรือจาก allData fields
+  const assetIdsWithHistory = new Set(cleaningItemsData.map(i => i.asset_id));
+  let assets = allData.filter(r => 
+    r.firstCleanDate || r.cleanWODate || assetIdsWithHistory.has(r.id)
+  );
   if (q) assets = assets.filter(r => r.id.toLowerCase().includes(q));
 
   // Keep search input and rebuild pills
