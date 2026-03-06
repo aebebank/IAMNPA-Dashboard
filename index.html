@@ -1695,7 +1695,6 @@ const SHEET_TABS = {
   survey:       'ประวัติการสำรวจ',
   meeting:      'นัดประชุม',
   cleaningWO:   'CleaningWO',
-  cleaningItems:'CleaningItems',
 };
 
 let meetingData = [];
@@ -1764,48 +1763,46 @@ async function _doLoadAllSheets() {
 
     // Tab 6 — CleaningWO (exact column match เพื่อกันการ fuzzy-match ผิด)
     try {
+      // Sheet เดียว — CleaningWO มีทุก column รวมกัน
       const rows = await fetchSheet(sheetId, SHEET_TABS.cleaningWO);
-      cleaningWOData = rows.map(r => {
-        // exact key ก่อน, fallback fuzzy
-        const pick = (exact, ...fuzzy) => {
-          if (r[exact] !== undefined && r[exact] !== '') return r[exact];
-          for (const k of fuzzy)
-            for (const rk of Object.keys(r))
-              if (rk.replace(/\s/g,'').toLowerCase() === k.toLowerCase()) return r[rk]||'';
-          return '';
-        };
-        return {
-          wo_number:  pick('wo_number',  'เลขใบสั่งงาน','ใบสั่งงาน'),
-          wo_date:    pick('wo_date',    'วันออกใบสั่งงาน','วันออกwo'),
-          clean_date: pick('clean_date', 'วันทำจริง','วันทำความสะอาด'),
-          contractor: pick('contractor', 'ผู้รับจ้าง','บริษัท'),
-          status:     pick('status',     'สถานะ'),
-          note:       pick('note',       'หมายเหตุ'),
-        };
-      }).filter(r => r.wo_number);
-      console.log(`✅ CleaningWO: ${cleaningWOData.length} รายการ`, cleaningWOData[0]);
-    } catch(e) { console.warn('tab CleaningWO:', e.message); }
+      const pick = (r, exact, ...fuzzy) => {
+        if (r[exact] !== undefined && r[exact] !== '') return r[exact];
+        for (const k of fuzzy)
+          for (const rk of Object.keys(r))
+            if (rk.replace(/\s/g,'').toLowerCase() === k.toLowerCase()) return r[rk]||'';
+        return '';
+      };
 
-    // Tab 7 — CleaningItems (exact column match)
-    try {
-      const rows = await fetchSheet(sheetId, SHEET_TABS.cleaningItems);
+      // แยก WO header data (unique per wo_number)
+      const woMap = {};
+      rows.forEach(r => {
+        const wn = pick(r, 'wo_number', 'เลขใบสั่งงาน', 'ใบสั่งงาน');
+        if (!wn) return;
+        if (!woMap[wn]) {
+          woMap[wn] = {
+            wo_number:  wn,
+            wo_date:    pick(r, 'wo_date',    'วันออกใบสั่งงาน', 'วันออกwo'),
+            clean_date: pick(r, 'clean_date', 'วันทำจริง', 'วันทำความสะอาด'),
+            contractor: pick(r, 'contractor', 'ผู้รับจ้าง', 'บริษัท'),
+            status:     pick(r, 'status',     'สถานะ'),
+            note:       pick(r, 'note',       'หมายเหตุ'),
+          };
+        }
+      });
+      cleaningWOData = Object.values(woMap);
+
+      // แยก Items (1 แถว = 1 รายการงาน)
       cleaningItemsData = rows.map(r => {
-        const pick = (exact, ...fuzzy) => {
-          if (r[exact] !== undefined && r[exact] !== '') return r[exact];
-          for (const k of fuzzy)
-            for (const rk of Object.keys(r))
-              if (rk.replace(/\s/g,'').toLowerCase() === k.toLowerCase()) return r[rk]||'';
-          return '';
-        };
-        return {
-          wo_number: pick('wo_number', 'เลขใบสั่งงาน','ใบสั่งงาน'),
-          asset_id:  pick('asset_id',  'รหัสทรัพย์','รหัส'),
-          item_type: pick('item_type', 'ประเภทงาน','ประเภท'),
-          cost:      parseFloat((String(pick('cost','ค่าใช้จ่าย','ราคา','บาท') || '0')).replace(/,/g,'')) || 0,
-        };
+        const wn  = pick(r, 'wo_number',  'เลขใบสั่งงาน', 'ใบสั่งงาน');
+        const aid = pick(r, 'asset_id',   'รหัสทรัพย์', 'รหัส');
+        const itp = pick(r, 'item_type',  'ประเภทงาน', 'ประเภท');
+        const cst = parseFloat((String(pick(r, 'cost', 'ค่าใช้จ่าย', 'ราคา', 'บาท') || '0')).replace(/,/g,'')) || 0;
+        return { wo_number: wn, asset_id: aid, item_type: itp, cost: cst };
       }).filter(r => r.wo_number && r.asset_id);
+
+      console.log(`✅ CleaningWO: ${cleaningWOData.length} รายการ`, cleaningWOData[0]);
       console.log(`✅ CleaningItems: ${cleaningItemsData.length} รายการ`, cleaningItemsData[0]);
-    } catch(e) { console.warn('tab CleaningItems:', e.message); }
+    } catch(e) { console.warn('tab CleaningWO:', e.message); }
 
     processData(npaData);
     const now = new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
@@ -3128,20 +3125,17 @@ function showCleanDebug() {
   if (!panel || !content) return;
 
   const lines = [];
-  lines.push(`=== CleaningWO (${cleaningWOData.length} รายการ) ===`);
+  lines.push(`=== CleaningWO Sheet (${cleaningWOData.length} ใบสั่งงาน / ${cleaningItemsData.length} รายการงาน) ===`);
   if (cleaningWOData.length === 0) {
-    lines.push('  ⚠️ ไม่มีข้อมูล — tab "CleaningWO" อาจไม่พบหรือ column ไม่ตรง');
+    lines.push('  ⚠️ ไม่มีข้อมูล — ตรวจสอบว่า tab ชื่อ "CleaningWO" และ column ครบถ้วน');
+    lines.push('  คอลัมน์ที่ต้องมี: wo_number, wo_date, clean_date, contractor, status, asset_id, item_type, cost');
   } else {
-    cleaningWOData.slice(0, 5).forEach(r => {
+    lines.push('  ตัวอย่างใบสั่งงาน:');
+    cleaningWOData.slice(0, 3).forEach(r => {
       lines.push(`  wo_number: "${r.wo_number}" | wo_date: "${r.wo_date}" | clean_date: "${r.clean_date}" | status: "${r.status}"`);
     });
-  }
-
-  lines.push('');
-  lines.push(`=== CleaningItems (${cleaningItemsData.length} รายการ) ===`);
-  if (cleaningItemsData.length === 0) {
-    lines.push('  ⚠️ ไม่มีข้อมูล — tab "CleaningItems" อาจไม่พบหรือ column ไม่ตรง');
-  } else {
+    lines.push('');
+    lines.push('  ตัวอย่างรายการงาน:');
     cleaningItemsData.slice(0, 5).forEach(r => {
       lines.push(`  wo_number: "${r.wo_number}" | asset_id: "${r.asset_id}" | item_type: "${r.item_type}" | cost: ${r.cost}`);
     });
