@@ -1649,7 +1649,7 @@ async function fetchSheet(sheetId, sheetName = '') {
   if (!gsAccessToken) throw new Error('กรุณา Sign in ก่อน');
   // encode เฉพาะชื่อ tab เท่านั้น ไม่ encode ! และ :
   const encodedName = sheetName ? encodeURIComponent(sheetName) : '';
-  const range = encodedName ? `${encodedName}!A:Z` : 'A:Z';
+  const range = encodedName ? `${encodedName}!A1:Z` : 'A1:Z';
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?access_token=${gsAccessToken}`;
   const res = await fetch(url);
   if (res.status === 401) { gsAccessToken = null; throw new Error('Session หมดอายุ กรุณา Sign in ใหม่'); }
