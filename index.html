@@ -903,7 +903,7 @@
   .tl-empty-asset .es { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
 
   /* ═══ PAGE: การประเมินราคา ═══ */
-  .val-panel { display: flex; flex-direction: column; height: 100%; }
+  .val-panel { display: flex; flex-direction: column; }
 
   /* ── Header bar ── */
   .val-header {
@@ -968,12 +968,12 @@
   .val-chip.c-green.active  { background: var(--success); border-color: var(--success); }
 
   /* ── Body layout ── */
-  .val-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+  .val-body { display: flex; min-height: 520px; }
 
   /* ── Left list panel ── */
   .val-list-panel {
     width: 300px; flex-shrink: 0; border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; background: var(--surface);
+    display: flex; flex-direction: column; background: var(--surface); min-height: 520px;
   }
   .val-search-wrap {
     padding: 10px 12px; border-bottom: 1px solid var(--border);
@@ -1013,7 +1013,7 @@
 
   /* ── Right detail panel ── */
   .val-detail-panel {
-    flex: 1; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column;
+    flex: 1; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; min-height: 520px;
   }
   .val-detail-empty {
     flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -2961,7 +2961,8 @@ function renderCleaningPanel() {
   };
   const STATUS_LABEL = {
     na:      { label:'⛔ ไม่ต้องทำ',           color:'#8b949e' },
-    never:   { label:'🆕 ยังไม่เคยทำความสะอาด', color:'#a78bfa' },
+    never:        { label:'🆕 ยังไม่เคยทำความสะอาด', color:'#a78bfa' },
+    'needs-clean':{ label:'🧹 ควรทำก่อนประเมิน',       color:'#f85149' },
     waiting: { label:'⏳ รอสั่งงาน',            color:'#d29922' },
     ordered: { label:'📋 สั่งงานแล้ว รอทำ',    color:'#79c0ff' },
     done:    { label:'✅ ทำความสะอาดแล้ว',     color:'#3fb950' },
@@ -2969,30 +2970,8 @@ function renderCleaningPanel() {
   };
 
   const rows = allData.map(r => {
-    const raw       = (r.cleanStatus || '').trim();
-    const woDate    = r.cleanWODate    ? new Date(r.cleanWODate)    : null;
-    const cleanDate = r.firstCleanDate ? new Date(r.firstCleanDate) : null;
-
-    let statusKey;
-
-    if (raw === 'ไม่ต้องทำความสะอาด' || raw === 'ไม่ต้องทำ') {
-      // ระบุชัดว่าไม่ต้องทำ
-      statusKey = 'na';
-    } else if (!woDate && !cleanDate) {
-      // ไม่มีทั้ง WO และวันทำ และไม่ใช่ na → ยังไม่เคยทำเลย
-      statusKey = 'never';
-    } else if (woDate && cleanDate) {
-      // มีทั้ง WO และวันทำ — เปรียบเทียบวันที่
-      statusKey = woDate > cleanDate ? 'ordered' : 'done';
-    } else if (woDate && !cleanDate) {
-      // มี WO แต่ยังไม่มีวันทำ → สั่งงานแล้ว รอทำ
-      statusKey = 'ordered';
-    } else if (!woDate && cleanDate) {
-      // มีวันทำแต่ไม่มี WO → ถือว่าเสร็จแล้ว
-      statusKey = 'done';
-    } else {
-      statusKey = STATUS_MAP[raw] || 'waiting';
-    }
+    // ใช้ getCleanStatusKey เพื่อความสอดคล้อง — ไม่ใช้ firstCleanDate/cleanWODate โดยตรง
+    const { statusKey } = getCleanStatusKey(r);
 
     let region = 'อื่นๆ';
     for (const [reg, provs] of Object.entries(REGION_MAP))
@@ -3160,18 +3139,7 @@ function renderQuarterlySummary() {
   const prevSurveyPct  = surveyTarget > 0 ? Math.floor(prevSurveyDone / surveyTarget * 100) : 0;
 
   // ── ทำความสะอาด ──────────────────────────
-  const cleanRows = allData.map(r => {
-    const raw       = (r.cleanStatus || '').trim();
-    const woDate    = r.cleanWODate    ? new Date(r.cleanWODate)    : null;
-    const cleanDate = r.firstCleanDate ? new Date(r.firstCleanDate) : null;
-    let sk;
-    if (raw === 'ไม่ต้องทำความสะอาด' || raw === 'ไม่ต้องทำ') sk = 'na';
-    else if (woDate && cleanDate) sk = woDate > cleanDate ? 'ordered' : 'done';
-    else if (woDate && !cleanDate) sk = 'ordered';
-    else if (!woDate && cleanDate) sk = 'done';
-    else sk = ({ 'รอสั่งงาน':'waiting','สั่งงานแล้ว':'ordered','สั่งงานแล้ว รอทำ':'ordered','ทำความสะอาดแล้ว':'done','ทำแล้ว':'done' }[raw]) || 'na';
-    return sk;
-  });
+  const cleanRows = allData.map(r => getCleanStatusKey(r).statusKey);
   const cleanDone    = cleanRows.filter(s => s === 'done').length;
   const cleanOrdered = cleanRows.filter(s => s === 'ordered').length;
   const cleanNA      = cleanRows.filter(s => s === 'na').length;
@@ -3423,26 +3391,35 @@ function getCleanStatusKey(r) {
     return { ...r, statusKey: 'na' };
   }
 
-  // ดูจาก CleaningWO ก่อน (ข้อมูลจริง)
+  // ดูจาก CleaningWO เท่านั้น (ตัด Fallback Sheet หลักออก)
   const woRows = cleaningWOData.filter(w =>
     cleaningItemsData.some(i => i.wo_number === w.wo_number && i.asset_id === r.id)
   );
+
   if (woRows.length > 0) {
-    // เรียงตามวันที่ล่าสุด
     woRows.sort((a, b) => new Date(parseDateStr(b.clean_date || b.wo_date)) - new Date(parseDateStr(a.clean_date || a.wo_date)));
     const latest = woRows[0];
-    if (latest.status === 'done')    return { ...r, statusKey: 'done' };
+
+    // ถ้า done แต่ใกล้ครบรอบประเมิน (30-45 วัน) และไม่มี WO ใหม่ → "ควรทำความสะอาด"
+    if (latest.status === 'done') {
+      const valDue = getValDueDate(r);
+      if (valDue) {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const daysToVal = Math.ceil((valDue - today) / (1000*60*60*24));
+        // อยู่ใน window 1-45 วัน และไม่มี WO ที่ ordered/waiting อยู่
+        const hasActiveWO = woRows.some(w => w.status === 'ordered' || w.status === 'waiting');
+        if (daysToVal > 0 && daysToVal <= 45 && !hasActiveWO) {
+          return { ...r, statusKey: 'needs-clean' }; // ควรทำความสะอาดก่อนประเมิน
+        }
+      }
+      return { ...r, statusKey: 'done' };
+    }
     if (latest.status === 'ordered') return { ...r, statusKey: 'ordered' };
     return { ...r, statusKey: 'waiting' };
   }
 
-  // Fallback: ดูจาก Sheet หลัก
-  const woDate    = r.cleanWODate    ? new Date(r.cleanWODate)    : null;
-  const cleanDate = r.firstCleanDate ? new Date(r.firstCleanDate) : null;
-  if (!woDate && !cleanDate) return { ...r, statusKey: 'never' };
-  if (woDate && cleanDate)   return { ...r, statusKey: woDate > cleanDate ? 'ordered' : 'done' };
-  if (woDate && !cleanDate)  return { ...r, statusKey: 'ordered' };
-  return { ...r, statusKey: 'done' };
+  // ไม่มีข้อมูลใน CleaningWO เลย → ยังไม่เคยทำ
+  return { ...r, statusKey: 'never' };
 }
 
 function showCleanDebug() {
@@ -3510,7 +3487,7 @@ function renderHistList() {
     return;
   }
 
-  const STATUS_DOT = { na:'#8b949e', never:'#a78bfa', waiting:'#d29922', ordered:'#58a6ff', done:'#3fb950' };
+  const STATUS_DOT = { na:'#8b949e', never:'#a78bfa', waiting:'#d29922', ordered:'#58a6ff', done:'#3fb950', 'needs-clean':'#f85149' };
 
   let rows = allData.map(r => getCleanStatusKey(r));
 
@@ -3537,7 +3514,7 @@ function renderHistList() {
         <div class="hai-code">${r.id}</div>
         <div class="hai-name">${r.province || r.name || '-'}</div>
       </div>
-      <div class="hai-count">${r.firstCleanDate ? '✅' : r.cleanWODate ? '📋' : '—'}</div>
+      <div class="hai-count">${getCleanStatusKey(r).statusKey === 'done' ? '✅' : getCleanStatusKey(r).statusKey === 'ordered' ? '📋' : '—'}</div>
     </div>
   `).join('');
 }
@@ -3559,7 +3536,8 @@ function renderHistDetail(id) {
   const { statusKey } = getCleanStatusKey(r);
   const STATUS_LABEL = {
     na:      { label:'⛔ ไม่ต้องทำ',            cls:'waiting' },
-    never:   { label:'🆕 ยังไม่เคยทำความสะอาด', cls:'never'   },
+    never:        { label:'🆕 ยังไม่เคยทำความสะอาด', cls:'never'    },
+    'needs-clean':{ label:'🧹 ควรทำก่อนประเมิน',       cls:'needs-clean' },
     waiting: { label:'⏳ รอสั่งงาน',              cls:'waiting' },
     ordered: { label:'📋 สั่งงานแล้ว รอทำ',      cls:'ordered' },
     done:    { label:'✅ ทำความสะอาดแล้ว',       cls:'done'    },
@@ -3576,8 +3554,7 @@ function renderHistDetail(id) {
   if (!useNewData) {
     // Fallback: ใช้ข้อมูลเดิม (firstCleanDate / cleanWODate)
     const entries = [];
-    if (r.firstCleanDate) entries.push({ date: r.firstCleanDate, type:'ทำความสะอาด', sts:'done' });
-    if (r.cleanWODate && r.cleanWODate !== r.firstCleanDate) entries.push({ date: r.cleanWODate, type:'ออก WO', sts:'ordered' });
+    // ไม่ใช้ firstCleanDate/cleanWODate จาก Sheet หลัก (ข้อมูลไม่น่าเชื่อถือ)
     entries.sort((a,b) => new Date(b.date)-new Date(a.date));
     if (!entries.length) {
       historyHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">ยังไม่มีประวัติการทำความสะอาด<br><span style="font-size:11px;color:var(--text-dim);">กรอกข้อมูลใน Sheet CleaningWO และ CleaningItems</span></div>`;
@@ -3638,11 +3615,11 @@ function renderHistDetail(id) {
     }).join('') + `</div>`;
   }
 
-  // ── คำนวณวันทำความสะอาดล่าสุด และเช็คว่าเกิน 3 เดือนไหม ──
+  // ── คำนวณวันทำความสะอาดล่าสุด จาก CleaningWO เท่านั้น ──
   const lastWO = useNewData ? history[0] : null;
   const lastCleanDateStr = lastWO
     ? (lastWO.clean_date || lastWO.wo_date)
-    : (r.firstCleanDate || r.cleanWODate || '');
+    : '';  // ไม่ fallback ไป firstCleanDate ใน Sheet หลัก
   const lastCleanDate = lastCleanDateStr ? new Date(parseDateStr(lastCleanDateStr)) : null;
 
   const today = new Date();
@@ -3651,7 +3628,7 @@ function renderHistDetail(id) {
     : null;
   const isOverdue = daysSinceLast !== null && daysSinceLast > 90;
 
-  // Next quarter estimate
+  // Next quarter estimate — คำนวณจาก CleaningWO เท่านั้น
   let nextQ = '—';
   if (lastCleanDate && !isNaN(lastCleanDate)) {
     const nd = new Date(lastCleanDate);
@@ -3826,7 +3803,7 @@ function renderTLPills() {
   const STATUS_DOT = { na:'#8b949e', never:'#a78bfa', waiting:'#d29922', ordered:'#58a6ff', done:'#3fb950' };
   const assetIdsWithHistory = new Set(cleaningItemsData.map(i => i.asset_id));
   let assets = allData.filter(r =>
-    r.firstCleanDate || r.cleanWODate || assetIdsWithHistory.has(r.id)
+    assetIdsWithHistory.has(r.id)
   );
   if (q) assets = assets.filter(r => r.id.toLowerCase().includes(q) || (r.province||'').toLowerCase().includes(q));
 
@@ -3952,8 +3929,7 @@ function renderTLDetail(id) {
   } else {
     // Fallback: ข้อมูลเดิม
     const events = [];
-    if (r.firstCleanDate) events.push({ date: r.firstCleanDate, type:'ทำความสะอาด', sts:'done' });
-    if (r.cleanWODate && r.cleanWODate !== r.firstCleanDate) events.push({ date: r.cleanWODate, type:'ออก WO', sts:'ordered' });
+    // ไม่ใช้ firstCleanDate/cleanWODate จาก Sheet หลัก (ข้อมูลไม่น่าเชื่อถือ)
     events.sort((a,b)=>new Date(b.date)-new Date(a.date));
     events.forEach(e => {
       tlItems += `
@@ -4171,6 +4147,8 @@ function renderValList() {
     const cleanBadge = cleanKey === 'done'
       ? `<span class="cbadge clean" style="font-size:10px;">✅ ทำแล้ว</span>`
       : cleanKey === 'na' ? ''
+      : cleanKey === 'needs-clean'
+        ? `<span class="cbadge" style="font-size:10px;background:rgba(248,81,73,.12);color:var(--danger);">🧹 ควรทำก่อนประเมิน</span>`
       : cleanKey === 'ordered'
         ? `<span class="cbadge ordered" style="font-size:10px;">📋 สั่งงานแล้ว</span>`
         : `<span class="cbadge dirty" style="font-size:10px;">⚠️ ยังไม่ทำ</span>`;
@@ -4359,10 +4337,11 @@ function renderValDetail(id) {
       <div class="vd-stat span2">
         <div class="lbl">🧹 สถานะทำความสะอาด</div>
         <div class="val" style="margin-top:4px;">
-          ${cleanKey === 'done'    ? '<span class="cbadge clean">✅ ทำความสะอาดแล้ว</span>'
-          : cleanKey === 'na'     ? '<span style="font-size:12px;color:var(--text-muted);">ไม่ต้องทำ</span>'
-          : cleanKey === 'ordered'? '<span class="cbadge ordered">📋 สั่งงานทำความสะอาดแล้ว</span>'
-          :                         '<span class="cbadge dirty">⚠️ ยังไม่ได้ทำความสะอาด</span>'}
+          ${cleanKey === 'done'         ? '<span class="cbadge clean">✅ ทำความสะอาดแล้ว</span>'
+          : cleanKey === 'na'          ? '<span style="font-size:12px;color:var(--text-muted);">ไม่ต้องทำ</span>'
+          : cleanKey === 'needs-clean' ? '<span class="cbadge" style="background:rgba(248,81,73,.12);color:var(--danger);">🧹 ควรทำความสะอาดก่อนประเมิน</span>'
+          : cleanKey === 'ordered'     ? '<span class="cbadge ordered">📋 สั่งงานทำความสะอาดแล้ว</span>'
+          :                              '<span class="cbadge dirty">⚠️ ยังไม่ได้ทำความสะอาด</span>'}
         </div>
       </div>
       <div class="vd-stat">
