@@ -903,52 +903,199 @@
   .tl-empty-asset .es { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
 
   /* ═══ PAGE: การประเมินราคา ═══ */
-  .val-panel { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-  .val-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
-  .val-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 16px; border-top: 3px solid; }
-  .val-kpi.blue   { border-top-color: var(--accent); }
-  .val-kpi.orange { border-top-color: var(--warning); }
-  .val-kpi.red    { border-top-color: var(--danger); }
-  .val-kpi.green  { border-top-color: var(--success); }
-  .vk-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-  .vk-val   { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1; }
-  .vk-sub   { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .val-panel { display: flex; flex-direction: column; height: 100%; }
+
+  /* ── Header bar ── */
+  .val-header {
+    padding: 14px 20px 0;
+    background: linear-gradient(180deg, rgba(88,166,255,0.04) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .val-header-top {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  }
+  .val-header-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.2);
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .val-header-title { font-size: 16px; font-weight: 700; }
+  .val-header-sub   { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+  /* ── KPI row ── */
+  .val-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; border-top: 1px solid var(--border); }
+  .val-kpi {
+    padding: 14px 18px; border-right: 1px solid var(--border);
+    position: relative; overflow: hidden; transition: background .2s;
+  }
+  .val-kpi:last-child { border-right: none; }
+  .val-kpi::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  }
+  .val-kpi.blue::after   { background: var(--accent); }
+  .val-kpi.orange::after { background: var(--warning); }
+  .val-kpi.red::after    { background: var(--danger); }
+  .val-kpi.green::after  { background: var(--success); }
+  .val-kpi:hover { background: var(--surface2); cursor: pointer; }
+  .vk-icon  { font-size: 20px; margin-bottom: 6px; opacity: .7; }
+  .vk-val   { font-family: var(--mono); font-size: 28px; font-weight: 700; line-height: 1; }
+  .vk-label { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .vk-sub   { font-size: 11px; margin-top: 3px; font-weight: 600; }
   .val-kpi.blue   .vk-val { color: var(--accent); }
   .val-kpi.orange .vk-val { color: var(--warning); }
   .val-kpi.red    .vk-val { color: var(--danger); }
   .val-kpi.green  .vk-val { color: var(--success); }
+  .val-kpi.orange .vk-sub { color: var(--warning); }
+  .val-kpi.red    .vk-sub { color: var(--danger); }
+  .val-kpi.green  .vk-sub { color: var(--success); }
 
-  .val-chip { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
-    cursor: pointer; border: 1px solid var(--border); color: var(--text-muted); transition: all .15s; }
+  /* ── Filter bar ── */
+  .val-filter-bar {
+    display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+    border-bottom: 1px solid var(--border); background: var(--surface2);
+    flex-wrap: wrap;
+  }
+  .val-chip {
+    padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid transparent; color: var(--text-muted);
+    transition: all .15s; background: transparent;
+  }
+  .val-chip:hover:not(.active) { background: var(--surface3); color: var(--text); }
   .val-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .val-chip:hover:not(.active) { color: var(--text); border-color: var(--text-muted); }
+  .val-chip.c-orange.active { background: var(--warning); border-color: var(--warning); }
+  .val-chip.c-red.active    { background: var(--danger);  border-color: var(--danger); }
+  .val-chip.c-blue.active   { background: var(--accent);  border-color: var(--accent); }
+  .val-chip.c-green.active  { background: var(--success); border-color: var(--success); }
 
-  /* val list items */
-  .val-list-item { padding: 10px 14px; border-bottom: 1px solid rgba(48,54,61,.4);
-    cursor: pointer; transition: background .15s; display: flex; align-items: flex-start; gap: 8px; }
-  .val-list-item:hover { background: var(--surface2); }
-  .val-list-item.selected { background: rgba(88,166,255,.08); border-left: 2px solid var(--accent); padding-left: 12px; }
-  .vli-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-  .vli-code { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent2); }
+  /* ── Body layout ── */
+  .val-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+  /* ── Left list panel ── */
+  .val-list-panel {
+    width: 300px; flex-shrink: 0; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; background: var(--surface);
+  }
+  .val-search-wrap {
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+  }
+  .val-search-wrap input {
+    width: 100%; padding: 7px 12px 7px 30px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: var(--mono);
+    font-size: 12px; outline: none; transition: border-color .2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: 9px center;
+  }
+  .val-search-wrap input:focus { border-color: var(--accent); }
+
+  /* ── List items ── */
+  .val-list-item {
+    padding: 11px 14px; border-bottom: 1px solid rgba(48,54,61,.35);
+    cursor: pointer; transition: background .12s; display: flex;
+    align-items: stretch; gap: 10px;
+  }
+  .val-list-item:hover { background: rgba(88,166,255,.04); }
+  .val-list-item.selected {
+    background: rgba(88,166,255,.08);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .vli-stripe {
+    width: 3px; border-radius: 3px; flex-shrink: 0; align-self: stretch;
+  }
+  .vli-body { flex: 1; min-width: 0; }
+  .vli-code { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--accent2); }
   .vli-sub  { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-  .vli-days { font-family: var(--mono); font-size: 11px; font-weight: 700; flex-shrink: 0; margin-left: auto; }
+  .vli-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+  .vli-right { display: flex; flex-direction: column; align-items: flex-end;
+    justify-content: space-between; flex-shrink: 0; }
+  .vli-days { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+  .vli-date { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 
-  /* val timeline (detail panel) */
-  .val-tl { position: relative; padding-left: 28px; }
-  .val-tl::before { content:''; position: absolute; left: 9px; top: 0; bottom: 0;
-    width: 2px; background: var(--border); }
-  .vtl-row { position: relative; padding: 0 0 20px 18px; }
-  .vtl-row::before { content:''; position: absolute; left: -10px; top: 5px;
-    width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--bg); }
-  .vtl-row.done::before     { background: var(--success); }
-  .vtl-row.sent::before     { background: var(--accent); }
-  .vtl-row.overdue::before  { background: var(--danger); }
-  .vtl-row.upcoming::before { background: var(--warning); }
-  .vtl-row.future::before   { background: var(--surface3); border: 2px dashed var(--border); }
-  .vtl-date  { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
-  .vtl-title { font-size: 13px; font-weight: 700; margin: 3px 0 2px; }
+  /* ── Right detail panel ── */
+  .val-detail-panel {
+    flex: 1; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column;
+  }
+  .val-detail-empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; color: var(--text-muted); padding: 40px;
+  }
+  .val-detail-empty .dei { font-size: 40px; opacity: .4; }
+  .val-detail-empty .det { font-size: 14px; font-weight: 600; }
+  .val-detail-empty .des { font-size: 12px; color: var(--text-dim); }
+
+  /* detail inner */
+  .val-detail-inner { padding: 20px; max-width: 680px; }
+  .vd-asset-bar {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 16px;
+  }
+  .vd-code { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--accent2); }
+  .vd-name { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+  /* stat grid */
+  .vd-stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .vd-stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; position: relative; overflow: hidden;
+  }
+  .vd-stat .lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .vd-stat .val { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+  .vd-stat.wide  { grid-column: span 3; }
+  .vd-stat.span2 { grid-column: span 2; }
+
+  /* timeline */
+  .val-tl-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim);
+    text-transform: uppercase; margin-bottom: 14px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .val-tl { position: relative; padding-left: 32px; }
+  .val-tl::before {
+    content:''; position: absolute; left: 11px; top: 8px; bottom: 0;
+    width: 1px; background: linear-gradient(180deg, var(--border) 0%, transparent 100%);
+  }
+  .vtl-row { position: relative; padding: 0 0 22px 20px; }
+  .vtl-row:last-child { padding-bottom: 0; }
+  .vtl-node {
+    position: absolute; left: -21px; top: 3px;
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--bg); display: flex; align-items: center;
+    justify-content: center; font-size: 9px; font-weight: 700;
+  }
+  .vtl-row.done     .vtl-node { background: var(--success); color: #fff; }
+  .vtl-row.sent     .vtl-node { background: var(--accent);  color: #fff; }
+  .vtl-row.overdue  .vtl-node { background: var(--danger);  color: #fff; }
+  .vtl-row.upcoming .vtl-node { background: var(--warning); color: #fff; }
+  .vtl-row.future   .vtl-node {
+    background: var(--surface3); color: var(--text-dim);
+    border: 2px dashed var(--border);
+  }
+  .vtl-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; transition: border-color .2s;
+  }
+  .vtl-row.done     .vtl-card { border-left: 3px solid var(--success); }
+  .vtl-row.sent     .vtl-card { border-left: 3px solid var(--accent); }
+  .vtl-row.overdue  .vtl-card { border-left: 3px solid var(--danger); background: rgba(248,81,73,.04); }
+  .vtl-row.upcoming .vtl-card { border-left: 3px solid var(--warning); background: rgba(210,153,34,.04); }
+  .vtl-row.future   .vtl-card { border-left: 3px solid var(--border); opacity: .6; }
+  .vtl-date  { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .vtl-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
   .vtl-sub   { font-size: 12px; color: var(--text-muted); }
+
+  /* banner */
+  .val-banner {
+    display: flex; gap: 12px; align-items: flex-start;
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+    border: 1px solid;
+  }
+  .val-banner.warn  { background: rgba(210,153,34,.07);  border-color: rgba(210,153,34,.3); }
+  .val-banner.alert { background: rgba(248,81,73,.07);   border-color: rgba(248,81,73,.3); }
+  .val-banner .bicon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .val-banner .btitle { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .val-banner .bsub   { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .val-banner.warn  .btitle { color: var(--warning); }
+  .val-banner.alert .btitle { color: var(--danger); }
 </style>
 </head>
 <body>
@@ -1585,54 +1732,76 @@
     <div class="page-view" id="page-valuation">
       <div class="val-panel">
 
-        <!-- KPI Row -->
-        <div class="val-kpi-row" id="valKPIRow">
-          <div class="val-kpi blue"><div class="vk-label">ทรัพย์ทั้งหมด</div><div class="vk-val" id="vkTotal">—</div></div>
-          <div class="val-kpi orange"><div class="vk-label">ครบรอบใน 45 วัน</div><div class="vk-val" id="vkUpcoming">—</div><div class="vk-sub" id="vkUpcomingSub"></div></div>
-          <div class="val-kpi red"><div class="vk-label">เกินกำหนด (ยังไม่ส่ง)</div><div class="vk-val" id="vkOverdue">—</div></div>
-          <div class="val-kpi green"><div class="vk-label">ส่งประเมินแล้ว / ประเมินแล้ว</div><div class="vk-val" id="vkDone">—</div></div>
+        <!-- Header + KPI -->
+        <div class="val-header">
+          <div class="val-header-top">
+            <div class="val-header-icon">🏷️</div>
+            <div>
+              <div class="val-header-title">การประเมินราคาทรัพย์สิน</div>
+              <div class="val-header-sub">ติดตามรอบประเมินราคาประจำปี และวางแผนทำความสะอาดล่วงหน้า</div>
+            </div>
+          </div>
+          <div class="val-kpi-row" id="valKPIRow">
+            <div class="val-kpi blue" onclick="setValFilter('all')">
+              <div class="vk-icon">📦</div>
+              <div class="vk-val" id="vkTotal">—</div>
+              <div class="vk-label">ทรัพย์ทั้งหมด</div>
+            </div>
+            <div class="val-kpi orange" onclick="setValFilter('alert')">
+              <div class="vk-icon">⚠️</div>
+              <div class="vk-val" id="vkUpcoming">—</div>
+              <div class="vk-label">ครบรอบใน 45 วัน</div>
+              <div class="vk-sub" id="vkUpcomingSub"></div>
+            </div>
+            <div class="val-kpi red" onclick="setValFilter('overdue')">
+              <div class="vk-icon">🔴</div>
+              <div class="vk-val" id="vkOverdue">—</div>
+              <div class="vk-label">เกินกำหนด ยังไม่ส่ง</div>
+            </div>
+            <div class="val-kpi green" onclick="setValFilter('done')">
+              <div class="vk-icon">✅</div>
+              <div class="vk-val" id="vkDone">—</div>
+              <div class="vk-label">ส่งแล้ว / ประเมินแล้ว</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Main content: Timeline list + Detail -->
-        <div style="display:flex;gap:0;min-height:520px;">
+        <!-- Filter bar -->
+        <div class="val-filter-bar">
+          <span style="font-size:11px;color:var(--text-muted);font-weight:600;margin-right:4px;">กรอง:</span>
+          <div class="val-chip active"        id="vchip-all"     onclick="setValFilter('all')">ทั้งหมด</div>
+          <div class="val-chip c-orange"      id="vchip-alert"   onclick="setValFilter('alert')">⚠️ ใน 45 วัน</div>
+          <div class="val-chip c-red"         id="vchip-overdue" onclick="setValFilter('overdue')">🔴 เกินกำหนด</div>
+          <div class="val-chip c-blue"        id="vchip-sent"    onclick="setValFilter('sent')">📤 ส่งแล้ว รอผล</div>
+          <div class="val-chip c-green"       id="vchip-done"    onclick="setValFilter('done')">✅ ประเมินแล้ว</div>
+        </div>
 
-          <!-- LEFT: Alert list + full list -->
-          <div style="width:320px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;">
+        <!-- Body -->
+        <div class="val-body">
 
-            <!-- Filter chips -->
-            <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">
-              <div class="val-chip active" id="vchip-all"     onclick="setValFilter('all')">ทั้งหมด</div>
-              <div class="val-chip"        id="vchip-alert"   onclick="setValFilter('alert')">⚠️ ใน 45 วัน</div>
-              <div class="val-chip"        id="vchip-overdue" onclick="setValFilter('overdue')">🔴 เกินกำหนด</div>
-              <div class="val-chip"        id="vchip-sent"    onclick="setValFilter('sent')">📤 ส่งแล้ว</div>
-              <div class="val-chip"        id="vchip-done"    onclick="setValFilter('done')">✅ ประเมินแล้ว</div>
+          <!-- LEFT: list -->
+          <div class="val-list-panel">
+            <div class="val-search-wrap">
+              <input id="valSearch" placeholder="ค้นหารหัสทรัพย์ / จังหวัด..." oninput="renderValList()">
             </div>
-
-            <!-- Search -->
-            <div style="padding:8px 12px;border-bottom:1px solid var(--border);">
-              <input id="valSearch" placeholder="🔎 ค้นหารหัสทรัพย์..."
-                oninput="renderValList()"
-                style="width:100%;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);
-                  border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
-            </div>
-
-            <!-- List -->
             <div id="valList" style="overflow-y:auto;flex:1;">
-              <div class="hist-empty" style="padding:32px;">
-                <div class="ei">📂</div><div class="et">โหลดข้อมูลก่อน</div>
+              <div class="val-detail-empty">
+                <div class="dei">📂</div>
+                <div class="det">โหลดข้อมูลก่อน</div>
               </div>
             </div>
           </div>
 
-          <!-- RIGHT: Detail + Timeline -->
-          <div id="valDetail" style="flex:1;overflow-y:auto;padding:16px;">
-            <div class="tl-empty-asset">
-              <div class="ei">🏷️</div>
-              <div class="et">เลือกทรัพย์จากรายการซ้าย</div>
-              <div class="es">เพื่อดู Timeline การประเมินราคา</div>
+          <!-- RIGHT: detail -->
+          <div class="val-detail-panel" id="valDetail">
+            <div class="val-detail-empty">
+              <div class="dei">🏷️</div>
+              <div class="det">เลือกทรัพย์จากรายการซ้าย</div>
+              <div class="des">เพื่อดู Timeline รอบการประเมินราคา</div>
             </div>
           </div>
         </div>
+
       </div>
     </div><!-- /page-valuation -->
 
@@ -3709,13 +3878,11 @@ function renderTLDetail(id) {
   let tlItems = '';
 
   // ── Next schedule card ──
+  // คำนวณจาก CleaningWO เท่านั้น — ไม่ fallback ไป firstCleanDate ใน Sheet หลัก
   let nextDate = null;
   if (useNewData && history.length) {
     const ld = new Date(parseDateStr(history[0].clean_date || history[0].wo_date));
     if (!isNaN(ld)) { nextDate = new Date(ld); nextDate.setMonth(nextDate.getMonth() + 3); }
-  } else if (r.firstCleanDate || r.cleanWODate) {
-    nextDate = new Date(r.firstCleanDate || r.cleanWODate);
-    nextDate.setMonth(nextDate.getMonth() + 3);
   }
 
   if (nextDate && statusKey !== 'na') {
@@ -3803,9 +3970,10 @@ function renderTLDetail(id) {
     });
   }
 
+  // lastDateStr จาก CleaningWO เท่านั้น — ถ้าไม่มีข้อมูลให้ว่างเปล่า
   const lastDateStr = useNewData && history.length
     ? (history[0].clean_date || history[0].wo_date)
-    : (r.firstCleanDate || r.cleanWODate || '');
+    : '';
 
   // ── เช็คว่าเกิน 3 เดือนไหม ──
   const lastCleanDate = lastDateStr ? new Date(parseDateStr(lastDateStr)) : null;
@@ -3959,7 +4127,7 @@ function renderValList() {
   const q = (document.getElementById('valSearch')?.value || '').toLowerCase().trim();
   const container = document.getElementById('valList');
   if (!allData.length) {
-    container.innerHTML = '<div class="hist-empty" style="padding:32px;"><div class="ei">📂</div><div class="et">โหลดข้อมูลก่อน</div></div>';
+    container.innerHTML = '<div class="val-detail-empty"><div class="dei">📂</div><div class="det">โหลดข้อมูลก่อน</div></div>';
     return;
   }
 
@@ -3987,7 +4155,7 @@ function renderValList() {
   });
 
   if (!assets.length) {
-    container.innerHTML = '<div class="hist-empty" style="padding:24px;"><div class="ei">🔍</div><div class="et">ไม่พบรายการ</div></div>';
+    container.innerHTML = '<div class="val-detail-empty"><div class="dei">🔍</div><div class="det">ไม่พบรายการ</div></div>';
     return;
   }
 
@@ -3999,19 +4167,27 @@ function renderValList() {
     const daysStr = daysLeft === null ? '—'
       : daysLeft <= 0  ? `เกิน ${Math.abs(daysLeft)} วัน`
       : `อีก ${daysLeft} วัน`;
-    const cleanStatus = (() => { const {statusKey} = getCleanStatusKey(r); return statusKey; })();
-    const cleanDot = cleanStatus === 'done' ? '🧹' : cleanStatus === 'na' ? '' : '⚠️';
+    const { statusKey: cleanKey } = getCleanStatusKey(r);
+    const cleanBadge = cleanKey === 'done'
+      ? `<span class="cbadge clean" style="font-size:10px;">✅ ทำแล้ว</span>`
+      : cleanKey === 'na' ? ''
+      : cleanKey === 'ordered'
+        ? `<span class="cbadge ordered" style="font-size:10px;">📋 สั่งงานแล้ว</span>`
+        : `<span class="cbadge dirty" style="font-size:10px;">⚠️ ยังไม่ทำ</span>`;
     return `
       <div class="val-list-item ${valSelectedId === r.id ? 'selected' : ''}" onclick="selectValAsset('${r.id}')">
-        <div class="vli-dot" style="background:${color};"></div>
-        <div style="flex:1;min-width:0;">
+        <div class="vli-stripe" style="background:${color};"></div>
+        <div class="vli-body">
           <div class="vli-code">${r.id}</div>
           <div class="vli-sub">${r.province||'-'} · ${r.type||'-'}</div>
-          <div style="margin-top:4px;">${VAL_STATUS_BADGE[sk]||''} ${cleanDot ? `<span style="font-size:11px;">${cleanDot}</span>` : ''}</div>
+          <div class="vli-tags">
+            ${VAL_STATUS_BADGE[sk]||''}
+            ${cleanBadge}
+          </div>
         </div>
-        <div class="vli-days" style="color:${color};text-align:right;">
-          ${daysStr}<br>
-          ${due ? `<span style="font-size:10px;color:var(--text-muted);font-weight:400;">${fmtDate(due)}</span>` : ''}
+        <div class="vli-right">
+          <div class="vli-days" style="color:${color};">${daysStr}</div>
+          <div class="vli-date">${due ? fmtDate(due) : ''}</div>
         </div>
       </div>`;
   }).join('');
@@ -4043,18 +4219,16 @@ function renderValDetail(id) {
     const daysToClean = Math.ceil((cleanDeadline - today) / (1000*60*60*24));
     const isCleanDone = cleanKey === 'done';
     if (!isCleanDone) {
-      const urgColor = daysToClean <= 0 ? 'var(--danger)' : 'var(--warning)';
-      const urgMsg   = daysToClean <= 0
+      const isUrgent = daysToClean <= 0;
+      const urgMsg = isUrgent
         ? `เลยกำหนดทำความสะอาดมาแล้ว ${Math.abs(daysToClean)} วัน — ควรสั่งงานทันที`
         : `ควรทำความสะอาดภายใน ${daysToClean} วัน (ก่อน ${fmtDate(cleanDeadline)})`;
       bannerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;
-          background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.35);
-          border-radius:8px;padding:10px 14px;margin-bottom:14px;">
-          <span style="font-size:18px;">🧹</span>
+        <div class="val-banner ${isUrgent ? 'alert' : 'warn'}">
+          <div class="bicon">🧹</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:${urgColor};">ควรทำความสะอาดก่อนส่งประเมิน</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${urgMsg}</div>
+            <div class="btitle">ควรทำความสะอาดก่อนส่งประเมิน</div>
+            <div class="bsub">${urgMsg}</div>
           </div>
         </div>`;
     }
@@ -4069,20 +4243,22 @@ function renderValDetail(id) {
     const prevDue = new Date(lastDate); prevDue.setFullYear(prevDue.getFullYear() - 1);
     tlRows += `
       <div class="vtl-row done">
-        <div class="vtl-date">${fmtDate(prevDue)}</div>
-        <div class="vtl-title">ประเมินราคาประจำปี (รอบก่อนหน้า)</div>
-        <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
-          <span class="badge done">✅ ประเมินแล้ว</span>
+        <div class="vtl-node">✓</div>
+        <div class="vtl-card">
+          <div class="vtl-date">${fmtDate(prevDue)}</div>
+          <div class="vtl-title">ประเมินราคาประจำปี (รอบก่อนหน้า)</div>
+          <div class="vtl-sub"><span class="badge done">✅ ประเมินแล้ว</span></div>
         </div>
       </div>`;
 
     // รอบล่าสุด
     tlRows += `
       <div class="vtl-row done">
-        <div class="vtl-date">${fmtDate(lastDate)}</div>
-        <div class="vtl-title">ประเมินราคาล่าสุด</div>
-        <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
-          <span class="badge done">✅ ประเมินแล้ว</span>
+        <div class="vtl-node">✓</div>
+        <div class="vtl-card">
+          <div class="vtl-date">${fmtDate(lastDate)}</div>
+          <div class="vtl-title">ประเมินราคาล่าสุด</div>
+          <div class="vtl-sub"><span class="badge done">✅ ประเมินแล้ว</span></div>
         </div>
       </div>`;
   }
@@ -4100,14 +4276,17 @@ function renderValDetail(id) {
       const cleanCls    = isCleanDone ? 'done' : daysToClean <= 0 ? 'overdue' : 'upcoming';
       tlRows += `
         <div class="vtl-row ${cleanCls}">
-          <div class="vtl-date" style="color:${cleanColor};">${fmtDate(cleanDeadline)} — ควรทำความสะอาดก่อนวันนี้</div>
-          <div class="vtl-title" style="color:${cleanColor};">🧹 ทำความสะอาดก่อนส่งประเมิน</div>
-          <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
-            ${isCleanDone
-              ? '<span class="cbadge clean">✅ ทำแล้ว</span>'
-              : daysToClean <= 0
-                ? '<span class="cbadge dirty">❌ ยังไม่ทำ — เลยกำหนดแล้ว</span>'
-                : `<span class="cbadge dirty">⚠️ ยังไม่ทำ — อีก ${daysToClean} วัน</span>`}
+          <div class="vtl-node">${isCleanDone ? '✓' : '!'}</div>
+          <div class="vtl-card">
+            <div class="vtl-date">${fmtDate(cleanDeadline)} — ควรทำก่อนวันนี้</div>
+            <div class="vtl-title" style="color:${cleanColor};">🧹 ทำความสะอาดก่อนส่งประเมิน</div>
+            <div class="vtl-sub">
+              ${isCleanDone
+                ? '<span class="cbadge clean">✅ ทำแล้ว พร้อมส่งประเมิน</span>'
+                : daysToClean <= 0
+                  ? '<span class="cbadge dirty">❌ ยังไม่ทำ — เลยกำหนดแล้ว</span>'
+                  : `<span class="cbadge dirty">⚠️ ยังไม่ทำ — อีก ${daysToClean} วัน</span>`}
+            </div>
           </div>
         </div>`;
     }
@@ -4116,82 +4295,96 @@ function renderValDetail(id) {
     if (sk === 'sent' && sentDate && !isNaN(sentDate)) {
       tlRows += `
         <div class="vtl-row sent">
-          <div class="vtl-date">${fmtDate(sentDate)}</div>
-          <div class="vtl-title">📤 ส่งคำสั่งให้ผู้ประเมิน</div>
-          <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
-            <span class="badge sent">📤 ส่งแล้ว รอผล</span>
+          <div class="vtl-node">→</div>
+          <div class="vtl-card">
+            <div class="vtl-date">${fmtDate(sentDate)}</div>
+            <div class="vtl-title">📤 ส่งคำสั่งให้ผู้ประเมิน</div>
+            <div class="vtl-sub"><span class="badge sent">📤 ส่งแล้ว รอผล</span></div>
           </div>
         </div>`;
     }
 
     // วันครบรอบประเมิน
-    const dueCls = sk === 'overdue' ? 'overdue' : sk === 'alert' ? 'upcoming' : sk === 'sent' ? 'sent' : 'future';
-    const dueColor = sk === 'overdue' ? 'var(--danger)' : sk === 'alert' ? 'var(--warning)' : sk === 'sent' ? 'var(--accent)' : 'var(--text-muted)';
+    const dueCls2 = sk === 'overdue' ? 'overdue' : sk === 'alert' ? 'upcoming' : sk === 'sent' ? 'sent' : 'future';
+    const dueColorStr = sk === 'overdue' ? 'var(--danger)' : sk === 'alert' ? 'var(--warning)' : sk === 'sent' ? 'var(--accent)' : 'var(--text-muted)';
     const dueDaysStr = daysLeft === null ? '' : daysLeft <= 0 ? ` — เกินมาแล้ว ${Math.abs(daysLeft)} วัน` : ` — อีก ${daysLeft} วัน`;
     tlRows += `
-      <div class="vtl-row ${dueCls}">
-        <div class="vtl-date" style="color:${dueColor};">${fmtDate(due)}${dueDaysStr}</div>
-        <div class="vtl-title" style="color:${dueColor};">📋 ครบรอบส่งประเมินราคา</div>
-        <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
-          ${VAL_STATUS_BADGE[sk]||''}
+      <div class="vtl-row ${dueCls2}">
+        <div class="vtl-node">${sk === 'done' || sk === 'sent' ? '✓' : '!'}</div>
+        <div class="vtl-card">
+          <div class="vtl-date" style="color:${dueColorStr};">${fmtDate(due)}${dueDaysStr}</div>
+          <div class="vtl-title" style="color:${dueColorStr};">📋 ครบรอบส่งประเมินราคา</div>
+          <div class="vtl-sub">${VAL_STATUS_BADGE[sk]||''}</div>
         </div>
       </div>`;
 
-    // รอบถัดไป (ถัดจาก due อีก 1 ปี)
+    // รอบถัดไป
     const nextDue2 = new Date(due); nextDue2.setFullYear(nextDue2.getFullYear() + 1);
     tlRows += `
       <div class="vtl-row future">
-        <div class="vtl-date">${fmtDate(nextDue2)}</div>
-        <div class="vtl-title" style="color:var(--text-muted);">📋 รอบประเมินราคาถัดไป (ประมาณการ)</div>
+        <div class="vtl-node">◦</div>
+        <div class="vtl-card">
+          <div class="vtl-date">${fmtDate(nextDue2)}</div>
+          <div class="vtl-title">📋 รอบประเมินราคาถัดไป (ประมาณการ)</div>
+        </div>
       </div>`;
   }
 
   if (!tlRows) {
-    tlRows = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">
-      ไม่มีข้อมูลวันประเมิน<br><span style="font-size:11px;">กรุณาเพิ่มคอลัมน์ lastValuationDate ใน Sheet ทรัพย์ NPA</span>
+    tlRows = `<div class="val-detail-empty" style="padding:32px;">
+      <div class="dei">📭</div>
+      <div class="det">ไม่มีข้อมูลวันประเมิน</div>
+      <div class="des">เพิ่มคอลัมน์ วันประเมินล่าสุด ใน Sheet ทรัพย์ NPA</div>
     </div>`;
   }
 
   // ── Stat boxes ──
   const sentDate = r.valuationSentDate ? new Date(parseDateStr(r.valuationSentDate)) : null;
+  const dueColor = daysLeft !== null && daysLeft <= 45 && daysLeft > 0 ? 'var(--warning)'
+                 : daysLeft !== null && daysLeft <= 0 ? 'var(--danger)' : 'var(--text)';
   const statBoxes = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-      <div class="det-box">
-        <div class="lbl">ประเมินราคาล่าสุด</div>
+    <div class="vd-stat-grid">
+      <div class="vd-stat">
+        <div class="lbl">📅 ประเมินราคาล่าสุด</div>
         <div class="val">${lastDate && !isNaN(lastDate) ? fmtDate(lastDate) : '—'}</div>
       </div>
-      <div class="det-box">
-        <div class="lbl">ครบรอบประเมินถัดไป</div>
-        <div class="val" style="color:${daysLeft !== null && daysLeft <= 45 && daysLeft > 0 ? 'var(--warning)' : daysLeft !== null && daysLeft <= 0 ? 'var(--danger)' : 'var(--text)'};">
-          ${due ? fmtDate(due) : '—'}
-        </div>
+      <div class="vd-stat">
+        <div class="lbl">🔔 ครบรอบประเมินถัดไป</div>
+        <div class="val" style="color:${dueColor};">${due ? fmtDate(due) : '—'}</div>
       </div>
-      <div class="det-box">
-        <div class="lbl">วันส่งประเมิน</div>
+      <div class="vd-stat">
+        <div class="lbl">📤 วันส่งประเมิน</div>
         <div class="val">${sentDate && !isNaN(sentDate) ? fmtDate(sentDate) : '—'}</div>
       </div>
-      <div class="det-box">
-        <div class="lbl">สถานะการประเมิน</div>
-        <div class="val">${VAL_STATUS_BADGE[sk]||'—'}</div>
+      <div class="vd-stat span2">
+        <div class="lbl">🧹 สถานะทำความสะอาด</div>
+        <div class="val" style="margin-top:4px;">
+          ${cleanKey === 'done'    ? '<span class="cbadge clean">✅ ทำความสะอาดแล้ว</span>'
+          : cleanKey === 'na'     ? '<span style="font-size:12px;color:var(--text-muted);">ไม่ต้องทำ</span>'
+          : cleanKey === 'ordered'? '<span class="cbadge ordered">📋 สั่งงานทำความสะอาดแล้ว</span>'
+          :                         '<span class="cbadge dirty">⚠️ ยังไม่ได้ทำความสะอาด</span>'}
+        </div>
       </div>
-      <div class="det-box" style="grid-column:1/-1;">
-        <div class="lbl">สถานะทำความสะอาด</div>
-        <div class="val">
-          ${cleanKey === 'done' ? '<span class="cbadge clean">✅ ทำแล้ว</span>'
-            : cleanKey === 'na' ? '<span style="font-size:12px;color:var(--text-muted);">ไม่ต้องทำ</span>'
-            : cleanKey === 'ordered' ? '<span class="cbadge ordered">📋 สั่งงานแล้ว</span>'
-            : '<span class="cbadge dirty">⚠️ ยังไม่ทำ</span>'}
+      <div class="vd-stat">
+        <div class="lbl">📋 อีกกี่วัน</div>
+        <div class="val" style="color:${dueColor};">
+          ${daysLeft === null ? '—' : daysLeft <= 0 ? `เกิน ${Math.abs(daysLeft)} วัน` : `${daysLeft} วัน`}
         </div>
       </div>
     </div>`;
 
   detail.innerHTML = `
-    <div>
+    <div class="val-detail-inner">
       ${bannerHTML}
-      <div class="hd-code" style="margin-bottom:2px;">${r.id}</div>
-      <div class="hd-name" style="margin-bottom:14px;">${r.name||''} · ${r.province||'-'}</div>
+      <div class="vd-asset-bar">
+        <div>
+          <div class="vd-code">${r.id}</div>
+          <div class="vd-name">${r.name||''} · ${r.province||'-'} · ${r.type||''}</div>
+        </div>
+        <div>${VAL_STATUS_BADGE[sk]||''}</div>
+      </div>
       ${statBoxes}
-      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;letter-spacing:.5px;">TIMELINE การประเมินราคา</div>
+      <div class="val-tl-label">TIMELINE รอบการประเมินราคา</div>
       <div class="val-tl">${tlRows}</div>
     </div>`;
 }
