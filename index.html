@@ -901,6 +901,54 @@
   .tl-empty-asset .ei { font-size: 36px; margin-bottom: 8px; }
   .tl-empty-asset .et { font-size: 14px; font-weight: 600; }
   .tl-empty-asset .es { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+  /* ═══ PAGE: การประเมินราคา ═══ */
+  .val-panel { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .val-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+  .val-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; border-top: 3px solid; }
+  .val-kpi.blue   { border-top-color: var(--accent); }
+  .val-kpi.orange { border-top-color: var(--warning); }
+  .val-kpi.red    { border-top-color: var(--danger); }
+  .val-kpi.green  { border-top-color: var(--success); }
+  .vk-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .vk-val   { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1; }
+  .vk-sub   { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .val-kpi.blue   .vk-val { color: var(--accent); }
+  .val-kpi.orange .vk-val { color: var(--warning); }
+  .val-kpi.red    .vk-val { color: var(--danger); }
+  .val-kpi.green  .vk-val { color: var(--success); }
+
+  .val-chip { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); color: var(--text-muted); transition: all .15s; }
+  .val-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .val-chip:hover:not(.active) { color: var(--text); border-color: var(--text-muted); }
+
+  /* val list items */
+  .val-list-item { padding: 10px 14px; border-bottom: 1px solid rgba(48,54,61,.4);
+    cursor: pointer; transition: background .15s; display: flex; align-items: flex-start; gap: 8px; }
+  .val-list-item:hover { background: var(--surface2); }
+  .val-list-item.selected { background: rgba(88,166,255,.08); border-left: 2px solid var(--accent); padding-left: 12px; }
+  .vli-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .vli-code { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent2); }
+  .vli-sub  { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .vli-days { font-family: var(--mono); font-size: 11px; font-weight: 700; flex-shrink: 0; margin-left: auto; }
+
+  /* val timeline (detail panel) */
+  .val-tl { position: relative; padding-left: 28px; }
+  .val-tl::before { content:''; position: absolute; left: 9px; top: 0; bottom: 0;
+    width: 2px; background: var(--border); }
+  .vtl-row { position: relative; padding: 0 0 20px 18px; }
+  .vtl-row::before { content:''; position: absolute; left: -10px; top: 5px;
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--bg); }
+  .vtl-row.done::before     { background: var(--success); }
+  .vtl-row.sent::before     { background: var(--accent); }
+  .vtl-row.overdue::before  { background: var(--danger); }
+  .vtl-row.upcoming::before { background: var(--warning); }
+  .vtl-row.future::before   { background: var(--surface3); border: 2px dashed var(--border); }
+  .vtl-date  { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+  .vtl-title { font-size: 13px; font-weight: 700; margin: 3px 0 2px; }
+  .vtl-sub   { font-size: 12px; color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -981,6 +1029,10 @@
     <div class="nav-item" id="nav-timeline" onclick="switchPage('timeline')">
       <span class="nav-icon">📅</span>
       <span>Timeline การทำความสะอาด</span>
+    </div>
+    <div class="nav-item" id="nav-valuation" onclick="switchPage('valuation')">
+      <span class="nav-icon">🏷️</span>
+      <span>การประเมินราคา</span>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-label">ข้อมูล</div>
@@ -1527,6 +1579,63 @@
       </div>
     </div><!-- /page-timeline -->
 
+    <!-- ═══════════════════════════════════════════
+         PAGE 4: การประเมินราคา
+    ═══════════════════════════════════════════ -->
+    <div class="page-view" id="page-valuation">
+      <div class="val-panel">
+
+        <!-- KPI Row -->
+        <div class="val-kpi-row" id="valKPIRow">
+          <div class="val-kpi blue"><div class="vk-label">ทรัพย์ทั้งหมด</div><div class="vk-val" id="vkTotal">—</div></div>
+          <div class="val-kpi orange"><div class="vk-label">ครบรอบใน 45 วัน</div><div class="vk-val" id="vkUpcoming">—</div><div class="vk-sub" id="vkUpcomingSub"></div></div>
+          <div class="val-kpi red"><div class="vk-label">เกินกำหนด (ยังไม่ส่ง)</div><div class="vk-val" id="vkOverdue">—</div></div>
+          <div class="val-kpi green"><div class="vk-label">ส่งประเมินแล้ว / ประเมินแล้ว</div><div class="vk-val" id="vkDone">—</div></div>
+        </div>
+
+        <!-- Main content: Timeline list + Detail -->
+        <div style="display:flex;gap:0;min-height:520px;">
+
+          <!-- LEFT: Alert list + full list -->
+          <div style="width:320px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;">
+
+            <!-- Filter chips -->
+            <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">
+              <div class="val-chip active" id="vchip-all"     onclick="setValFilter('all')">ทั้งหมด</div>
+              <div class="val-chip"        id="vchip-alert"   onclick="setValFilter('alert')">⚠️ ใน 45 วัน</div>
+              <div class="val-chip"        id="vchip-overdue" onclick="setValFilter('overdue')">🔴 เกินกำหนด</div>
+              <div class="val-chip"        id="vchip-sent"    onclick="setValFilter('sent')">📤 ส่งแล้ว</div>
+              <div class="val-chip"        id="vchip-done"    onclick="setValFilter('done')">✅ ประเมินแล้ว</div>
+            </div>
+
+            <!-- Search -->
+            <div style="padding:8px 12px;border-bottom:1px solid var(--border);">
+              <input id="valSearch" placeholder="🔎 ค้นหารหัสทรัพย์..."
+                oninput="renderValList()"
+                style="width:100%;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);
+                  border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
+            </div>
+
+            <!-- List -->
+            <div id="valList" style="overflow-y:auto;flex:1;">
+              <div class="hist-empty" style="padding:32px;">
+                <div class="ei">📂</div><div class="et">โหลดข้อมูลก่อน</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Detail + Timeline -->
+          <div id="valDetail" style="flex:1;overflow-y:auto;padding:16px;">
+            <div class="tl-empty-asset">
+              <div class="ei">🏷️</div>
+              <div class="et">เลือกทรัพย์จากรายการซ้าย</div>
+              <div class="es">เพื่อดู Timeline การประเมินราคา</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-valuation -->
+
   </div><!-- /page-content -->
 </div><!-- /app-shell -->
 
@@ -1901,6 +2010,8 @@ function mapRow(row) {
     contractEnd:get('วันหมดสัญญา','contractend','สิ้นสุด','expire','enddate'),
     contractVal:parseFloat((get('มูลค่าสัญญา','contractval','มูลค่า','value') || '0').replace(/,/g,'')) || 0,
     contractType:get('ประเภทสัญญา','contracttype','งาน','service'),
+    lastValuationDate:  get('วันประเมินล่าสุด','lastvaluationdate','lastvaldate','วันที่ประเมินล่าสุด','ประเมินล่าสุด'),
+    valuationSentDate:  get('วันส่งประเมิน','valuationsentdate','วันส่ง','sentdate','ส่งประเมิน'),
   };
 }
 
@@ -2251,6 +2362,10 @@ function renderUpcoming(data = allData) {
     const color   = isToday ? '#f85149' : (colorMap[e.urgency] || 'var(--accent)');
     const diffStr = isToday ? '🔴 วันนี้' : `อีก ${e.diff} วัน`;
     const blinkClass = isToday ? ' today-blink' : '';
+    // คำนวณวันที่จริงของ event
+    const eventDate = new Date();
+    eventDate.setDate(eventDate.getDate() + e.diff);
+    const dateStr = fmtDate(eventDate.toISOString().split('T')[0]);
     return `
     <div class="alert-item" style="animation-delay:${i*0.04}s${isToday ? ';border-left:2px solid #f85149;' : ''}">
       <div style="font-size:16px;flex-shrink:0;" class="${blinkClass}">${e.icon}</div>
@@ -2261,7 +2376,10 @@ function renderUpcoming(data = allData) {
         </div>
         <div class="alert-desc">${e.desc}</div>
       </div>
-      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};flex-shrink:0;text-align:right;white-space:nowrap;" class="${blinkClass}">${diffStr}</div>
+      <div style="flex-shrink:0;text-align:right;white-space:nowrap;" class="${blinkClass}">
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};">${diffStr}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:1px;">${dateStr}</div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -3075,12 +3193,13 @@ function fmtDate(s) {
 //  SIDEBAR NAVIGATION
 // ═══════════════════════════════════════════
 function switchPage(page) {
-  ['summary','history','timeline'].forEach(p => {
+  ['summary','history','timeline','valuation'].forEach(p => {
     document.getElementById('page-' + p)?.classList.toggle('active', p === page);
     document.getElementById('nav-' + p)?.classList.toggle('active', p === page);
   });
   if (page === 'history') renderHistPage();
   if (page === 'timeline') renderTLPills();
+  if (page === 'valuation') renderValPage();
 }
 
 // ═══════════════════════════════════════════
@@ -3308,10 +3427,12 @@ function renderHistDetail(id) {
   } else {
     // ── ใช้ข้อมูลจาก CleaningWO/Items ──
     const ITEM_COLORS = {
-      'ทำความสะอาด':   '#3fb950',
-      'กำจัดวัชพืช':   '#58a6ff',
-      'งานขนขยะ/วัชพืช':'#d29922',
-      'ตัดต้นไม้':      '#f0883e',
+      'ทำความสะอาดครั้งแรก': '#a78bfa',
+      'กำจัดวัชพืช':          '#58a6ff',
+      'งานขนขยะ/วัชพืช':      '#d29922',
+      'ตัดต้นไม้':             '#f0883e',
+      'ปรับปรุงทรัพย์สิน':    '#e879f9',
+      'ทำความสะอาด':           '#3fb950',
     };
     historyHTML = `<div class="hist-rows">` + history.map(wo => {
       const stsCls  = wo.status === 'done' ? 'done' : wo.status === 'ordered' ? 'ordered' : 'waiting';
@@ -3577,10 +3698,12 @@ function renderTLDetail(id) {
   const totalCost = useNewData ? getTotalCostForAsset(id) : 0;
 
   const ITEM_COLORS = {
-    'ทำความสะอาด':    '#3fb950',
-    'กำจัดวัชพืช':    '#58a6ff',
-    'งานขนขยะ/วัชพืช':'#d29922',
-    'ตัดต้นไม้':       '#f0883e',
+    'ทำความสะอาดครั้งแรก': '#a78bfa',
+    'กำจัดวัชพืช':          '#58a6ff',
+    'งานขนขยะ/วัชพืช':      '#d29922',
+    'ตัดต้นไม้':             '#f0883e',
+    'ปรับปรุงทรัพย์สิน':    '#e879f9',
+    'ทำความสะอาด':           '#3fb950',
   };
 
   let tlItems = '';
@@ -3732,6 +3855,347 @@ function renderTLDetail(id) {
     <div class="tl-list">${tlItems || '<div class="tl-empty-asset"><div class="ei">📭</div><div class="et">ไม่มีประวัติ</div><div class="es">กรอกข้อมูลใน Sheet CleaningWO</div></div>'}</div>`;
 }
 
+
+
+// ═══════════════════════════════════════════
+//  PAGE 4: การประเมินราคา
+// ═══════════════════════════════════════════
+let valFilter = 'all';
+let valSelectedId = null;
+
+// สถานะทรัพย์ในการประเมินราคา
+// คำนวณจาก lastValuationDate + 1 ปี และ valuationSentDate
+// Priority: sent → done → alert → overdue → no-data
+function getValStatusKey(r) {
+  const lastDateRaw  = r.lastValuationDate || '';
+  const sentDateRaw  = r.valuationSentDate  || '';
+  const lastDate = lastDateRaw ? new Date(parseDateStr(lastDateRaw)) : null;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // ถ้ามี lastValuationDate → คำนวณ daysLeft ก่อน
+  let daysLeft = null;
+  if (lastDate && !isNaN(lastDate)) {
+    const nextDue = new Date(lastDate);
+    nextDue.setFullYear(nextDue.getFullYear() + 1);
+    daysLeft = Math.ceil((nextDue - today) / (1000*60*60*24));
+  }
+
+  // ส่งแล้ว รอผล — มี valuationSentDate กรอกไว้
+  // (แสดงเฉพาะเมื่อยังไม่ถึงรอบ หรืออยู่ใน window 45 วัน)
+  if (sentDateRaw) return 'sent';
+
+  if (daysLeft === null) return 'no-data';
+  if (daysLeft <= 0)   return 'overdue';   // เกินกำหนดแล้ว — ทำความสะอาดไม่ทัน
+  if (daysLeft <= 45)  return 'alert';     // ใน 45 วัน — แจ้งเตือน
+  return 'done';                           // ประเมินแล้ว ยังไม่ถึงรอบ
+}
+
+function getValDueDate(r) {
+  const lastDateRaw = r.lastValuationDate || r.lastValDate || '';
+  if (!lastDateRaw) return null;
+  const d = new Date(parseDateStr(lastDateRaw));
+  if (isNaN(d)) return null;
+  d.setFullYear(d.getFullYear() + 1);
+  return d;
+}
+
+function getValDaysLeft(r) {
+  const due = getValDueDate(r);
+  if (!due) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.ceil((due - today) / (1000*60*60*24));
+}
+
+function renderValPage() {
+  renderValKPIs();
+  renderValList();
+}
+
+function renderValKPIs() {
+  if (!allData.length) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  let upcoming = 0, overdue = 0, done = 0;
+  allData.forEach(r => {
+    const sk = getValStatusKey(r);
+    if (sk === 'alert') upcoming++;
+    else if (sk === 'overdue') overdue++;
+    else if (sk === 'done' || sk === 'sent') done++;
+  });
+
+  document.getElementById('vkTotal').textContent    = allData.length;
+  document.getElementById('vkUpcoming').textContent = upcoming;
+  document.getElementById('vkUpcomingSub').textContent = upcoming > 0 ? 'ควรเตรียมทำความสะอาด' : 'ไม่มีรายการเร่งด่วน';
+  document.getElementById('vkOverdue').textContent  = overdue;
+  document.getElementById('vkDone').textContent     = done;
+}
+
+function setValFilter(f) {
+  valFilter = f;
+  ['all','alert','overdue','sent','done'].forEach(k => {
+    document.getElementById('vchip-' + k)?.classList.toggle('active', k === f);
+  });
+  renderValList();
+}
+
+const VAL_STATUS_COLOR = {
+  alert:   '#d29922',
+  overdue: '#f85149',
+  sent:    '#58a6ff',
+  done:    '#3fb950',
+  'no-data': '#8b949e',
+};
+
+const VAL_STATUS_BADGE = {
+  alert:    '<span class="badge wait">⚠️ ใกล้ครบรอบ</span>',
+  overdue:  '<span class="badge overdue">🔴 เกินกำหนด</span>',
+  sent:     '<span class="badge sent">📤 ส่งแล้ว รอผล</span>',
+  done:     '<span class="badge done">✅ ประเมินแล้ว</span>',
+  'no-data':'<span class="badge" style="background:rgba(139,148,158,.1);color:var(--text-muted);">— ไม่มีข้อมูล</span>',
+};
+
+function renderValList() {
+  const q = (document.getElementById('valSearch')?.value || '').toLowerCase().trim();
+  const container = document.getElementById('valList');
+  if (!allData.length) {
+    container.innerHTML = '<div class="hist-empty" style="padding:32px;"><div class="ei">📂</div><div class="et">โหลดข้อมูลก่อน</div></div>';
+    return;
+  }
+
+  let assets = allData.filter(r => {
+    const sk = getValStatusKey(r);
+    if (valFilter === 'alert')   return sk === 'alert';
+    if (valFilter === 'overdue') return sk === 'overdue';
+    if (valFilter === 'sent')    return sk === 'sent';
+    if (valFilter === 'done')    return sk === 'done';
+    return true;
+  });
+
+  if (q) assets = assets.filter(r =>
+    r.id.toLowerCase().includes(q) || (r.province||'').toLowerCase().includes(q)
+  );
+
+  // เรียงลำดับ: alert (น้อยวันก่อน) → overdue → sent → done → no-data
+  const ORDER = { alert:0, overdue:1, sent:2, done:3, 'no-data':4 };
+  assets.sort((a, b) => {
+    const sa = getValStatusKey(a), sb = getValStatusKey(b);
+    if (ORDER[sa] !== ORDER[sb]) return ORDER[sa] - ORDER[sb];
+    // ถ้า alert เหมือนกัน เรียงจากน้อยวันก่อน
+    if (sa === 'alert') return (getValDaysLeft(a)||999) - (getValDaysLeft(b)||999);
+    return 0;
+  });
+
+  if (!assets.length) {
+    container.innerHTML = '<div class="hist-empty" style="padding:24px;"><div class="ei">🔍</div><div class="et">ไม่พบรายการ</div></div>';
+    return;
+  }
+
+  container.innerHTML = assets.map(r => {
+    const sk = getValStatusKey(r);
+    const daysLeft = getValDaysLeft(r);
+    const due = getValDueDate(r);
+    const color = VAL_STATUS_COLOR[sk] || 'var(--text-muted)';
+    const daysStr = daysLeft === null ? '—'
+      : daysLeft <= 0  ? `เกิน ${Math.abs(daysLeft)} วัน`
+      : `อีก ${daysLeft} วัน`;
+    const cleanStatus = (() => { const {statusKey} = getCleanStatusKey(r); return statusKey; })();
+    const cleanDot = cleanStatus === 'done' ? '🧹' : cleanStatus === 'na' ? '' : '⚠️';
+    return `
+      <div class="val-list-item ${valSelectedId === r.id ? 'selected' : ''}" onclick="selectValAsset('${r.id}')">
+        <div class="vli-dot" style="background:${color};"></div>
+        <div style="flex:1;min-width:0;">
+          <div class="vli-code">${r.id}</div>
+          <div class="vli-sub">${r.province||'-'} · ${r.type||'-'}</div>
+          <div style="margin-top:4px;">${VAL_STATUS_BADGE[sk]||''} ${cleanDot ? `<span style="font-size:11px;">${cleanDot}</span>` : ''}</div>
+        </div>
+        <div class="vli-days" style="color:${color};text-align:right;">
+          ${daysStr}<br>
+          ${due ? `<span style="font-size:10px;color:var(--text-muted);font-weight:400;">${fmtDate(due)}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function selectValAsset(id) {
+  valSelectedId = id;
+  renderValList();
+  renderValDetail(id);
+}
+
+function renderValDetail(id) {
+  const r = allData.find(d => d.id === id);
+  const detail = document.getElementById('valDetail');
+  if (!r) return;
+
+  const sk = getValStatusKey(r);
+  const due = getValDueDate(r);
+  const daysLeft = getValDaysLeft(r);
+  const lastDateRaw = r.lastValuationDate || r.lastValDate || '';
+  const lastDate = lastDateRaw ? new Date(parseDateStr(lastDateRaw)) : null;
+  const { statusKey: cleanKey } = getCleanStatusKey(r);
+
+  // ── แบนเนอร์แจ้งเตือน ──
+  let bannerHTML = '';
+  if (sk === 'alert' && daysLeft !== null) {
+    const cleanDeadline = new Date(due); cleanDeadline.setDate(cleanDeadline.getDate() - 30);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const daysToClean = Math.ceil((cleanDeadline - today) / (1000*60*60*24));
+    const isCleanDone = cleanKey === 'done';
+    if (!isCleanDone) {
+      const urgColor = daysToClean <= 0 ? 'var(--danger)' : 'var(--warning)';
+      const urgMsg   = daysToClean <= 0
+        ? `เลยกำหนดทำความสะอาดมาแล้ว ${Math.abs(daysToClean)} วัน — ควรสั่งงานทันที`
+        : `ควรทำความสะอาดภายใน ${daysToClean} วัน (ก่อน ${fmtDate(cleanDeadline)})`;
+      bannerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;
+          background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.35);
+          border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+          <span style="font-size:18px;">🧹</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:${urgColor};">ควรทำความสะอาดก่อนส่งประเมิน</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${urgMsg}</div>
+          </div>
+        </div>`;
+    }
+  }
+
+  // ── Timeline items ──
+  // คำนวณรอบก่อนหน้า (สมมติ 2 ปีย้อนหลัง)
+  let tlRows = '';
+
+  if (lastDate && !isNaN(lastDate)) {
+    // รอบก่อนหน้า (lastDate - 1 ปี)
+    const prevDue = new Date(lastDate); prevDue.setFullYear(prevDue.getFullYear() - 1);
+    tlRows += `
+      <div class="vtl-row done">
+        <div class="vtl-date">${fmtDate(prevDue)}</div>
+        <div class="vtl-title">ประเมินราคาประจำปี (รอบก่อนหน้า)</div>
+        <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
+          <span class="badge done">✅ ประเมินแล้ว</span>
+        </div>
+      </div>`;
+
+    // รอบล่าสุด
+    tlRows += `
+      <div class="vtl-row done">
+        <div class="vtl-date">${fmtDate(lastDate)}</div>
+        <div class="vtl-title">ประเมินราคาล่าสุด</div>
+        <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
+          <span class="badge done">✅ ประเมินแล้ว</span>
+        </div>
+      </div>`;
+  }
+
+  // ── ส่วนอนาคต ──
+  if (due) {
+    const cleanDeadline = new Date(due); cleanDeadline.setDate(cleanDeadline.getDate() - 30);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const isCleanDone = cleanKey === 'done';
+
+    // กำหนดทำความสะอาด
+    if (sk === 'alert' || sk === 'sent') {
+      const daysToClean = Math.ceil((cleanDeadline - today) / (1000*60*60*24));
+      const cleanColor  = isCleanDone ? 'var(--success)' : daysToClean <= 0 ? 'var(--danger)' : 'var(--warning)';
+      const cleanCls    = isCleanDone ? 'done' : daysToClean <= 0 ? 'overdue' : 'upcoming';
+      tlRows += `
+        <div class="vtl-row ${cleanCls}">
+          <div class="vtl-date" style="color:${cleanColor};">${fmtDate(cleanDeadline)} — ควรทำความสะอาดก่อนวันนี้</div>
+          <div class="vtl-title" style="color:${cleanColor};">🧹 ทำความสะอาดก่อนส่งประเมิน</div>
+          <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
+            ${isCleanDone
+              ? '<span class="cbadge clean">✅ ทำแล้ว</span>'
+              : daysToClean <= 0
+                ? '<span class="cbadge dirty">❌ ยังไม่ทำ — เลยกำหนดแล้ว</span>'
+                : `<span class="cbadge dirty">⚠️ ยังไม่ทำ — อีก ${daysToClean} วัน</span>`}
+          </div>
+        </div>`;
+    }
+
+    // วันส่งประเมิน (ถ้ามี)
+    if (sk === 'sent' && sentDate && !isNaN(sentDate)) {
+      tlRows += `
+        <div class="vtl-row sent">
+          <div class="vtl-date">${fmtDate(sentDate)}</div>
+          <div class="vtl-title">📤 ส่งคำสั่งให้ผู้ประเมิน</div>
+          <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
+            <span class="badge sent">📤 ส่งแล้ว รอผล</span>
+          </div>
+        </div>`;
+    }
+
+    // วันครบรอบประเมิน
+    const dueCls = sk === 'overdue' ? 'overdue' : sk === 'alert' ? 'upcoming' : sk === 'sent' ? 'sent' : 'future';
+    const dueColor = sk === 'overdue' ? 'var(--danger)' : sk === 'alert' ? 'var(--warning)' : sk === 'sent' ? 'var(--accent)' : 'var(--text-muted)';
+    const dueDaysStr = daysLeft === null ? '' : daysLeft <= 0 ? ` — เกินมาแล้ว ${Math.abs(daysLeft)} วัน` : ` — อีก ${daysLeft} วัน`;
+    tlRows += `
+      <div class="vtl-row ${dueCls}">
+        <div class="vtl-date" style="color:${dueColor};">${fmtDate(due)}${dueDaysStr}</div>
+        <div class="vtl-title" style="color:${dueColor};">📋 ครบรอบส่งประเมินราคา</div>
+        <div class="vtl-sub" style="display:flex;gap:6px;margin-top:3px;">
+          ${VAL_STATUS_BADGE[sk]||''}
+        </div>
+      </div>`;
+
+    // รอบถัดไป (ถัดจาก due อีก 1 ปี)
+    const nextDue2 = new Date(due); nextDue2.setFullYear(nextDue2.getFullYear() + 1);
+    tlRows += `
+      <div class="vtl-row future">
+        <div class="vtl-date">${fmtDate(nextDue2)}</div>
+        <div class="vtl-title" style="color:var(--text-muted);">📋 รอบประเมินราคาถัดไป (ประมาณการ)</div>
+      </div>`;
+  }
+
+  if (!tlRows) {
+    tlRows = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">
+      ไม่มีข้อมูลวันประเมิน<br><span style="font-size:11px;">กรุณาเพิ่มคอลัมน์ lastValuationDate ใน Sheet ทรัพย์ NPA</span>
+    </div>`;
+  }
+
+  // ── Stat boxes ──
+  const sentDate = r.valuationSentDate ? new Date(parseDateStr(r.valuationSentDate)) : null;
+  const statBoxes = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div class="det-box">
+        <div class="lbl">ประเมินราคาล่าสุด</div>
+        <div class="val">${lastDate && !isNaN(lastDate) ? fmtDate(lastDate) : '—'}</div>
+      </div>
+      <div class="det-box">
+        <div class="lbl">ครบรอบประเมินถัดไป</div>
+        <div class="val" style="color:${daysLeft !== null && daysLeft <= 45 && daysLeft > 0 ? 'var(--warning)' : daysLeft !== null && daysLeft <= 0 ? 'var(--danger)' : 'var(--text)'};">
+          ${due ? fmtDate(due) : '—'}
+        </div>
+      </div>
+      <div class="det-box">
+        <div class="lbl">วันส่งประเมิน</div>
+        <div class="val">${sentDate && !isNaN(sentDate) ? fmtDate(sentDate) : '—'}</div>
+      </div>
+      <div class="det-box">
+        <div class="lbl">สถานะการประเมิน</div>
+        <div class="val">${VAL_STATUS_BADGE[sk]||'—'}</div>
+      </div>
+      <div class="det-box" style="grid-column:1/-1;">
+        <div class="lbl">สถานะทำความสะอาด</div>
+        <div class="val">
+          ${cleanKey === 'done' ? '<span class="cbadge clean">✅ ทำแล้ว</span>'
+            : cleanKey === 'na' ? '<span style="font-size:12px;color:var(--text-muted);">ไม่ต้องทำ</span>'
+            : cleanKey === 'ordered' ? '<span class="cbadge ordered">📋 สั่งงานแล้ว</span>'
+            : '<span class="cbadge dirty">⚠️ ยังไม่ทำ</span>'}
+        </div>
+      </div>
+    </div>`;
+
+  detail.innerHTML = `
+    <div>
+      ${bannerHTML}
+      <div class="hd-code" style="margin-bottom:2px;">${r.id}</div>
+      <div class="hd-name" style="margin-bottom:14px;">${r.name||''} · ${r.province||'-'}</div>
+      ${statBoxes}
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;letter-spacing:.5px;">TIMELINE การประเมินราคา</div>
+      <div class="val-tl">${tlRows}</div>
+    </div>`;
+}
+
 // Hook into renderAll to also refresh sidebar pages if active
 const _origRenderAll = renderAll;
 renderAll = function() {
@@ -3739,6 +4203,7 @@ renderAll = function() {
   const activePage = document.querySelector('.page-view.active')?.id;
   if (activePage === 'page-history') renderHistPage();
   if (activePage === 'page-timeline') renderTLPills();
+  if (activePage === 'page-valuation') renderValPage();
 };
 
 </script>
