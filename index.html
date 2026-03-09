@@ -2215,7 +2215,6 @@ function mapRow(row) {
     lastValuationDate:  get('วันประเมินล่าสุด','lastvaluationdate','lastvaldate','วันที่ประเมินล่าสุด','ประเมินล่าสุด'),
     valuationSentDate:  get('วันส่งประเมิน','valuationsentdate','วันส่ง','sentdate','ส่งประเมิน'),
     zone:              (() => {
-      // อ่านคอลัมน์ "โซน" จาก Sheet ตรงๆ ไม่แปลงค่า
       for (const rk of Object.keys(row)) {
         if (rk.replace(/\s/g,'').toLowerCase() === 'โซน') {
           return (row[rk]||'').replace(/\s+/g,' ').trim();
@@ -3554,7 +3553,10 @@ function getCleanStatusKey(r) {
     return { ...r, statusKey: 'na' };
   }
 
-  // ดูจาก CleaningWO เท่านั้น (ตัด Fallback Sheet หลักออก)
+  // สั่งงานแล้ว รอทำ — ดูจากคอลัมน์ "วันออก WO ทำความสะอาด" ใน Sheet ทรัพย์ NPA เท่านั้น
+  const hasWODate = !!(r.cleanWODate && r.cleanWODate.trim());
+
+  // ดูจาก CleaningWO สำหรับ done / needs-clean เท่านั้น
   const woRows = cleaningWOData.filter(w =>
     cleaningItemsData.some(i => i.wo_number === w.wo_number && i.asset_id === r.id)
   );
@@ -3563,25 +3565,24 @@ function getCleanStatusKey(r) {
     woRows.sort((a, b) => new Date(parseDateStr(b.clean_date || b.wo_date)) - new Date(parseDateStr(a.clean_date || a.wo_date)));
     const latest = woRows[0];
 
-    // ถ้า done แต่ใกล้ครบรอบประเมิน (30-45 วัน) และไม่มี WO ใหม่ → "ควรทำความสะอาด"
     if (latest.status === 'done') {
       const valDue = getValDueDate(r);
       if (valDue) {
         const today = new Date(); today.setHours(0,0,0,0);
         const daysToVal = Math.ceil((valDue - today) / (1000*60*60*24));
-        // อยู่ใน window 1-45 วัน และไม่มี WO ที่ ordered/waiting อยู่
         const hasActiveWO = woRows.some(w => w.status === 'ordered' || w.status === 'waiting');
         if (daysToVal > 0 && daysToVal <= 45 && !hasActiveWO) {
-          return { ...r, statusKey: 'needs-clean' }; // ควรทำความสะอาดก่อนประเมิน
+          return { ...r, statusKey: 'needs-clean' };
         }
       }
       return { ...r, statusKey: 'done' };
     }
-    if (latest.status === 'ordered') return { ...r, statusKey: 'ordered' };
-    return { ...r, statusKey: 'waiting' };
   }
 
-  // ไม่มีข้อมูลใน CleaningWO เลย → ยังไม่เคยทำ
+  // สั่งงานแล้ว รอทำ — มีวันออก WO ใน Sheet ทรัพย์ NPA
+  if (hasWODate) return { ...r, statusKey: 'ordered' };
+
+  // ไม่มีข้อมูลใดเลย → ยังไม่เคยทำ
   return { ...r, statusKey: 'never' };
 }
 
