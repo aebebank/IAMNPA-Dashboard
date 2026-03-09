@@ -928,7 +928,7 @@
   .zp-clear.show { display: inline-block; }
 
     /* ═══ PAGE: การประเมินราคา ═══ */
-  .val-panel { display: flex; flex-direction: column; }
+  .val-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
   /* ── Header bar ── */
   .val-header {
@@ -1041,7 +1041,7 @@
 
   /* ── Right detail panel ── */
   .val-detail-panel {
-    flex: 1; overflow-y: auto; background: var(--bg);
+    flex: 1; overflow-y: auto; background: var(--bg); min-height: 0;
   }
   .val-detail-empty {
     flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -2035,6 +2035,8 @@ async function _doLoadAllSheets() {
     // Tab 1 — ทรัพย์ NPA (บังคับ)
     const npaData = await fetchSheet(sheetId, SHEET_TABS.npa);
     if (!npaData.length) throw new Error(`ไม่พบข้อมูลใน tab "${SHEET_TABS.npa}"`);
+    // DEBUG: แสดงชื่อ column ทั้งหมดจาก row แรก
+    console.log('[NPA Columns]', Object.keys(npaData[0]));
 
     // Tab 2 — สัญญาดูแลทรัพย์
     try {
@@ -2225,8 +2227,31 @@ function mapRow(row) {
 // ═══════════════════════════════════════════
 //  PROCESS DATA
 // ═══════════════════════════════════════════
+function debugZones() {
+  const raw = allData.map(r => r.zone).filter(Boolean);
+  const counts = {};
+  raw.forEach(z => counts[z] = (counts[z]||0) + 1);
+  console.log('[Zone Debug] unique zones:', Object.keys(counts).length);
+  Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([z,c]) => {
+    console.log(`  "${z}" (${c} ทรัพย์) — charCodes:`, [...z].map(c=>c.charCodeAt(0)).join(','));
+  });
+}
+
+function debugColumns() {
+  if (!allData.length) return;
+  // แสดง raw column keys จาก Sheet row แรก
+  console.log('[Column Debug] ไม่พบ zone — ชื่อ column ทั้งหมดใน Sheet:');
+  // ดึง raw keys จาก window._rawSheetData ถ้ามี
+  if (window._rawSheetData && window._rawSheetData.length) {
+    Object.keys(window._rawSheetData[0]).forEach(k => {
+      console.log('  col:', JSON.stringify(k), '— charCodes:', [...k].map(c=>c.charCodeAt(0)).join(','));
+    });
+  }
+}
+
 function processData(raw) {
   allData = raw.map(mapRow).filter(r => r.id || r.name);
+  debugZones();
   if (allData.length === 0) return alert('ไม่พบข้อมูล กรุณาตรวจสอบ CSV');
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('dashboard').style.display = 'flex';
