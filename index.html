@@ -541,6 +541,7 @@
   }
   .page-view { display: none; }
   .page-view.active { display: block; }
+  #page-valuation.active { display: flex; flex-direction: column; }
 
   /* ══════════════════════════════════════════
      PAGE 2: ประวัติการทำความสะอาด (Mixed Panel)
@@ -902,8 +903,29 @@
   .tl-empty-asset .et { font-size: 14px; font-weight: 600; }
   .tl-empty-asset .es { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
 
-  /* ═══ PAGE: การประเมินราคา ═══ */
-  .val-panel { display: flex; flex-direction: column; }
+  /* ═══ Zone / Province Filter (shared across panels) ═══ */
+  .zp-filter {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    border-bottom: 1px solid var(--border); background: var(--surface);
+    flex-wrap: wrap;
+  }
+  .zp-select {
+    padding: 5px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); cursor: pointer; outline: none;
+    font-family: var(--sans); transition: border-color .15s;
+    max-width: 200px;
+  }
+  .zp-select:focus { border-color: var(--accent); }
+  .zp-select.active { border-color: var(--accent); color: var(--accent); background: rgba(88,166,255,.07); }
+  .zp-label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+  .zp-clear { font-size: 11px; color: var(--accent); cursor: pointer; margin-left: 4px;
+    padding: 3px 8px; border-radius: 5px; border: 1px solid rgba(88,166,255,.3);
+    background: rgba(88,166,255,.07); font-weight: 600; display: none; }
+  .zp-clear.show { display: inline-block; }
+
+    /* ═══ PAGE: การประเมินราคา ═══ */
+  .val-panel { display: flex; flex-direction: column; overflow: hidden; }
 
   /* ── Header bar ── */
   .val-header {
@@ -968,12 +990,12 @@
   .val-chip.c-green.active  { background: var(--success); border-color: var(--success); }
 
   /* ── Body layout ── */
-  .val-body { display: flex; min-height: 520px; }
+  .val-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
   /* ── Left list panel ── */
   .val-list-panel {
     width: 300px; flex-shrink: 0; border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; background: var(--surface); min-height: 520px;
+    display: flex; flex-direction: column; background: var(--surface); overflow: hidden;
   }
   .val-search-wrap {
     padding: 10px 12px; border-bottom: 1px solid var(--border);
@@ -1013,7 +1035,7 @@
 
   /* ── Right detail panel ── */
   .val-detail-panel {
-    flex: 1; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; min-height: 520px;
+    flex: 1; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column;
   }
   .val-detail-empty {
     flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -1652,6 +1674,7 @@
           <div class="hist-body">
             <!-- Left: asset list -->
             <div class="hist-list">
+              <div id="zpFilter-history-wrap"></div>
               <div class="hist-list-search">
                 <input id="histAssetSearch" placeholder="🔎 รหัสทรัพย์..." oninput="renderHistList()">
               </div>
@@ -1700,6 +1723,7 @@
           <div style="display:flex;min-height:480px;">
             <!-- Left: asset list -->
             <div style="width:260px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;">
+              <div id="zpFilter-timeline-wrap"></div>
               <div style="padding:10px 12px;border-bottom:1px solid var(--border);">
                 <input id="tlSearch" placeholder="🔎 ค้นหารหัสทรัพย์..." oninput="renderTLPills()"
                   style="width:100%;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
@@ -1729,8 +1753,8 @@
     <!-- ═══════════════════════════════════════════
          PAGE 4: การประเมินราคา
     ═══════════════════════════════════════════ -->
-    <div class="page-view" id="page-valuation">
-      <div class="val-panel">
+    <div class="page-view" id="page-valuation" style="height:calc(100vh - 52px);">
+      <div class="val-panel" style="height:100%;">
 
         <!-- Header + KPI -->
         <div class="val-header">
@@ -1781,8 +1805,9 @@
 
           <!-- LEFT: list -->
           <div class="val-list-panel">
+            <div id="zpFilter-valuation-wrap"></div>
             <div class="val-search-wrap">
-              <input id="valSearch" placeholder="ค้นหารหัสทรัพย์ / จังหวัด..." oninput="renderValList()">
+              <input id="valSearch" placeholder="ค้นหารหัสทรัพย์..." oninput="renderValList()">
             </div>
             <div id="valList" style="overflow-y:auto;flex:1;">
               <div class="val-detail-empty">
@@ -2181,6 +2206,7 @@ function mapRow(row) {
     contractType:get('ประเภทสัญญา','contracttype','งาน','service'),
     lastValuationDate:  get('วันประเมินล่าสุด','lastvaluationdate','lastvaldate','วันที่ประเมินล่าสุด','ประเมินล่าสุด'),
     valuationSentDate:  get('วันส่งประเมิน','valuationsentdate','วันส่ง','sentdate','ส่งประเมิน'),
+    zone:              get('โซน','zone','เขต'),
   };
 }
 
@@ -2218,6 +2244,102 @@ const REGION_MAP = {
   'ภาคตะวันตก': ['ตาก','กาญจนบุรี','ราชบุรี','เพชรบุรี','ประจวบคีรีขันธ์'],
   'ภาคใต้': ['สุราษฎร์ธานี','นครศรีธรรมราช','สงขลา','ตรัง','พัทลุง','สตูล','ปัตตานี','ยะลา','นราธิวาส','กระบี่','ภูเก็ต','พังงา','ระนอง','ชุมพร'],
 };
+
+// ═══════════════════════════════════════════
+//  ZONE / PROVINCE FILTER (shared across panels)
+//  โซนอ่านจากคอลัมน์ r.zone ใน Sheet ทรัพย์ NPA
+// ═══════════════════════════════════════════
+const panelFilterState = {
+  history:  { zone: '', province: '' },
+  timeline: { zone: '', province: '' },
+  valuation:{ zone: '', province: '' },
+};
+
+// ดึง zone list จากข้อมูลจริง (sort ตามตัวเลข prefix เช่น "1 - ...")
+function getAvailableZones() {
+  const zones = [...new Set(allData.map(r => r.zone).filter(Boolean))];
+  zones.sort((a, b) => {
+    const na = parseInt(a), nb = parseInt(b);
+    return isNaN(na) || isNaN(nb) ? a.localeCompare(b) : na - nb;
+  });
+  return zones;
+}
+
+// ดึงจังหวัดที่มีในโซนนั้นจากข้อมูลจริง
+function getZoneProvinces(zone) {
+  if (!zone) return [];
+  const provs = [...new Set(allData.filter(r => r.zone === zone).map(r => r.province).filter(Boolean))];
+  provs.sort((a, b) => a.localeCompare(b, 'th'));
+  return provs;
+}
+
+// กรองข้อมูลตาม zone+province
+function applyZPFilter(data, panelKey) {
+  const { zone, province } = panelFilterState[panelKey];
+  if (!zone && !province) return data;
+  return data.filter(r => {
+    if (province) return r.province === province;
+    if (zone) return r.zone === zone;
+    return true;
+  });
+}
+
+// สร้าง HTML ของ zone/province dropdowns
+function renderZPFilterHTML(panelKey) {
+  const { zone, province } = panelFilterState[panelKey];
+  const zones = getAvailableZones();
+  const provinces = getZoneProvinces(zone);
+  const hasFilter = zone || province;
+
+  const zoneOpts = zones.map(z =>
+    `<option value="${z}" ${zone === z ? 'selected' : ''}>${z}</option>`
+  ).join('');
+
+  const provOpts = provinces.map(p =>
+    `<option value="${p}" ${province === p ? 'selected' : ''}>${p}</option>`
+  ).join('');
+
+  return `
+    <div class="zp-filter" id="zpFilter-${panelKey}">
+      <span class="zp-label">โซน:</span>
+      <select class="zp-select ${zone ? 'active' : ''}" id="zpZone-${panelKey}"
+        onchange="onZoneChange('${panelKey}', this.value)">
+        <option value="">— ทั้งหมด —</option>
+        ${zoneOpts}
+      </select>
+      <span class="zp-label" style="margin-left:4px;">จังหวัด:</span>
+      <select class="zp-select ${province ? 'active' : ''}" id="zpProv-${panelKey}"
+        onchange="onProvChange('${panelKey}', this.value)"
+        ${!zone ? 'disabled style="opacity:.45;cursor:not-allowed;"' : ''}>
+        <option value="">— ทั้งหมด —</option>
+        ${provOpts}
+      </select>
+      <span class="zp-clear ${hasFilter ? 'show' : ''}" id="zpClear-${panelKey}"
+        onclick="clearZPFilter('${panelKey}')">✕ ล้าง</span>
+    </div>`;
+}
+
+function onZoneChange(panelKey, zone) {
+  panelFilterState[panelKey].zone = zone;
+  panelFilterState[panelKey].province = '';
+  triggerPanelRender(panelKey);
+}
+
+function onProvChange(panelKey, province) {
+  panelFilterState[panelKey].province = province;
+  triggerPanelRender(panelKey);
+}
+
+function clearZPFilter(panelKey) {
+  panelFilterState[panelKey] = { zone: '', province: '' };
+  triggerPanelRender(panelKey);
+}
+
+function triggerPanelRender(panelKey) {
+  if (panelKey === 'history')   renderHistList();
+  if (panelKey === 'timeline')  renderTLPills();
+  if (panelKey === 'valuation') renderValList();
+}
 
 function getFilteredData() {
   if (!activeRegion) return allData;
@@ -3480,6 +3602,9 @@ function setHistFilter(f) {
 }
 
 function renderHistList() {
+  // inject zone/province filter UI
+  const zpWrap = document.getElementById('zpFilter-history-wrap');
+  if (zpWrap) zpWrap.outerHTML = renderZPFilterHTML('history');
   const q = (document.getElementById('histAssetSearch')?.value || '').toLowerCase().trim();
   const container = document.getElementById('histListItems');
   if (!allData.length) {
@@ -3498,6 +3623,11 @@ function renderHistList() {
       return r.statusKey === histFilter;
     });
   }
+
+  // filter zone/province (จาก r.zone ใน Sheet)
+  const zpH = panelFilterState['history'];
+  if (zpH.province) rows = rows.filter(r => r.province === zpH.province);
+  else if (zpH.zone) rows = rows.filter(r => r.zone === zpH.zone);
 
   // filter search
   if (q) rows = rows.filter(r => r.id.toLowerCase().includes(q));
@@ -3793,6 +3923,9 @@ function getWOCountForAsset(assetId) {
 let tlSelectedId = null;
 
 function renderTLPills() {
+  // inject zone/province filter UI
+  const zpWrapTL = document.getElementById('zpFilter-timeline-wrap');
+  if (zpWrapTL) zpWrapTL.outerHTML = renderZPFilterHTML('timeline');
   const q = (document.getElementById('tlSearch')?.value || '').toLowerCase().trim();
   const listContainer = document.getElementById('tlPills');
   if (!allData.length) {
@@ -3805,6 +3938,10 @@ function renderTLPills() {
   let assets = allData.filter(r =>
     assetIdsWithHistory.has(r.id)
   );
+  // filter zone/province (จาก r.zone ใน Sheet)
+  const zpTL = panelFilterState['timeline'];
+  if (zpTL.province) assets = assets.filter(r => r.province === zpTL.province);
+  else if (zpTL.zone) assets = assets.filter(r => r.zone === zpTL.zone);
   if (q) assets = assets.filter(r => r.id.toLowerCase().includes(q) || (r.province||'').toLowerCase().includes(q));
 
   if (!assets.length) {
@@ -4100,6 +4237,9 @@ const VAL_STATUS_BADGE = {
 };
 
 function renderValList() {
+  // inject zone/province filter UI
+  const zpWrapV = document.getElementById('zpFilter-valuation-wrap');
+  if (zpWrapV) zpWrapV.outerHTML = renderZPFilterHTML('valuation');
   const q = (document.getElementById('valSearch')?.value || '').toLowerCase().trim();
   const container = document.getElementById('valList');
   if (!allData.length) {
@@ -4115,6 +4255,10 @@ function renderValList() {
     if (valFilter === 'done')    return sk === 'done';
     return true;
   });
+  // filter zone/province (จาก r.zone ใน Sheet)
+  const zpV = panelFilterState['valuation'];
+  if (zpV.province) assets = assets.filter(r => r.province === zpV.province);
+  else if (zpV.zone) assets = assets.filter(r => r.zone === zpV.zone);
 
   if (q) assets = assets.filter(r =>
     r.id.toLowerCase().includes(q) || (r.province||'').toLowerCase().includes(q)
@@ -4125,9 +4269,12 @@ function renderValList() {
   assets.sort((a, b) => {
     const sa = getValStatusKey(a), sb = getValStatusKey(b);
     if (ORDER[sa] !== ORDER[sb]) return ORDER[sa] - ORDER[sb];
-    // ถ้า alert เหมือนกัน เรียงจากน้อยวันก่อน
-    if (sa === 'alert') return (getValDaysLeft(a)||999) - (getValDaysLeft(b)||999);
-    return 0;
+    // ทุก group: เรียงจากวันครบรอบเร็วที่สุดก่อน (daysLeft น้อยก่อน)
+    const da = getValDaysLeft(a), db = getValDaysLeft(b);
+    if (da === null && db === null) return 0;
+    if (da === null) return 1;
+    if (db === null) return -1;
+    return da - db;
   });
 
   if (!assets.length) {
