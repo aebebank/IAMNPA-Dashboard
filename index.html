@@ -2226,7 +2226,13 @@ function mapRow(row) {
         '3':'3 - ภาคกลาง','4':'4 - ภาคตะวันตก','5':'5 - ภาคเหนือ',
         '6':'6 - ภาคตะวันออกเฉียงเหนือ','7':'7 - ภาคตะวันออก','8':'8 - ภาคใต้',
       };
-      return ZONE_NAME[val] || val;
+      // normalize: ถ้า Sheet เก็บแค่ตัวเลข → map เป็นชื่อเต็ม
+      if (ZONE_NAME[val]) return ZONE_NAME[val];
+      // normalize: ถ้า Sheet เก็บชื่อที่มี "โซน X" prefix → แปลงเป็น "X - ชื่อ"
+      const m = val.match(/^โซน\s*(\d)/);
+      if (m && ZONE_NAME[m[1]]) return ZONE_NAME[m[1]];
+      // ถ้าชื่อมี prefix ตัวเลขอยู่แล้ว เช่น "1 - ..." → ใช้เลย
+      return val;
     })(),
   };
 }
