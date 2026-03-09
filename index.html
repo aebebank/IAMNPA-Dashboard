@@ -2284,7 +2284,7 @@ function applyZPFilter(data, panelKey) {
   });
 }
 
-// สร้าง HTML ของ zone/province dropdowns
+// สร้าง HTML ของ zone/province dropdowns — คืน innerHTML ของ wrap
 function renderZPFilterHTML(panelKey) {
   const { zone, province } = panelFilterState[panelKey];
   const zones = getAvailableZones();
@@ -2299,22 +2299,21 @@ function renderZPFilterHTML(panelKey) {
     `<option value="${p}" ${province === p ? 'selected' : ''}>${p}</option>`
   ).join('');
 
-  return `
-    <div class="zp-filter" id="zpFilter-${panelKey}">
+  return `<div class="zp-filter">
       <span class="zp-label">โซน:</span>
-      <select class="zp-select ${zone ? 'active' : ''}" id="zpZone-${panelKey}"
+      <select class="zp-select ${zone ? 'active' : ''}"
         onchange="onZoneChange('${panelKey}', this.value)">
         <option value="">— ทั้งหมด —</option>
         ${zoneOpts}
       </select>
       <span class="zp-label" style="margin-left:4px;">จังหวัด:</span>
-      <select class="zp-select ${province ? 'active' : ''}" id="zpProv-${panelKey}"
+      <select class="zp-select ${province ? 'active' : ''}"
         onchange="onProvChange('${panelKey}', this.value)"
         ${!zone ? 'disabled style="opacity:.45;cursor:not-allowed;"' : ''}>
         <option value="">— ทั้งหมด —</option>
         ${provOpts}
       </select>
-      <span class="zp-clear ${hasFilter ? 'show' : ''}" id="zpClear-${panelKey}"
+      <span class="zp-clear ${hasFilter ? 'show' : ''}"
         onclick="clearZPFilter('${panelKey}')">✕ ล้าง</span>
     </div>`;
 }
@@ -3604,7 +3603,7 @@ function setHistFilter(f) {
 function renderHistList() {
   // inject zone/province filter UI
   const zpWrap = document.getElementById('zpFilter-history-wrap');
-  if (zpWrap) zpWrap.outerHTML = renderZPFilterHTML('history');
+  if (zpWrap) zpWrap.innerHTML = renderZPFilterHTML('history');
   const q = (document.getElementById('histAssetSearch')?.value || '').toLowerCase().trim();
   const container = document.getElementById('histListItems');
   if (!allData.length) {
@@ -3925,7 +3924,7 @@ let tlSelectedId = null;
 function renderTLPills() {
   // inject zone/province filter UI
   const zpWrapTL = document.getElementById('zpFilter-timeline-wrap');
-  if (zpWrapTL) zpWrapTL.outerHTML = renderZPFilterHTML('timeline');
+  if (zpWrapTL) zpWrapTL.innerHTML = renderZPFilterHTML('timeline');
   const q = (document.getElementById('tlSearch')?.value || '').toLowerCase().trim();
   const listContainer = document.getElementById('tlPills');
   if (!allData.length) {
@@ -4239,7 +4238,7 @@ const VAL_STATUS_BADGE = {
 function renderValList() {
   // inject zone/province filter UI
   const zpWrapV = document.getElementById('zpFilter-valuation-wrap');
-  if (zpWrapV) zpWrapV.outerHTML = renderZPFilterHTML('valuation');
+  if (zpWrapV) zpWrapV.innerHTML = renderZPFilterHTML('valuation');
   const q = (document.getElementById('valSearch')?.value || '').toLowerCase().trim();
   const container = document.getElementById('valList');
   if (!allData.length) {
