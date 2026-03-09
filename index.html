@@ -3297,36 +3297,33 @@ function renderQuarterlySummary() {
   const curSurveyPct   = surveyTarget > 0 ? Math.floor(curSurveyDone  / surveyTarget * 100) : 0;
   const prevSurveyPct  = surveyTarget > 0 ? Math.floor(prevSurveyDone / surveyTarget * 100) : 0;
 
-  // ── ทำความสะอาด (นับเฉพาะ Quarter ปัจจุบัน) ──────────────────────────
-  // done = WO ที่มี clean_date ใน currentQ และ status === 'done'
-  // ordered = WO ที่มี wo_date ใน currentQ และ status !== 'done' (ยังรอทำ)
-  const cleanDoneAssetsInQ = new Set(
+  // ── ทำความสะอาด ──────────────────────────────────────────────────────
+  // ใช้ getCleanStatusKey() เป็น source of truth สำหรับ ordered / waiting / na
+  // done = เสร็จแล้ว และ clean_date ของ WO ล่าสุดอยู่ใน currentQ
+  // ordered = สถานะปัจจุบัน 'ordered' (มี WO active อยู่)
+  // waiting = สถานะปัจจุบัน 'waiting' หรือ 'never' (ยังไม่มี WO)
+  // na = ไม่ต้องทำ
+
+  // ทรัพย์ที่ WO ล่าสุดเสร็จใน currentQ
+  const cleanDoneInQSet = new Set(
     cleaningWOData
-      .filter(w => w.status === 'done' && w.clean_date && getQuarterLabel(parseDateStr(w.clean_date)) === currentQ)
-      .flatMap(w => cleaningItemsData.filter(i => i.wo_number === w.wo_number).map(i => i.asset_id))
+      .filter(w => w.status === 'done' && w.clean_date &&
+                   getQuarterLabel(parseDateStr(w.clean_date)) === currentQ)
+      .flatMap(w => cleaningItemsData
+        .filter(i => i.wo_number === w.wo_number)
+        .map(i => i.asset_id))
   );
-  const cleanOrderedAssetsInQ = new Set(
-    cleaningWOData
-      .filter(w => w.status !== 'done' && w.wo_date && getQuarterLabel(parseDateStr(w.wo_date)) === currentQ)
-      .flatMap(w => cleaningItemsData.filter(i => i.wo_number === w.wo_number).map(i => i.asset_id))
-      // ยกเว้นที่เสร็จแล้วใน quarter นี้
-      .filter(id => !cleanDoneAssetsInQ.has(id))
-  );
-  // waiting = ยังไม่มี WO ใน quarter นี้เลย และไม่ใช่ na
-  const cleanNAAssets = new Set(
-    allData.filter(r => {
-      const raw = (r.cleanStatus || '').trim();
-      return raw === 'ไม่ต้องทำความสะอาด' || raw === 'ไม่ต้องทำ';
-    }).map(r => r.id)
-  );
-  const cleanDone    = cleanDoneAssetsInQ.size;
-  const cleanOrdered = cleanOrderedAssetsInQ.size;
-  const cleanNA      = cleanNAAssets.size;
-  const cleanWaiting = allData.filter(r =>
-    !cleanNAAssets.has(r.id) &&
-    !cleanDoneAssetsInQ.has(r.id) &&
-    !cleanOrderedAssetsInQ.has(r.id)
-  ).length;
+
+  // นับสถานะจาก getCleanStatusKey (สถานะปัจจุบัน)
+  const cleanStatusRows = allData.map(r => ({
+    id: r.id,
+    statusKey: getCleanStatusKey(r).statusKey
+  }));
+
+  const cleanDone    = cleanStatusRows.filter(r => r.statusKey === 'done' && cleanDoneInQSet.has(r.id)).length;
+  const cleanOrdered = cleanStatusRows.filter(r => r.statusKey === 'ordered').length;
+  const cleanNA      = cleanStatusRows.filter(r => r.statusKey === 'na').length;
+  const cleanWaiting = cleanStatusRows.filter(r => r.statusKey === 'waiting' || r.statusKey === 'never' || r.statusKey === 'nodata').length;
   const cleanApply   = cleanDone + cleanOrdered;
   const cleanPct     = cleanApply > 0 ? Math.floor(cleanDone / cleanApply * 100) : 0;
 
@@ -3374,21 +3371,16 @@ function renderQuarterlySummary() {
     </div>`;
   };
 
-  // prev quarter cleaning (สำหรับ comparison)
-  const prevCleanDoneSet = new Set(
-    cleaningWOData
-      .filter(w => w.status === 'done' && w.clean_date && getQuarterLabel(parseDateStr(w.clean_date)) === prevQ)
-      .flatMap(w => cleaningItemsData.filter(i => i.wo_number === w.wo_number).map(i => i.asset_id))
-  );
-  const prevCleanOrderedSet = new Set(
-    cleaningWOData
-      .filter(w => w.status !== 'done' && w.wo_date && getQuarterLabel(parseDateStr(w.wo_date)) === prevQ)
-      .flatMap(w => cleaningItemsData.filter(i => i.wo_number === w.wo_number).map(i => i.asset_id))
-      .filter(id => !prevCleanDoneSet.has(id))
-  );
-  const prevCleanDone  = prevCleanDoneSet.size;
-  const prevCleanApply = prevCleanDone + prevCleanOrderedSet.size;
-  const prevCleanPct   = prevCleanApply > 0 ? Math.floor(prevCleanDone / prevCleanApply * 100) : 0;
+   // prev quarter cleaning — นับ "เสร็จใน prevQ" เทียบกับฐานเดียวกับ currentQ
+   const prevCleanDoneInQSet = new Set(
+     cleaningWOData
+       .filter(w => w.status === 'done' && w.clean_date &&
+                    getQuarterLabel(parseDateStr(w.clean_date)) === prevQ)
+       .flatMap(w => cleaningItemsData.filter(i => i.wo_number === w.wo_number).map(i => i.asset_id))
+   );
+   const prevCleanDone  = prevCleanDoneInQSet.size;
+   const prevCleanApply = cleanApply;  // ใช้ฐาน (done+ordered) ของ Q ปัจจุบันเหมือนกัน
+   const prevCleanPct   = prevCleanApply > 0 ? Math.floor(prevCleanDone / prevCleanApply * 100) : 0;
 
   const cleanExtra = `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
