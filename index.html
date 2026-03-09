@@ -934,6 +934,7 @@
     padding: 14px 20px 0;
     background: linear-gradient(180deg, rgba(88,166,255,0.04) 0%, transparent 100%);
     border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
   }
   .val-header-top {
     display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
@@ -978,6 +979,7 @@
     display: flex; align-items: center; gap: 8px; padding: 10px 16px;
     border-bottom: 1px solid var(--border); background: var(--surface2);
     flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 9;
   }
   .val-chip {
     padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
@@ -992,12 +994,13 @@
   .val-chip.c-green.active  { background: var(--success); color: #fff; border-color: var(--success); }
 
   /* ── Body layout ── */
-  .val-body { display: flex; min-height: 0; overflow: visible; }
+  .val-body { display: flex; }
 
   /* ── Left list panel ── */
   .val-list-panel {
     width: 300px; flex-shrink: 0; border-right: 1px solid var(--border);
     display: flex; flex-direction: column; background: var(--surface);
+    position: sticky; top: 0; align-self: flex-start; max-height: 100vh;
   }
   .val-search-wrap {
     padding: 10px 12px; border-bottom: 1px solid var(--border);
@@ -1037,7 +1040,7 @@
 
   /* ── Right detail panel ── */
   .val-detail-panel {
-    flex: 1; background: var(--bg); display: flex; flex-direction: column;
+    flex: 1; background: var(--bg);
   }
   .val-detail-empty {
     flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -1811,7 +1814,7 @@
             <div class="val-search-wrap">
               <input id="valSearch" placeholder="ค้นหารหัสทรัพย์..." oninput="renderValList()">
             </div>
-            <div id="valList" style="overflow-y:auto;max-height:calc(100vh - 340px);min-height:300px;">
+            <div id="valList" style="overflow-y:auto;max-height:calc(100vh - 260px);">
               <div class="val-detail-empty">
                 <div class="dei">📂</div>
                 <div class="det">โหลดข้อมูลก่อน</div>
@@ -2208,7 +2211,13 @@ function mapRow(row) {
     contractType:get('ประเภทสัญญา','contracttype','งาน','service'),
     lastValuationDate:  get('วันประเมินล่าสุด','lastvaluationdate','lastvaldate','วันที่ประเมินล่าสุด','ประเมินล่าสุด'),
     valuationSentDate:  get('วันส่งประเมิน','valuationsentdate','วันส่ง','sentdate','ส่งประเมิน'),
-    zone:              get('โซน','zone','เขต'),
+    zone:              (() => {
+      // exact match คอลัมน์ "โซน" เท่านั้น
+      for (const rk of Object.keys(row)) {
+        if (rk.replace(/\s/g,'').toLowerCase() === 'โซน') return (row[rk]||'').replace(/\s+/g,' ').trim();
+      }
+      return '';
+    })(),
   };
 }
 
