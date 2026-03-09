@@ -2215,24 +2215,13 @@ function mapRow(row) {
     lastValuationDate:  get('วันประเมินล่าสุด','lastvaluationdate','lastvaldate','วันที่ประเมินล่าสุด','ประเมินล่าสุด'),
     valuationSentDate:  get('วันส่งประเมิน','valuationsentdate','วันส่ง','sentdate','ส่งประเมิน'),
     zone:              (() => {
-      // exact match คอลัมน์ "โซน" เท่านั้น
-      let val = '';
+      // อ่านคอลัมน์ "โซน" จาก Sheet ตรงๆ ไม่แปลงค่า
       for (const rk of Object.keys(row)) {
-        if (rk.replace(/\s/g,'').toLowerCase() === 'โซน') { val = (row[rk]||'').replace(/\s+/g,' ').trim(); break; }
+        if (rk.replace(/\s/g,'').toLowerCase() === 'โซน') {
+          return (row[rk]||'').replace(/\s+/g,' ').trim();
+        }
       }
-      // ถ้า Sheet เก็บแค่ตัวเลข 1-8 ให้ map เป็นชื่อเต็ม
-      const ZONE_NAME = {
-        '1':'1 - กรุงเทพและปริมณฑล 1','2':'2 - กรุงเทพและปริมณฑล 2',
-        '3':'3 - ภาคกลาง','4':'4 - ภาคตะวันตก','5':'5 - ภาคเหนือ',
-        '6':'6 - ภาคตะวันออกเฉียงเหนือ','7':'7 - ภาคตะวันออก','8':'8 - ภาคใต้',
-      };
-      // normalize: ถ้า Sheet เก็บแค่ตัวเลข → map เป็นชื่อเต็ม
-      if (ZONE_NAME[val]) return ZONE_NAME[val];
-      // normalize: ถ้า Sheet เก็บชื่อที่มี "โซน X" prefix → แปลงเป็น "X - ชื่อ"
-      const m = val.match(/^โซน\s*(\d)/);
-      if (m && ZONE_NAME[m[1]]) return ZONE_NAME[m[1]];
-      // ถ้าชื่อมี prefix ตัวเลขอยู่แล้ว เช่น "1 - ..." → ใช้เลย
-      return val;
+      return '';
     })(),
   };
 }
