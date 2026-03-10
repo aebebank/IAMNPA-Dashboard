@@ -1888,13 +1888,23 @@ function loadCSV(input) {
 const GS_CLIENT_ID = '490649363384-99c12jqdqjc2mt21tmqqd32vo64lpu27.apps.googleusercontent.com';
 const GS_SCOPE     = 'https://www.googleapis.com/auth/spreadsheets.readonly';
 let   gsAccessToken = null;
+let   gsTokenClient = null;   // สร้างครั้งเดียว reuse ได้
+let   gsPendingLoad = false;  // รอ sign-in แล้วค่อย load
 
 // ── Init Google Sign-In ─────────────────────
 window.addEventListener('load', () => {
   if (typeof google === 'undefined') return;
-  google.accounts.id.initialize({
+
+  // สร้าง token client ครั้งเดียวตอน page load (ต้องสร้างก่อน requestAccessToken)
+  gsTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GS_CLIENT_ID,
-    callback:  onGoogleSignIn,
+    scope:     GS_SCOPE,
+    callback:  () => {},  // placeholder — จะ override ก่อนเรียก requestAccessToken ทุกครั้ง
+  });
+
+  google.accounts.id.initialize({
+    client_id:   GS_CLIENT_ID,
+    callback:    onGoogleSignIn,
     auto_select: false,
   });
   google.accounts.id.renderButton(
@@ -1909,19 +1919,27 @@ window.addEventListener('load', () => {
 function onGoogleSignIn(response) {
   // decode JWT id_token เพื่อดึง profile
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
-  // ขอ access token สำหรับ Sheets API
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: GS_CLIENT_ID,
-    scope:     GS_SCOPE,
-    callback:  (tokenResp) => {
-      if (tokenResp.error) return alert('ขอ access token ไม่สำเร็จ: ' + tokenResp.error);
-      gsAccessToken = tokenResp.access_token;
-      const authState = { name: payload.name, email: payload.email, picture: payload.picture };
-      saveAuth(authState);
-      applyAuthState(authState);
-    }
+  const authState = { name: payload.name, email: payload.email, picture: payload.picture };
+  saveAuth(authState);
+  applyAuthState(authState);
+  // ขอ token ทันทีขณะยังอยู่ใน GSI callback (ยังนับเป็น user gesture บน Safari)
+  _requestTokenThen(() => {
+    if (gsPendingLoad) { gsPendingLoad = false; _doLoadAllSheets(); }
   });
-  client.requestAccessToken();
+}
+
+// ── ขอ access token — เรียกจาก direct click หรือ GSI callback เท่านั้น ──
+// prompt:'' = ไม่แสดง consent popup ซ้ำถ้าเคยอนุญาตแล้ว (แก้ปัญหา popup blocker บน iPad Safari)
+function _requestTokenThen(onSuccess) {
+  gsTokenClient.callback = (tokenResp) => {
+    if (tokenResp.error) {
+      alert('ขอสิทธิ์ไม่สำเร็จ: ' + tokenResp.error);
+      return;
+    }
+    gsAccessToken = tokenResp.access_token;
+    onSuccess();
+  };
+  gsTokenClient.requestAccessToken({ prompt: '' });
 }
 
 function applyAuthState(state) {
@@ -1991,17 +2009,16 @@ async function fetchSheet(sheetId, sheetName = '') {
 // ── Load all 4 sheets ──────────────────────
 async function loadAllGSheets() {
   if (!gsAccessToken) {
-    // ถ้ายังไม่มี token ขอใหม่
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: GS_CLIENT_ID,
-      scope:     GS_SCOPE,
-      callback:  async (tokenResp) => {
-        if (tokenResp.error) return alert('ขอสิทธิ์ไม่สำเร็จ: ' + tokenResp.error);
-        gsAccessToken = tokenResp.access_token;
-        await _doLoadAllSheets();
-      }
-    });
-    client.requestAccessToken();
+    // ยังไม่มี token — ตรวจว่า sign-in แล้วหรือยัง
+    const saved = getSavedAuth();
+    if (!saved) {
+      // ยังไม่ได้ sign-in: set flag แล้วให้ user กดปุ่ม Sign-in ก่อน
+      gsPendingLoad = true;
+      alert('กรุณา Sign in ด้วย Google ก่อน แล้วระบบจะโหลดข้อมูลให้อัตโนมัติ');
+      return;
+    }
+    // sign-in แล้วแต่ token หมดอายุ — ขอ token ใหม่ทันที (ปุ่มนี้คือ direct user gesture)
+    _requestTokenThen(async () => { await _doLoadAllSheets(); });
     return;
   }
   await _doLoadAllSheets();
@@ -2205,7 +2222,7 @@ function mapRow(row) {
     surveyDate:      get('วันนัดรังวัด','surveydate','นัดรังวัด','รังวัด'),
     selfSurveyDate:  get('วันนัดสำรวจด้วยตนเอง','selfsurvedate','สำรวจด้วยตนเอง','นัดสำรวจเอง'),
     workOrderDate:   get('วันออกWork','workorder','workorderdate','วันworkorder','ออกwork'),
-    firstCleanDate:  get('วันทำความสะอาดล่าสุด','วันทำความสะอาดครั้งแรก','firstcleandate','ล่าสุด','ครั้งแรก'),
+    firstCleanDate:  get('วันทำความสะอาดล่าสุด','วันทำความสะอาดครั้งแรก','firstcleandate'),
     cleanWODate:     get('วันออก WO ทำความสะอาด','cleanwodate','WOทำความสะอาด'),
     cleanStatus:     get('สถานะทำความสะอาด','cleanstatus','สถานะความสะอาด'),
     acquired:   get('วันที่รับทรัพย์','รับที่รับทรัพย์','acquired','วันที่','date'),
