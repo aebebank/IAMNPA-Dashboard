@@ -188,6 +188,7 @@
   .row { display: grid; gap: 16px; }
   .row-2 { grid-template-columns: 1fr 1fr; }
   .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .row-alert { grid-template-columns: 1fr 1fr; }
 
   /* ── PANELS ── */
   .panel {
@@ -4721,8 +4722,10 @@ renderAll = function() {
 // ═══════════════════════════════════════════
 //  PAGE 5: ปฏิทินงาน
 // ═══════════════════════════════════════════
-let calView    = 'month';   // 'week' | 'month' | '3month'
-let calCursor  = new Date(); // วันที่ปัจจุบันที่กำลัง view
+//  PAGE 5: ปฏิทินงาน
+// ═══════════════════════════════════════════
+let calView   = 'month';
+let calCursor = new Date();
 
 // ── helpers ─────────────────────────────────
 const TH_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -4730,62 +4733,95 @@ const TH_MONTHS_FULL  = ['มกราคม','กุมภาพันธ์','
 const TH_DAYS_SHORT   = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 
 function beYear(y) { return y + 543; }
-function isoDate(d) { return d.toISOString().split('T')[0]; }
-function sameDay(a, b) { return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function sameDay(a,b) { return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
 
-// ── build events from allData ────────────────
+// ── build events ─────────────────────────────
 function buildCalEvents() {
-  const today = new Date();
   const events = [];
-
   allData.forEach(r => {
-    // นัดรังวัด
-    if (r.surveyDate) events.push({ date: parseDateStr(r.surveyDate), type:'survey', label:`${r.id} นัดรังวัด`, sub: r.province||'' });
-    // สำรวจเอง
-    if (r.selfSurveyDate) events.push({ date: parseDateStr(r.selfSurveyDate), type:'survey', label:`${r.id} สำรวจเอง`, sub: r.province||'' });
-    // ออก WO ทำความสะอาด
-    if (r.cleanWODate) events.push({ date: parseDateStr(r.cleanWODate), type:'wo', label:`${r.id} ออก WO`, sub: r.province||'' });
-    // วันออก Work Order หลัก
-    if (r.workOrderDate) events.push({ date: parseDateStr(r.workOrderDate), type:'wo', label:`${r.id} Work Order`, sub: r.province||'' });
-    // ครบรอบประเมินราคา
+    if (r.surveyDate)    events.push({ date:parseDateStr(r.surveyDate),    type:'survey',    label:`${r.id} นัดรังวัด`,        sub:r.province||'', time:'' });
+    if (r.selfSurveyDate)events.push({ date:parseDateStr(r.selfSurveyDate),type:'survey',    label:`${r.id} สำรวจเอง`,         sub:r.province||'', time:'' });
+    if (r.cleanWODate)   events.push({ date:parseDateStr(r.cleanWODate),   type:'wo',        label:`${r.id} ออก WO`,           sub:r.province||'', time:'' });
+    if (r.workOrderDate) events.push({ date:parseDateStr(r.workOrderDate), type:'wo',        label:`${r.id} Work Order`,       sub:r.province||'', time:'' });
+    if (r.contractEnd)   events.push({ date:parseDateStr(r.contractEnd),   type:'contract',  label:`${r.id} สัญญาหมดอายุ`,    sub:r.contractType||'', time:'' });
     const valDue = getValDueDate(r);
-    if (valDue) events.push({ date: isoDate(valDue), type:'valuation', label:`${r.id} ครบรอบประเมิน`, sub: r.province||'' });
-    // สัญญาหมดอายุ
-    if (r.contractEnd) events.push({ date: parseDateStr(r.contractEnd), type:'contract', label:`${r.id} สัญญาหมดอายุ`, sub: r.contractType||'' });
+    if (valDue) events.push({ date:isoDate(valDue), type:'valuation', label:`${r.id} ครบรอบประเมิน`, sub:r.province||'', time:'' });
   });
-
-  // CleaningWO — วันทำความสะอาดจริง
   cleaningWOData.forEach(w => {
-    const d = parseDateStr(w.clean_date || w.wo_date);
-    if (d) events.push({ date: d, type:'clean', label:`WO ${w.wo_number||''} ทำความสะอาด`, sub: w.contractor||'' });
+    const d = parseDateStr(w.clean_date||w.wo_date);
+    if (d) events.push({ date:d, type:'clean', label:`WO ${w.wo_number||''} ทำความสะอาด`, sub:w.contractor||'', time:'' });
   });
-
-  // สัญญาดูแลทรัพย์ + รปภ.
-  [...(maintContracts||[]), ...(secContracts||[])].forEach(c => {
-    if (c.end) events.push({ date: parseDateStr(c.end), type:'contract', label:`สัญญา ${c.company||''} หมดอายุ`, sub: c.zone||'' });
+  [...(maintContracts||[]),...(secContracts||[])].forEach(c => {
+    if (c.end) events.push({ date:parseDateStr(c.end), type:'contract', label:`สัญญา ${c.company||''} หมดอายุ`, sub:c.zone||'', time:'' });
   });
-
-  // นัดประชุม
   (meetingData||[]).forEach(m => {
-    if (m.date) events.push({ date: parseDateStr(m.date), type:'meeting', label: m.topic||'นัดประชุม', sub: `${m.time||''}${m.room ? ' · '+m.room : ''}` });
+    if (m.date) events.push({ date:parseDateStr(m.date), type:'meeting', label:m.topic||'นัดประชุม', sub:m.room||'', time:m.time||'' });
   });
-
-  return events.filter(e => e.date);
+  return events.filter(e=>e.date);
 }
 
-function eventsOnDate(events, dateStr) {
-  return events.filter(e => e.date === dateStr);
+function eventsOnDate(events, ds) { return events.filter(e=>e.date===ds); }
+function evClass(type) { return `cal-ev ${type}`; }
+
+// ── popup: แสดง event ทั้งหมดของวัน ─────────
+function showCalDayPopup(dateStr, eventsJson) {
+  const evs = JSON.parse(decodeURIComponent(eventsJson));
+  const d   = new Date(dateStr);
+  const title = `${d.getDate()} ${TH_MONTHS_FULL[d.getMonth()]} ${beYear(d.getFullYear())}`;
+
+  const typeLabel = { survey:'นัดรังวัด/สำรวจ', clean:'ทำความสะอาด', valuation:'ครบรอบประเมิน', contract:'สัญญาหมดอายุ', meeting:'นัดประชุม', wo:'Work Order' };
+  const rows = evs.map(e => `
+    <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
+      <div style="width:10px;height:10px;border-radius:2px;background:var(--ev-${e.type});margin-top:3px;flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);">${e.label}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${typeLabel[e.type]||e.type}${e.time?' · ⏰ '+e.time:''}${e.sub?' · '+e.sub:''}</div>
+      </div>
+    </div>`).join('');
+
+  // remove old popup
+  document.getElementById('calDayPopup')?.remove();
+
+  const popup = document.createElement('div');
+  popup.id = 'calDayPopup';
+  popup.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.2);width:340px;max-height:70vh;display:flex;flex-direction:column;overflow:hidden;`;
+  popup.innerHTML = `
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:13px;font-weight:700;">📅 ${title}</div>
+      <button onclick="document.getElementById('calDayPopup').remove();document.getElementById('calDayOverlay').remove();"
+        style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted);padding:2px 6px;">✕</button>
+    </div>
+    <div style="padding:8px 16px;overflow-y:auto;flex:1;">${rows}</div>
+    <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:right;">
+      <button onclick="document.getElementById('calDayPopup').remove();document.getElementById('calDayOverlay').remove();"
+        style="padding:5px 14px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;font-size:12px;font-family:var(--font);color:var(--text);">ปิด</button>
+    </div>`;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'calDayOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.3);';
+  overlay.onclick = () => { popup.remove(); overlay.remove(); };
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(popup);
 }
 
-function evClass(type) {
-  return `cal-ev ${type}`;
-}
-
-function evHTML(ev, showTime=false) {
+function evHTML(ev) {
   return `<div class="${evClass(ev.type)}" title="${ev.label}${ev.sub?' · '+ev.sub:''}">
     <div class="cal-ev-dot" style="background:var(--ev-${ev.type});flex-shrink:0;"></div>
-    <span style="overflow:hidden;text-overflow:ellipsis;">${ev.label}</span>
+    <span style="overflow:hidden;text-overflow:ellipsis;">${ev.time?`<span class="cal-ev-time">${ev.time}</span>`:''}${ev.label}</span>
   </div>`;
+}
+
+function moreBtn(dateStr, evs) {
+  const hidden = evs.slice(3);
+  const enc = encodeURIComponent(JSON.stringify(evs));
+  return `<div class="cal-3m-more" style="cursor:pointer;color:var(--accent2);" onclick="showCalDayPopup('${dateStr}','${enc}')">+${hidden.length} รายการ</div>`;
 }
 
 // ── view switcher ────────────────────────────
@@ -4802,28 +4838,21 @@ function setCalView(v) {
 }
 
 function calNav(dir) {
-  if (calView === 'week') {
-    calCursor = new Date(calCursor); calCursor.setDate(calCursor.getDate() + dir*7);
-  } else if (calView === 'month') {
-    calCursor = new Date(calCursor); calCursor.setMonth(calCursor.getMonth() + dir);
-  } else {
-    calCursor = new Date(calCursor); calCursor.setMonth(calCursor.getMonth() + dir*3);
-  }
+  calCursor = new Date(calCursor);
+  if (calView==='week')        calCursor.setDate(calCursor.getDate()+dir*7);
+  else if (calView==='month')  calCursor.setMonth(calCursor.getMonth()+dir);
+  else                         calCursor.setMonth(calCursor.getMonth()+dir*3);
   renderCalPage();
 }
 
-function calGoToday() {
-  calCursor = new Date();
-  renderCalPage();
-}
+function calGoToday() { calCursor = new Date(); renderCalPage(); }
 
-// ── main render ──────────────────────────────
 function renderCalPage() {
   if (!allData.length) return;
   const events = buildCalEvents();
-  if (calView === 'month')  renderCalMonth(events);
-  if (calView === 'week')   renderCalWeek(events);
-  if (calView === '3month') renderCal3Month(events);
+  if (calView==='month')  renderCalMonth(events);
+  if (calView==='week')   renderCalWeek(events);
+  if (calView==='3month') renderCal3Month(events);
 }
 
 // ═══════════════════════════════════════════
@@ -4833,54 +4862,56 @@ function renderCalMonth(events) {
   const y = calCursor.getFullYear(), m = calCursor.getMonth();
   document.getElementById('calCurLabel').textContent = `${TH_MONTHS_FULL[m]} ${beYear(y)}`;
 
-  const firstDay = new Date(y, m, 1).getDay();  // 0=Sun
-  const daysInMonth = new Date(y, m+1, 0).getDate();
-  const prevDays = new Date(y, m, 0).getDate();
-  const today = new Date();
+  const firstDay    = new Date(y,m,1).getDay();
+  const daysInMonth = new Date(y,m+1,0).getDate();
+  const prevDays    = new Date(y,m,0).getDate();
+  const today       = new Date();
 
   let html = `<div class="cal-month-wrap"><div class="cal-month-grid">`;
-
-  // day headers
   TH_DAYS_SHORT.forEach((d,i) => {
     html += `<div class="cal-day-hdr${i===0||i===6?' weekend':''}">${d}</div>`;
   });
 
-  // leading prev month days
-  for (let i = firstDay - 1; i >= 0; i--) {
-    const dn = prevDays - i;
-    const ds = isoDate(new Date(y, m-1, dn));
-    const evs = eventsOnDate(events, ds);
+  // leading
+  for (let i=firstDay-1;i>=0;i--) {
+    const dn = prevDays-i;
+    const ds = isoDate(new Date(y,m-1,dn));
+    const evs = eventsOnDate(events,ds);
+    const enc = encodeURIComponent(JSON.stringify(evs));
     html += `<div class="cal-day-cell other">
       <div class="cal-day-num">${dn}</div>
       ${evs.slice(0,2).map(e=>evHTML(e)).join('')}
-      ${evs.length>2?`<div class="cal-3m-more">+${evs.length-2}</div>`:''}
+      ${evs.length>2?`<div class="cal-3m-more" style="cursor:pointer;color:var(--accent2);" onclick="showCalDayPopup('${ds}','${enc}')">+${evs.length-2} รายการ</div>`:''}
     </div>`;
   }
 
-  // current month days
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateObj = new Date(y, m, d);
-    const ds = isoDate(dateObj);
+  // current month
+  for (let d=1;d<=daysInMonth;d++) {
+    const dateObj = new Date(y,m,d);
+    const ds  = isoDate(dateObj);
     const dow = dateObj.getDay();
-    const isToday = sameDay(dateObj, today);
-    const isWknd = dow===0||dow===6;
-    const evs = eventsOnDate(events, ds);
+    const isToday = sameDay(dateObj,today);
+    const isWknd  = dow===0||dow===6;
+    const evs = eventsOnDate(events,ds);
+    const enc = encodeURIComponent(JSON.stringify(evs));
     html += `<div class="cal-day-cell${isToday?' today':''}${isWknd?' weekend':''}">
       <div class="cal-day-num">${d}</div>
       ${evs.slice(0,3).map(e=>evHTML(e)).join('')}
-      ${evs.length>3?`<div class="cal-3m-more">+${evs.length-3} รายการ</div>`:''}
+      ${evs.length>3?`<div class="cal-3m-more" style="cursor:pointer;color:var(--accent2);" onclick="showCalDayPopup('${ds}','${enc}')">+${evs.length-3} รายการ</div>`:''}
     </div>`;
   }
 
-  // trailing next month days
-  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  // trailing
+  const totalCells = Math.ceil((firstDay+daysInMonth)/7)*7;
   let next = 1;
-  for (let i = firstDay + daysInMonth; i < totalCells; i++, next++) {
-    const ds = isoDate(new Date(y, m+1, next));
-    const evs = eventsOnDate(events, ds);
+  for (let i=firstDay+daysInMonth;i<totalCells;i++,next++) {
+    const ds  = isoDate(new Date(y,m+1,next));
+    const evs = eventsOnDate(events,ds);
+    const enc = encodeURIComponent(JSON.stringify(evs));
     html += `<div class="cal-day-cell other">
       <div class="cal-day-num">${next}</div>
       ${evs.slice(0,2).map(e=>evHTML(e)).join('')}
+      ${evs.length>2?`<div class="cal-3m-more" style="cursor:pointer;color:var(--accent2);" onclick="showCalDayPopup('${ds}','${enc}')">+${evs.length-2} รายการ</div>`:''}
     </div>`;
   }
 
@@ -4889,57 +4920,80 @@ function renderCalMonth(events) {
 }
 
 // ═══════════════════════════════════════════
-//  WEEKLY VIEW
+//  WEEKLY VIEW — events in time slots
 // ═══════════════════════════════════════════
 function renderCalWeek(events) {
   const today = new Date();
-  // หา Sunday ของสัปดาห์
   const weekStart = new Date(calCursor);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  weekStart.setDate(weekStart.getDate()-weekStart.getDay());
 
-  const days = Array.from({length:7}, (_,i) => {
-    const d = new Date(weekStart); d.setDate(d.getDate()+i); return d;
-  });
+  const days = Array.from({length:7},(_,i)=>{ const d=new Date(weekStart); d.setDate(d.getDate()+i); return d; });
 
-  const startLabel = `${days[0].getDate()} ${TH_MONTHS_SHORT[days[0].getMonth()]}`;
-  const endLabel   = `${days[6].getDate()} ${TH_MONTHS_SHORT[days[6].getMonth()]} ${beYear(days[6].getFullYear())}`;
-  document.getElementById('calCurLabel').textContent = `${startLabel} – ${endLabel}`;
+  const s = days[0], e = days[6];
+  document.getElementById('calCurLabel').textContent =
+    `${s.getDate()} ${TH_MONTHS_SHORT[s.getMonth()]} – ${e.getDate()} ${TH_MONTHS_SHORT[e.getMonth()]} ${beYear(e.getFullYear())}`;
 
-  const HOURS = ['08:30','09:30','10:30','11:30','12:30','13:30','14:30','15:30','16:30'];
+  const SLOTS = ['08:30','09:30','10:30','11:30','12:30','13:30','14:30','15:30','16:30'];
+
+  // แยก events เป็น: มีเวลา (meeting ที่มี time) vs ทั้งวัน
+  function getTimedEvs(ds) {
+    return eventsOnDate(events,ds).filter(ev => ev.type==='meeting' && ev.time && ev.time.trim());
+  }
+  function getAllDayEvs(ds) {
+    return eventsOnDate(events,ds).filter(ev => !(ev.type==='meeting' && ev.time && ev.time.trim()));
+  }
+  // หา slot ที่ใกล้เคียงที่สุดของ event
+  function matchSlot(timeStr) {
+    const [hh,mm] = timeStr.split(':').map(Number);
+    const totalMin = hh*60+(mm||0);
+    for (let i=SLOTS.length-1;i>=0;i--) {
+      const [sh,sm] = SLOTS[i].split(':').map(Number);
+      if (totalMin >= sh*60+sm) return SLOTS[i];
+    }
+    return SLOTS[0];
+  }
 
   let html = `<div class="cal-week-wrap"><div class="cal-week-grid">`;
 
-  // corner
+  // corner + headers
   html += `<div class="cal-wk-corner"></div>`;
-  // day headers
   days.forEach((d,i) => {
-    const isToday = sameDay(d, today);
-    const isWknd = i===0||i===6;
+    const isToday = sameDay(d,today), isWknd = i===0||i===6;
     html += `<div class="cal-wk-day-hdr${isToday?' today':''}${isWknd?' weekend':''}">
       <div class="cal-wk-dname">${TH_DAYS_SHORT[i]}</div>
       <div class="cal-wk-dnum">${d.getDate()}</div>
     </div>`;
   });
 
-  // all-day row
+  // all-day row — ทุก event ที่ไม่มีเวลา + ปุ่ม "ดูทั้งหมด"
   html += `<div class="cal-wk-allday-lbl">ทั้งวัน</div>`;
   days.forEach((d,i) => {
     const ds = isoDate(d);
-    const isToday = sameDay(d, today);
-    const evs = eventsOnDate(events, ds);
+    const isToday = sameDay(d,today);
+    const evs = getAllDayEvs(ds);
+    const allEvs = eventsOnDate(events,ds);
+    const enc = encodeURIComponent(JSON.stringify(allEvs));
     html += `<div class="cal-wk-allday-cell${isToday?' today':''}">
       ${evs.slice(0,2).map(e=>evHTML(e)).join('')}
-      ${evs.length>2?`<div class="cal-3m-more">+${evs.length-2}</div>`:''}
+      ${evs.length>2?`<div class="cal-3m-more" style="cursor:pointer;color:var(--accent2);" onclick="showCalDayPopup('${ds}','${enc}')">+${evs.length-2}</div>`:''}
     </div>`;
   });
 
-  // time rows
-  HOURS.forEach(h => {
-    html += `<div class="cal-wk-time">${h}</div>`;
+  // time slots — วาง meeting ที่มีเวลาลงใน slot ที่ตรง
+  SLOTS.forEach(slot => {
+    html += `<div class="cal-wk-time">${slot}</div>`;
     days.forEach((d,i) => {
-      const isToday = sameDay(d, today);
-      const isWknd = i===0||i===6;
-      html += `<div class="cal-wk-cell${isToday?' today':''}${isWknd?' weekend':''}"></div>`;
+      const ds = isoDate(d);
+      const isToday = sameDay(d,today), isWknd = i===0||i===6;
+      const slotEvs = getTimedEvs(ds).filter(ev => matchSlot(ev.time)===slot);
+      const allEvs  = eventsOnDate(events,ds);
+      const enc     = encodeURIComponent(JSON.stringify(allEvs));
+      html += `<div class="cal-wk-cell${isToday?' today':''}${isWknd?' weekend':''}">
+        ${slotEvs.map(ev=>`<div class="${evClass(ev.type)}" title="${ev.label}${ev.sub?' · '+ev.sub:''}">
+          <div class="cal-ev-dot" style="background:var(--ev-${ev.type});flex-shrink:0;"></div>
+          <span><span class="cal-ev-time">${ev.time}</span>${ev.label}</span>
+        </div>`).join('')}
+      </div>`;
     });
   });
 
@@ -4948,7 +5002,7 @@ function renderCalWeek(events) {
 }
 
 // ═══════════════════════════════════════════
-//  3-MONTH VIEW
+//  3-MONTH VIEW — full month, no trailing filler
 // ═══════════════════════════════════════════
 function renderCal3Month(events) {
   const startMonth = new Date(calCursor.getFullYear(), calCursor.getMonth(), 1);
@@ -4963,70 +5017,65 @@ function renderCal3Month(events) {
 
   months.forEach(mStart => {
     const y = mStart.getFullYear(), m = mStart.getMonth();
-    const daysInMonth = new Date(y, m+1, 0).getDate();
-    const firstDay = mStart.getDay();
-    const prevDays = new Date(y, m, 0).getDate();
+    const daysInMonth = new Date(y,m+1,0).getDate();
+    const firstDay    = mStart.getDay(); // 0=Sun
 
-    // count events this month
-    const evCount = {survey:0, clean:0, valuation:0, contract:0, meeting:0, wo:0};
-    for (let d=1; d<=daysInMonth; d++) {
-      eventsOnDate(events, isoDate(new Date(y,m,d))).forEach(e => { if(evCount[e.type]!==undefined) evCount[e.type]++; });
+    // count events
+    const evCount = {survey:0,clean:0,valuation:0,contract:0,meeting:0,wo:0};
+    for (let d=1;d<=daysInMonth;d++) {
+      eventsOnDate(events,isoDate(new Date(y,m,d))).forEach(e=>{if(evCount[e.type]!==undefined)evCount[e.type]++;});
     }
     const totalEv = Object.values(evCount).reduce((a,b)=>a+b,0);
 
-    // chips
     const chipDefs = [
-      { type:'survey',    icon:'🔵', label:'รังวัด' },
-      { type:'clean',     icon:'🟢', label:'ทำสะอาด' },
-      { type:'valuation', icon:'🟠', label:'ประเมิน' },
-      { type:'contract',  icon:'🔴', label:'สัญญา' },
-      { type:'meeting',   icon:'🟣', label:'ประชุม' },
-      { type:'wo',        icon:'🟡', label:'WO' },
+      {type:'survey',icon:'🔵',label:'รังวัด'},{type:'clean',icon:'🟢',label:'ทำสะอาด'},
+      {type:'valuation',icon:'🟠',label:'ประเมิน'},{type:'contract',icon:'🔴',label:'สัญญา'},
+      {type:'meeting',icon:'🟣',label:'ประชุม'},{type:'wo',icon:'🟡',label:'WO'},
     ];
-    const chips = chipDefs.filter(c=>evCount[c.type]>0).map(c =>
+    const chips = chipDefs.filter(c=>evCount[c.type]>0).map(c=>
       `<div class="cal-3m-chip" style="background:rgba(0,0,0,0.05);color:var(--ev-${c.type});">${c.icon} ${evCount[c.type]} ${c.label}</div>`
     ).join('');
 
     html += `<div class="cal-3m-month">
       <div class="cal-3m-hdr">
-        <div>
-          <div class="cal-3m-title">${TH_MONTHS_FULL[m]} ${beYear(y)}</div>
-          <div class="cal-3m-sub">${daysInMonth} วัน · ${totalEv} events</div>
-        </div>
+        <div><div class="cal-3m-title">${TH_MONTHS_FULL[m]} ${beYear(y)}</div>
+        <div class="cal-3m-sub">${daysInMonth} วัน · ${totalEv} events</div></div>
         <div class="cal-3m-chips">${chips}</div>
       </div>
       <div class="cal-3m-grid">`;
 
-    // headers
-    TH_DAYS_SHORT.forEach((d,i) => {
+    TH_DAYS_SHORT.forEach((d,i)=>{
       html += `<div class="cal-3m-dh${i===0||i===6?' weekend':''}">${d}</div>`;
     });
 
-    // leading cells
-    for (let i=firstDay-1;i>=0;i--) {
-      html += `<div class="cal-3m-cell other"><div class="cal-3m-num">${prevDays-i}</div></div>`;
+    // leading empty cells (ไม่แสดงวันจากเดือนก่อน)
+    for (let i=0;i<firstDay;i++) {
+      html += `<div class="cal-3m-cell other"></div>`;
     }
-    // month days
+
+    // วันในเดือน
     for (let d=1;d<=daysInMonth;d++) {
       const dateObj = new Date(y,m,d);
-      const ds = isoDate(dateObj);
+      const ds  = isoDate(dateObj);
       const dow = dateObj.getDay();
-      const isToday = sameDay(dateObj, today);
-      const isWknd = dow===0||dow===6;
-      const evs = eventsOnDate(events, ds);
+      const isToday = sameDay(dateObj,today);
+      const isWknd  = dow===0||dow===6;
+      const evs = eventsOnDate(events,ds);
+      const enc = encodeURIComponent(JSON.stringify(evs));
       html += `<div class="cal-3m-cell${isToday?' today':''}${isWknd?' weekend':''}">
         <div class="cal-3m-num">${d}</div>
         ${evs.slice(0,2).map(e=>`<div class="${evClass(e.type)}" style="font-size:9px;padding:1px 3px;margin-bottom:1px;">
           <div class="cal-ev-dot" style="background:var(--ev-${e.type});flex-shrink:0;"></div>
           <span style="overflow:hidden;text-overflow:ellipsis;">${e.label}</span>
         </div>`).join('')}
-        ${evs.length>2?`<div class="cal-3m-more">+${evs.length-2}</div>`:''}
+        ${evs.length>2?`<div class="cal-3m-more" style="cursor:pointer;color:var(--accent2);" onclick="showCalDayPopup('${ds}','${enc}')">+${evs.length-2}</div>`:''}
       </div>`;
     }
-    // trailing
-    const total = Math.ceil((firstDay+daysInMonth)/7)*7;
-    for (let i=firstDay+daysInMonth;i<total;i++) {
-      html += `<div class="cal-3m-cell other"><div class="cal-3m-num">${i-firstDay-daysInMonth+1}</div></div>`;
+
+    // trailing empty cells ให้ครบแถว แต่ไม่แสดงวัน
+    const totalCells = Math.ceil((firstDay+daysInMonth)/7)*7;
+    for (let i=firstDay+daysInMonth;i<totalCells;i++) {
+      html += `<div class="cal-3m-cell other"></div>`;
     }
 
     html += `</div></div>`;
