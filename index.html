@@ -1146,18 +1146,8 @@
 <!-- DATA SOURCE BAR -->
 <div class="datasource-bar">
   <span class="ds-label">แหล่งข้อมูล</span>
-  <div class="ds-tabs">
-    <button class="ds-tab active" onclick="switchTab('csv')">📂 CSV File</button>
-    <button class="ds-tab" onclick="switchTab('gsheet')">📊 Google Sheet</button>
-  </div>
 
-  <div class="ds-input-area" id="csvArea">
-    <label class="file-label" for="fileInput">📁 เลือกไฟล์ CSV</label>
-    <input type="file" id="fileInput" accept=".csv" onchange="loadCSV(this)">
-    <button class="btn-sample" onclick="loadSampleData()">✨ ลองข้อมูลตัวอย่าง</button>
-  </div>
-
-  <div class="ds-input-area" id="gsheetArea" style="display:none;flex-direction:column;gap:8px;align-items:flex-start;">
+  <div class="ds-input-area" style="flex-direction:column;gap:8px;align-items:flex-start;">
 
     <!-- ยังไม่ได้ login -->
     <div id="gsLoginArea" style="display:flex;align-items:center;gap:12px;">
@@ -1210,11 +1200,6 @@
       <span>การประเมินราคา</span>
     </div>
     <div class="sidebar-divider"></div>
-    <div class="sidebar-section-label">ข้อมูล</div>
-    <div class="nav-item" id="nav-datasource" onclick="window.scrollTo(0,0)">
-      <span class="nav-icon">📂</span>
-      <span>แหล่งข้อมูล</span>
-    </div>
   </nav>
 
   <!-- ── PAGE CONTENT ── -->
@@ -1228,7 +1213,7 @@
   <div class="empty-state" id="emptyState">
     <div class="empty-icon">🏢</div>
     <div class="empty-title">โหลดข้อมูลทรัพย์สินเพื่อเริ่มต้น</div>
-    <div class="empty-sub">รองรับ CSV หรือ Google Sheet ที่ตั้งค่าสาธารณะแล้ว<br>หรือกด "ลองข้อมูลตัวอย่าง" เพื่อดูตัวอย่าง Dashboard</div>
+    <div class="empty-sub">Sign in ด้วย Google แล้ววาง URL ของ Google Sheet<br>หรือกด "ลองข้อมูลตัวอย่าง" เพื่อดูตัวอย่าง Dashboard</div>
   </div>
 
   <!-- DASHBOARD (hidden until data loaded) -->
@@ -1653,15 +1638,6 @@
 
         <!-- Main mixed panel -->
         <div class="hist-panel">
-          <!-- DEBUG PANEL — แสดงข้อมูลที่โหลดได้จริง -->
-          <div id="cleanDebugPanel" style="display:none;margin-bottom:12px;background:rgba(88,166,255,0.06);border:1px solid rgba(88,166,255,0.25);border-radius:8px;padding:12px 14px;font-size:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <span style="font-weight:700;color:var(--accent2);">🔍 Debug: ข้อมูลที่โหลดจาก Google Sheets</span>
-              <button onclick="document.getElementById('cleanDebugPanel').style.display='none'" style="font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text-muted);">ปิด</button>
-            </div>
-            <div id="cleanDebugContent" style="font-family:var(--mono);white-space:pre-wrap;color:var(--text-muted);max-height:200px;overflow-y:auto;font-size:11px;"></div>
-          </div>
-
           <div class="hist-topbar">
             <div class="hist-title">
               <div class="hist-icon">🧹</div>
@@ -1673,7 +1649,6 @@
               <span class="hchip ord" id="hChipOrdered" onclick="setHistFilter('ordered')">📋 สั่งงาน</span>
               <span class="hchip ovd" id="hChipWaiting" onclick="setHistFilter('waiting')">⏳ รอสั่ง</span>
               <span class="hchip nev" id="hChipNever" onclick="setHistFilter('never')">🆕 ยังไม่เคย</span>
-              <span class="hchip" style="background:rgba(88,166,255,0.1);color:var(--accent2);border:1px solid rgba(88,166,255,0.3);" onclick="showCleanDebug()">🔍 Debug</span>
             </div>
           </div>
 
@@ -1859,17 +1834,7 @@ function toggleTheme() {
 }
 
 // ═══════════════════════════════════════════
-//  TAB SWITCH
-// ═══════════════════════════════════════════
-function switchTab(tab) {
-  document.querySelectorAll('.ds-tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('csvArea').style.display = tab === 'csv' ? 'flex' : 'none';
-  document.getElementById('gsheetArea').style.display = tab === 'gsheet' ? 'flex' : 'none';
-}
-
-// ═══════════════════════════════════════════
-//  CSV LOAD
+//  CSV LOAD (ยังคงไว้สำหรับ Survey CSV)
 // ═══════════════════════════════════════════
 function loadCSV(input) {
   const file = input.files[0];
@@ -3635,51 +3600,6 @@ function getCleanStatusKey(r) {
   return { ...r, statusKey: 'never' };
 }
 
-function showCleanDebug() {
-  const panel = document.getElementById('cleanDebugPanel');
-  const content = document.getElementById('cleanDebugContent');
-  if (!panel || !content) return;
-
-  const lines = [];
-  lines.push(`=== CleaningWO Sheet (${cleaningWOData.length} ใบสั่งงาน / ${cleaningItemsData.length} รายการงาน) ===`);
-  if (cleaningWOData.length === 0) {
-    lines.push('  ⚠️ ไม่มีข้อมูล — ตรวจสอบว่า tab ชื่อ "CleaningWO" และ column ครบถ้วน');
-    lines.push('  คอลัมน์ที่ต้องมี: wo_number, wo_date, clean_date, contractor, status, asset_id, item_type, cost');
-  } else {
-    lines.push('  ตัวอย่างใบสั่งงาน:');
-    cleaningWOData.slice(0, 3).forEach(r => {
-      lines.push(`  wo_number: "${r.wo_number}" | wo_date: "${r.wo_date}" | clean_date: "${r.clean_date}" | status: "${r.status}"`);
-    });
-    lines.push('');
-    lines.push('  ตัวอย่างรายการงาน:');
-    cleaningItemsData.slice(0, 5).forEach(r => {
-      lines.push(`  wo_number: "${r.wo_number}" | asset_id: "${r.asset_id}" | item_type: "${r.item_type}" | cost: ${r.cost}`);
-    });
-  }
-
-  // Check asset_id matching
-  lines.push('');
-  lines.push(`=== asset_id จาก allData (5 ตัวอย่าง) ===`);
-  allData.slice(0, 5).forEach(r => lines.push(`  "${r.id}"`));
-
-  lines.push('');
-  lines.push(`=== asset_id ที่มีใน CleaningItems ===`);
-  const ids = [...new Set(cleaningItemsData.map(i => i.asset_id))];
-  lines.push('  ' + ids.slice(0, 10).join(', '));
-
-  lines.push('');
-  lines.push(`=== Match ระหว่าง allData.id ↔ CleaningItems.asset_id ===`);
-  const matched = allData.filter(r => ids.includes(r.id));
-  if (matched.length === 0) {
-    lines.push(`  ❌ ไม่มี match เลย — กรุณาตรวจสอบว่า asset_id ตรงกัน`);
-  } else {
-    lines.push(`  ✅ match ${matched.length} รายการ: ${matched.map(r=>r.id).slice(0,5).join(', ')}`);
-  }
-
-  content.textContent = lines.join('\n');
-  panel.style.display = 'block';
-  panel.scrollIntoView({ behavior:'smooth' });
-}
 
 function setHistFilter(f) {
   histFilter = f;
