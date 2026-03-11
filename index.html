@@ -3635,6 +3635,11 @@ function renderHistList() {
     });
   }
 
+  // เฉพาะ filter "ยังไม่เคย" — แสดงเฉพาะทรัพย์ที่มีสถานะ "ทรัพย์ NPA"
+  if (histFilter === 'never') {
+    rows = rows.filter(r => (r.status || '').trim() === 'ทรัพย์ NPA');
+  }
+
   // filter zone/province (จาก r.zone ใน Sheet)
   const zpH = panelFilterState['history'];
   if (zpH.province) rows = rows.filter(r => r.province === zpH.province);
