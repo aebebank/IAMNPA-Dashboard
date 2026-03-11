@@ -100,21 +100,6 @@
     flex-wrap: wrap;
   }
   .ds-label { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
-  .ds-tabs { display: flex; gap: 4px; }
-  .ds-tab {
-    padding: 5px 14px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 14px;
-    font-family: var(--font);
-    transition: all 0.15s;
-  }
-  .ds-tab:hover { border-color: var(--accent); color: var(--text); }
-  .ds-tab.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
-
   .ds-input-area { display: flex; gap: 8px; align-items: center; flex: 1; }
   .ds-input {
     flex: 1; max-width: 480px;
@@ -131,19 +116,6 @@
   .ds-input:focus { border-color: var(--accent2); }
   .ds-input::placeholder { color: var(--text-dim); }
 
-  .file-label {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--text-muted);
-    transition: all 0.15s;
-  }
-  .file-label:hover { border-color: var(--accent2); color: var(--text); }
-  #fileInput { display: none; }
 
   .btn-load {
     padding: 6px 18px;
@@ -215,9 +187,7 @@
   /* ── SECTION LAYOUT ── */
   .row { display: grid; gap: 16px; }
   .row-2 { grid-template-columns: 1fr 1fr; }
-  .row-3 { grid-template-columns: 2fr 1fr 1fr; }
-  .row-alert { grid-template-columns: 1fr 1fr; }
-  .row-3    { grid-template-columns: 1fr 1fr 1fr; }
+  .row-3 { grid-template-columns: 1fr 1fr 1fr; }
 
   /* ── PANELS ── */
   .panel {
@@ -1124,6 +1094,186 @@
   .val-banner .bsub   { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
   .val-banner.warn  .btitle { color: var(--warning); }
   .val-banner.alert .btitle { color: var(--danger); }
+
+  /* ══════════════════════════════════════════
+     PAGE 5: ปฏิทินงาน
+  ══════════════════════════════════════════ */
+  #page-calendar.active { display:flex; flex-direction:column; height:100%; overflow:hidden; }
+
+  /* event colors */
+  :root {
+    --ev-survey:    #0969da; --ev-clean:   #1a7f37;
+    --ev-valuation: #d4580a; --ev-contract:#cf222e;
+    --ev-meeting:   #8250df; --ev-wo:      #9a6700;
+  }
+  body.dark {
+    --ev-survey:    #58a6ff; --ev-clean:   #3fb950;
+    --ev-valuation: #f0883e; --ev-contract:#f85149;
+    --ev-meeting:   #a78bfa; --ev-wo:      #d29922;
+  }
+
+  /* topbar */
+  .cal-topbar {
+    padding:12px 18px; border-bottom:1px solid var(--border);
+    background:var(--surface);
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0;
+  }
+  .cal-title-row { font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .cal-icon-box { width:26px; height:26px; background:rgba(9,105,218,0.12); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+  body.dark .cal-icon-box { background:rgba(88,166,255,0.15); }
+  .cal-view-toggle { display:flex; gap:2px; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:3px; }
+  .cal-vt {
+    padding:4px 11px; border-radius:5px; font-size:12px; font-weight:500;
+    cursor:pointer; border:none; background:transparent; color:var(--text-muted);
+    font-family:var(--font); transition:all 0.15s;
+  }
+  .cal-vt.active { background:var(--surface); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,0.1); font-weight:600; }
+  body.dark .cal-vt.active { box-shadow:0 1px 3px rgba(0,0,0,0.4); }
+  .cal-nav-row { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .cal-cur-label { font-family:var(--mono); font-size:13px; font-weight:600; min-width:170px; text-align:center; }
+  .btn-cal-nav { padding:5px 10px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--text-muted); cursor:pointer; font-size:13px; font-family:var(--font); transition:all 0.15s; }
+  .btn-cal-nav:hover { border-color:var(--accent2); color:var(--text); }
+  .btn-cal-today { padding:5px 12px; border-radius:6px; background:var(--accent2); border:none; color:#fff; font-weight:600; cursor:pointer; font-size:12px; font-family:var(--font); }
+  body.dark .btn-cal-today { color:#000; }
+
+  /* legend */
+  .cal-legend {
+    display:flex; gap:10px; flex-wrap:wrap;
+    padding:7px 18px; border-bottom:1px solid var(--border);
+    background:var(--surface2); flex-shrink:0;
+  }
+  .cal-leg-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-muted); }
+  .cal-leg-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+
+  /* ── MONTHLY VIEW ── */
+  .cal-month-wrap { flex:1; overflow:auto; }
+  .cal-month-grid { display:grid; grid-template-columns:repeat(7,1fr); border-left:1px solid var(--border); border-top:1px solid var(--border); }
+  .cal-day-hdr {
+    padding:7px 0; text-align:center;
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px;
+    color:var(--text-muted); background:var(--surface2);
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+  }
+  .cal-day-hdr.weekend { color:var(--text-dim); }
+  .cal-day-cell {
+    min-height:100px; padding:5px;
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:var(--surface); cursor:default;
+  }
+  .cal-day-cell.other { background:var(--surface2); opacity:0.6; }
+  .cal-day-cell.today { background:rgba(9,105,218,0.04); }
+  body.dark .cal-day-cell.today { background:rgba(88,166,255,0.05); }
+  .cal-day-cell.weekend { background:rgba(0,0,0,0.01); }
+  body.dark .cal-day-cell.weekend { background:rgba(255,255,255,0.01); }
+  .cal-day-num {
+    font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-muted);
+    margin-bottom:3px; width:20px; height:20px;
+    display:flex; align-items:center; justify-content:center; border-radius:50%;
+  }
+  .cal-day-cell.today .cal-day-num { background:var(--accent2); color:#fff; }
+  body.dark .cal-day-cell.today .cal-day-num { color:#000; }
+  .cal-day-cell.other .cal-day-num { opacity:0.35; }
+
+  /* ── WEEK VIEW ── */
+  .cal-week-wrap { flex:1; overflow:auto; }
+  .cal-week-grid { display:grid; grid-template-columns:52px repeat(7,1fr); border-left:1px solid var(--border); border-top:1px solid var(--border); }
+  .cal-wk-corner { background:var(--surface2); border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .cal-wk-day-hdr {
+    padding:8px 6px; text-align:center;
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:var(--surface2);
+  }
+  .cal-wk-day-hdr.today { background:rgba(9,105,218,0.06); }
+  body.dark .cal-wk-day-hdr.today { background:rgba(88,166,255,0.07); }
+  .cal-wk-dname { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); }
+  .cal-wk-dnum { font-family:var(--mono); font-size:17px; font-weight:700; color:var(--text); margin-top:1px; }
+  .cal-wk-day-hdr.today .cal-wk-dnum { color:var(--accent2); }
+  .cal-wk-day-hdr.weekend .cal-wk-dname,
+  .cal-wk-day-hdr.weekend .cal-wk-dnum { color:var(--text-dim); }
+  .cal-wk-allday-lbl {
+    padding:4px 6px; text-align:right; font-size:9px; color:var(--text-dim);
+    border-right:1px solid var(--border); border-bottom:2px solid var(--border);
+    background:var(--surface2); display:flex; align-items:center; justify-content:flex-end;
+  }
+  .cal-wk-allday-cell {
+    border-right:1px solid var(--border); border-bottom:2px solid var(--border);
+    padding:3px; background:var(--surface2); min-height:26px;
+  }
+  .cal-wk-allday-cell.today { background:rgba(9,105,218,0.04); }
+  .cal-wk-time {
+    padding:0 6px; text-align:right; height:60px;
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+    font-family:var(--mono); font-size:9px; color:var(--text-dim);
+    display:flex; align-items:flex-start; padding-top:3px; background:var(--surface2);
+  }
+  .cal-wk-cell {
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+    height:60px; padding:3px; background:var(--surface); position:relative;
+  }
+  .cal-wk-cell.today { background:rgba(9,105,218,0.02); }
+  body.dark .cal-wk-cell.today { background:rgba(88,166,255,0.03); }
+  .cal-wk-cell.weekend { background:rgba(0,0,0,0.01); }
+
+  /* ── 3-MONTH VIEW ── */
+  .cal-3m-wrap { flex:1; overflow:auto; padding:14px 18px; display:flex; flex-direction:column; gap:14px; }
+  .cal-3m-month { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .cal-3m-hdr {
+    padding:9px 14px; background:var(--surface2); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .cal-3m-title { font-size:13px; font-weight:700; }
+  .cal-3m-sub { font-size:11px; color:var(--text-muted); font-family:var(--mono); }
+  .cal-3m-chips { display:flex; gap:5px; flex-wrap:wrap; }
+  .cal-3m-chip { padding:2px 7px; border-radius:20px; font-size:10px; font-weight:600; display:flex; align-items:center; gap:3px; }
+  .cal-3m-grid { display:grid; grid-template-columns:repeat(7,1fr); }
+  .cal-3m-dh {
+    padding:5px 0; text-align:center; font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.6px; color:var(--text-muted); background:var(--surface2);
+    border-bottom:1px solid var(--border);
+  }
+  .cal-3m-dh.weekend { color:var(--text-dim); }
+  .cal-3m-cell {
+    min-height:68px; padding:4px;
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:var(--surface);
+  }
+  .cal-3m-cell:nth-child(7n) { border-right:none; }
+  .cal-3m-cell.other { background:var(--surface2); opacity:0.5; }
+  .cal-3m-cell.today { background:rgba(9,105,218,0.04); }
+  body.dark .cal-3m-cell.today { background:rgba(88,166,255,0.05); }
+  .cal-3m-num {
+    font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-muted);
+    margin-bottom:2px; width:18px; height:18px;
+    display:flex; align-items:center; justify-content:center; border-radius:50%;
+  }
+  .cal-3m-cell.today .cal-3m-num { background:var(--accent2); color:#fff; font-size:10px; }
+  body.dark .cal-3m-cell.today .cal-3m-num { color:#000; }
+  .cal-3m-cell.other .cal-3m-num { opacity:0.3; }
+  .cal-3m-more { font-size:9px; color:var(--text-dim); padding:0 2px; cursor:pointer; }
+
+  /* ── EVENTS (shared) ── */
+  .cal-ev {
+    display:flex; align-items:center; gap:3px;
+    padding:2px 5px; border-radius:3px; margin-bottom:2px;
+    font-size:10px; font-weight:500; cursor:pointer;
+    border-left:2px solid transparent; transition:opacity 0.1s;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+  }
+  .cal-ev:hover { opacity:0.75; }
+  .cal-ev-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+  .cal-ev-time { font-family:var(--mono); font-size:9px; opacity:0.65; margin-right:2px; flex-shrink:0; }
+  .cal-ev.survey    { background:rgba(9,105,218,0.1);  color:var(--ev-survey);    border-color:var(--ev-survey); }
+  .cal-ev.clean     { background:rgba(26,127,55,0.1);  color:var(--ev-clean);     border-color:var(--ev-clean); }
+  .cal-ev.valuation { background:rgba(212,88,10,0.1);  color:var(--ev-valuation); border-color:var(--ev-valuation); }
+  .cal-ev.contract  { background:rgba(207,34,46,0.1);  color:var(--ev-contract);  border-color:var(--ev-contract); }
+  .cal-ev.meeting   { background:rgba(130,80,223,0.1); color:var(--ev-meeting);   border-color:var(--ev-meeting); }
+  .cal-ev.wo        { background:rgba(154,103,0,0.1);  color:var(--ev-wo);        border-color:var(--ev-wo); }
+  body.dark .cal-ev.survey    { background:rgba(88,166,255,0.12); }
+  body.dark .cal-ev.clean     { background:rgba(63,185,80,0.12); }
+  body.dark .cal-ev.valuation { background:rgba(240,136,62,0.12); }
+  body.dark .cal-ev.contract  { background:rgba(248,81,73,0.12); }
+  body.dark .cal-ev.meeting   { background:rgba(167,139,250,0.12); }
+  body.dark .cal-ev.wo        { background:rgba(210,153,34,0.12); }
 </style>
 </head>
 <body>
@@ -1192,12 +1342,16 @@
       <span>ประวัติการทำความสะอาด</span>
     </div>
     <div class="nav-item" id="nav-timeline" onclick="switchPage('timeline')">
-      <span class="nav-icon">📅</span>
+      <span class="nav-icon">🗓️</span>
       <span>Timeline การทำความสะอาด</span>
     </div>
     <div class="nav-item" id="nav-valuation" onclick="switchPage('valuation')">
       <span class="nav-icon">🏷️</span>
       <span>การประเมินราคา</span>
+    </div>
+    <div class="nav-item" id="nav-calendar" onclick="switchPage('calendar')">
+      <span class="nav-icon">📅</span>
+      <span>ปฏิทินงาน</span>
     </div>
     <div class="sidebar-divider"></div>
   </nav>
@@ -1811,6 +1965,47 @@
       </div>
     </div><!-- /page-valuation -->
 
+    <!-- ══════════════════════════════════════════
+         PAGE 5: ปฏิทินงาน
+    ══════════════════════════════════════════ -->
+    <div class="page-view" id="page-calendar">
+
+      <!-- Topbar -->
+      <div class="cal-topbar">
+        <div class="cal-title-row">
+          <div class="cal-icon-box">📅</div>
+          ปฏิทินงาน
+        </div>
+        <div class="cal-view-toggle">
+          <button class="cal-vt" id="calVtWeek"   onclick="setCalView('week')">รายสัปดาห์</button>
+          <button class="cal-vt active" id="calVtMonth"  onclick="setCalView('month')">รายเดือน</button>
+          <button class="cal-vt" id="calVt3month" onclick="setCalView('3month')">3 เดือน</button>
+        </div>
+        <div class="cal-nav-row">
+          <button class="btn-cal-nav" onclick="calNav(-1)">◀</button>
+          <div class="cal-cur-label" id="calCurLabel">—</div>
+          <button class="btn-cal-nav" onclick="calNav(1)">▶</button>
+          <button class="btn-cal-today" onclick="calGoToday()">วันนี้</button>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="cal-legend">
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--ev-survey);"></div>นัดรังวัด / สำรวจ</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--ev-clean);"></div>ทำความสะอาด</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--ev-valuation);"></div>ครบรอบประเมินราคา</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--ev-contract);"></div>สัญญาหมดอายุ</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--ev-meeting);"></div>นัดประชุม</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--ev-wo);"></div>ออก Work Order</div>
+      </div>
+
+      <!-- View containers -->
+      <div id="calViewMonth"  style="flex:1;overflow:hidden;display:flex;flex-direction:column;"></div>
+      <div id="calViewWeek"   style="flex:1;overflow:hidden;display:none;flex-direction:column;"></div>
+      <div id="calView3month" style="flex:1;overflow:hidden;display:none;flex-direction:column;"></div>
+
+    </div><!-- /page-calendar -->
+
   </div><!-- /page-content -->
 </div><!-- /app-shell -->
 
@@ -2017,8 +2212,6 @@ async function _doLoadAllSheets() {
     // Tab 1 — ทรัพย์ NPA (บังคับ)
     const npaData = await fetchSheet(sheetId, SHEET_TABS.npa);
     if (!npaData.length) throw new Error(`ไม่พบข้อมูลใน tab "${SHEET_TABS.npa}"`);
-    // DEBUG: แสดงชื่อ column ทั้งหมดจาก row แรก
-    console.log('[NPA Columns]', Object.keys(npaData[0]));
 
     // Tab 2 — สัญญาดูแลทรัพย์
     try {
@@ -2104,8 +2297,6 @@ async function _doLoadAllSheets() {
         return { wo_number: wn, asset_id: aid, item_type: itp, cost: cst };
       }).filter(r => r.wo_number && r.asset_id);
 
-      console.log(`✅ CleaningWO: ${cleaningWOData.length} รายการ`, cleaningWOData[0]);
-      console.log(`✅ CleaningItems: ${cleaningItemsData.length} รายการ`, cleaningItemsData[0]);
     } catch(e) { console.warn('tab CleaningWO:', e.message); }
 
     processData(npaData);
@@ -2211,25 +2402,11 @@ function mapRow(row) {
 //  PROCESS DATA
 // ═══════════════════════════════════════════
 function debugZones() {
-  const raw = allData.map(r => r.zone).filter(Boolean);
-  const counts = {};
-  raw.forEach(z => counts[z] = (counts[z]||0) + 1);
-  console.log('[Zone Debug] unique zones:', Object.keys(counts).length);
-  Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([z,c]) => {
-    console.log(`  "${z}" (${c} ทรัพย์) — charCodes:`, [...z].map(c=>c.charCodeAt(0)).join(','));
-  });
+  // ฟังก์ชันนี้สงวนไว้สำหรับ dev — ไม่ทำงานใน production
 }
 
 function debugColumns() {
-  if (!allData.length) return;
-  // แสดง raw column keys จาก Sheet row แรก
-  console.log('[Column Debug] ไม่พบ zone — ชื่อ column ทั้งหมดใน Sheet:');
-  // ดึง raw keys จาก window._rawSheetData ถ้ามี
-  if (window._rawSheetData && window._rawSheetData.length) {
-    Object.keys(window._rawSheetData[0]).forEach(k => {
-      console.log('  col:', JSON.stringify(k), '— charCodes:', [...k].map(c=>c.charCodeAt(0)).join(','));
-    });
-  }
+  // ฟังก์ชันนี้สงวนไว้สำหรับ dev — ไม่ทำงานใน production
 }
 
 function processData(raw) {
@@ -3503,16 +3680,16 @@ function fmtDate(s) {
 //  SIDEBAR NAVIGATION
 // ═══════════════════════════════════════════
 function switchPage(page) {
-  ['summary','history','timeline','valuation'].forEach(p => {
+  ['summary','history','timeline','valuation','calendar'].forEach(p => {
     document.getElementById('page-' + p)?.classList.toggle('active', p === page);
     document.getElementById('nav-' + p)?.classList.toggle('active', p === page);
   });
-  // valuation ต้องการ fixed layout — toggle overflow บน page-content
   const pc = document.querySelector('.page-content');
-  if (pc) pc.style.overflowY = (page === 'valuation') ? 'hidden' : 'auto';
-  if (page === 'history') renderHistPage();
+  if (pc) pc.style.overflowY = (page === 'valuation' || page === 'calendar') ? 'hidden' : 'auto';
+  if (page === 'history')  renderHistPage();
   if (page === 'timeline') renderTLPills();
   if (page === 'valuation') renderValPage();
+  if (page === 'calendar')  renderCalPage();
 }
 
 // ═══════════════════════════════════════════
@@ -4540,6 +4717,324 @@ renderAll = function() {
   if (activePage === 'page-timeline') renderTLPills();
   if (activePage === 'page-valuation') renderValPage();
 };
+
+// ═══════════════════════════════════════════
+//  PAGE 5: ปฏิทินงาน
+// ═══════════════════════════════════════════
+let calView    = 'month';   // 'week' | 'month' | '3month'
+let calCursor  = new Date(); // วันที่ปัจจุบันที่กำลัง view
+
+// ── helpers ─────────────────────────────────
+const TH_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const TH_MONTHS_FULL  = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TH_DAYS_SHORT   = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+function beYear(y) { return y + 543; }
+function isoDate(d) { return d.toISOString().split('T')[0]; }
+function sameDay(a, b) { return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+// ── build events from allData ────────────────
+function buildCalEvents() {
+  const today = new Date();
+  const events = [];
+
+  allData.forEach(r => {
+    // นัดรังวัด
+    if (r.surveyDate) events.push({ date: parseDateStr(r.surveyDate), type:'survey', label:`${r.id} นัดรังวัด`, sub: r.province||'' });
+    // สำรวจเอง
+    if (r.selfSurveyDate) events.push({ date: parseDateStr(r.selfSurveyDate), type:'survey', label:`${r.id} สำรวจเอง`, sub: r.province||'' });
+    // ออก WO ทำความสะอาด
+    if (r.cleanWODate) events.push({ date: parseDateStr(r.cleanWODate), type:'wo', label:`${r.id} ออก WO`, sub: r.province||'' });
+    // วันออก Work Order หลัก
+    if (r.workOrderDate) events.push({ date: parseDateStr(r.workOrderDate), type:'wo', label:`${r.id} Work Order`, sub: r.province||'' });
+    // ครบรอบประเมินราคา
+    const valDue = getValDueDate(r);
+    if (valDue) events.push({ date: isoDate(valDue), type:'valuation', label:`${r.id} ครบรอบประเมิน`, sub: r.province||'' });
+    // สัญญาหมดอายุ
+    if (r.contractEnd) events.push({ date: parseDateStr(r.contractEnd), type:'contract', label:`${r.id} สัญญาหมดอายุ`, sub: r.contractType||'' });
+  });
+
+  // CleaningWO — วันทำความสะอาดจริง
+  cleaningWOData.forEach(w => {
+    const d = parseDateStr(w.clean_date || w.wo_date);
+    if (d) events.push({ date: d, type:'clean', label:`WO ${w.wo_number||''} ทำความสะอาด`, sub: w.contractor||'' });
+  });
+
+  // สัญญาดูแลทรัพย์ + รปภ.
+  [...(maintContracts||[]), ...(secContracts||[])].forEach(c => {
+    if (c.end) events.push({ date: parseDateStr(c.end), type:'contract', label:`สัญญา ${c.company||''} หมดอายุ`, sub: c.zone||'' });
+  });
+
+  // นัดประชุม
+  (meetingData||[]).forEach(m => {
+    if (m.date) events.push({ date: parseDateStr(m.date), type:'meeting', label: m.topic||'นัดประชุม', sub: `${m.time||''}${m.room ? ' · '+m.room : ''}` });
+  });
+
+  return events.filter(e => e.date);
+}
+
+function eventsOnDate(events, dateStr) {
+  return events.filter(e => e.date === dateStr);
+}
+
+function evClass(type) {
+  return `cal-ev ${type}`;
+}
+
+function evHTML(ev, showTime=false) {
+  return `<div class="${evClass(ev.type)}" title="${ev.label}${ev.sub?' · '+ev.sub:''}">
+    <div class="cal-ev-dot" style="background:var(--ev-${ev.type});flex-shrink:0;"></div>
+    <span style="overflow:hidden;text-overflow:ellipsis;">${ev.label}</span>
+  </div>`;
+}
+
+// ── view switcher ────────────────────────────
+function setCalView(v) {
+  calView = v;
+  const btnMap  = { week:'calVtWeek', month:'calVtMonth', '3month':'calVt3month' };
+  const viewMap = { week:'calViewWeek', month:'calViewMonth', '3month':'calView3month' };
+  ['week','month','3month'].forEach(k => {
+    document.getElementById(btnMap[k])?.classList.toggle('active', k===v);
+    const el = document.getElementById(viewMap[k]);
+    if (el) el.style.display = k===v ? 'flex' : 'none';
+  });
+  renderCalPage();
+}
+
+function calNav(dir) {
+  if (calView === 'week') {
+    calCursor = new Date(calCursor); calCursor.setDate(calCursor.getDate() + dir*7);
+  } else if (calView === 'month') {
+    calCursor = new Date(calCursor); calCursor.setMonth(calCursor.getMonth() + dir);
+  } else {
+    calCursor = new Date(calCursor); calCursor.setMonth(calCursor.getMonth() + dir*3);
+  }
+  renderCalPage();
+}
+
+function calGoToday() {
+  calCursor = new Date();
+  renderCalPage();
+}
+
+// ── main render ──────────────────────────────
+function renderCalPage() {
+  if (!allData.length) return;
+  const events = buildCalEvents();
+  if (calView === 'month')  renderCalMonth(events);
+  if (calView === 'week')   renderCalWeek(events);
+  if (calView === '3month') renderCal3Month(events);
+}
+
+// ═══════════════════════════════════════════
+//  MONTHLY VIEW
+// ═══════════════════════════════════════════
+function renderCalMonth(events) {
+  const y = calCursor.getFullYear(), m = calCursor.getMonth();
+  document.getElementById('calCurLabel').textContent = `${TH_MONTHS_FULL[m]} ${beYear(y)}`;
+
+  const firstDay = new Date(y, m, 1).getDay();  // 0=Sun
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+  const today = new Date();
+
+  let html = `<div class="cal-month-wrap"><div class="cal-month-grid">`;
+
+  // day headers
+  TH_DAYS_SHORT.forEach((d,i) => {
+    html += `<div class="cal-day-hdr${i===0||i===6?' weekend':''}">${d}</div>`;
+  });
+
+  // leading prev month days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const dn = prevDays - i;
+    const ds = isoDate(new Date(y, m-1, dn));
+    const evs = eventsOnDate(events, ds);
+    html += `<div class="cal-day-cell other">
+      <div class="cal-day-num">${dn}</div>
+      ${evs.slice(0,2).map(e=>evHTML(e)).join('')}
+      ${evs.length>2?`<div class="cal-3m-more">+${evs.length-2}</div>`:''}
+    </div>`;
+  }
+
+  // current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(y, m, d);
+    const ds = isoDate(dateObj);
+    const dow = dateObj.getDay();
+    const isToday = sameDay(dateObj, today);
+    const isWknd = dow===0||dow===6;
+    const evs = eventsOnDate(events, ds);
+    html += `<div class="cal-day-cell${isToday?' today':''}${isWknd?' weekend':''}">
+      <div class="cal-day-num">${d}</div>
+      ${evs.slice(0,3).map(e=>evHTML(e)).join('')}
+      ${evs.length>3?`<div class="cal-3m-more">+${evs.length-3} รายการ</div>`:''}
+    </div>`;
+  }
+
+  // trailing next month days
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  let next = 1;
+  for (let i = firstDay + daysInMonth; i < totalCells; i++, next++) {
+    const ds = isoDate(new Date(y, m+1, next));
+    const evs = eventsOnDate(events, ds);
+    html += `<div class="cal-day-cell other">
+      <div class="cal-day-num">${next}</div>
+      ${evs.slice(0,2).map(e=>evHTML(e)).join('')}
+    </div>`;
+  }
+
+  html += `</div></div>`;
+  document.getElementById('calViewMonth').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+//  WEEKLY VIEW
+// ═══════════════════════════════════════════
+function renderCalWeek(events) {
+  const today = new Date();
+  // หา Sunday ของสัปดาห์
+  const weekStart = new Date(calCursor);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+
+  const days = Array.from({length:7}, (_,i) => {
+    const d = new Date(weekStart); d.setDate(d.getDate()+i); return d;
+  });
+
+  const startLabel = `${days[0].getDate()} ${TH_MONTHS_SHORT[days[0].getMonth()]}`;
+  const endLabel   = `${days[6].getDate()} ${TH_MONTHS_SHORT[days[6].getMonth()]} ${beYear(days[6].getFullYear())}`;
+  document.getElementById('calCurLabel').textContent = `${startLabel} – ${endLabel}`;
+
+  const HOURS = ['08:30','09:30','10:30','11:30','12:30','13:30','14:30','15:30','16:30'];
+
+  let html = `<div class="cal-week-wrap"><div class="cal-week-grid">`;
+
+  // corner
+  html += `<div class="cal-wk-corner"></div>`;
+  // day headers
+  days.forEach((d,i) => {
+    const isToday = sameDay(d, today);
+    const isWknd = i===0||i===6;
+    html += `<div class="cal-wk-day-hdr${isToday?' today':''}${isWknd?' weekend':''}">
+      <div class="cal-wk-dname">${TH_DAYS_SHORT[i]}</div>
+      <div class="cal-wk-dnum">${d.getDate()}</div>
+    </div>`;
+  });
+
+  // all-day row
+  html += `<div class="cal-wk-allday-lbl">ทั้งวัน</div>`;
+  days.forEach((d,i) => {
+    const ds = isoDate(d);
+    const isToday = sameDay(d, today);
+    const evs = eventsOnDate(events, ds);
+    html += `<div class="cal-wk-allday-cell${isToday?' today':''}">
+      ${evs.slice(0,2).map(e=>evHTML(e)).join('')}
+      ${evs.length>2?`<div class="cal-3m-more">+${evs.length-2}</div>`:''}
+    </div>`;
+  });
+
+  // time rows
+  HOURS.forEach(h => {
+    html += `<div class="cal-wk-time">${h}</div>`;
+    days.forEach((d,i) => {
+      const isToday = sameDay(d, today);
+      const isWknd = i===0||i===6;
+      html += `<div class="cal-wk-cell${isToday?' today':''}${isWknd?' weekend':''}"></div>`;
+    });
+  });
+
+  html += `</div></div>`;
+  document.getElementById('calViewWeek').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+//  3-MONTH VIEW
+// ═══════════════════════════════════════════
+function renderCal3Month(events) {
+  const startMonth = new Date(calCursor.getFullYear(), calCursor.getMonth(), 1);
+  const months = [0,1,2].map(i => new Date(startMonth.getFullYear(), startMonth.getMonth()+i, 1));
+
+  const first = months[0], last = months[2];
+  document.getElementById('calCurLabel').textContent =
+    `${TH_MONTHS_SHORT[first.getMonth()]} – ${TH_MONTHS_SHORT[last.getMonth()]} ${beYear(last.getFullYear())}`;
+
+  const today = new Date();
+  let html = `<div class="cal-3m-wrap">`;
+
+  months.forEach(mStart => {
+    const y = mStart.getFullYear(), m = mStart.getMonth();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const firstDay = mStart.getDay();
+    const prevDays = new Date(y, m, 0).getDate();
+
+    // count events this month
+    const evCount = {survey:0, clean:0, valuation:0, contract:0, meeting:0, wo:0};
+    for (let d=1; d<=daysInMonth; d++) {
+      eventsOnDate(events, isoDate(new Date(y,m,d))).forEach(e => { if(evCount[e.type]!==undefined) evCount[e.type]++; });
+    }
+    const totalEv = Object.values(evCount).reduce((a,b)=>a+b,0);
+
+    // chips
+    const chipDefs = [
+      { type:'survey',    icon:'🔵', label:'รังวัด' },
+      { type:'clean',     icon:'🟢', label:'ทำสะอาด' },
+      { type:'valuation', icon:'🟠', label:'ประเมิน' },
+      { type:'contract',  icon:'🔴', label:'สัญญา' },
+      { type:'meeting',   icon:'🟣', label:'ประชุม' },
+      { type:'wo',        icon:'🟡', label:'WO' },
+    ];
+    const chips = chipDefs.filter(c=>evCount[c.type]>0).map(c =>
+      `<div class="cal-3m-chip" style="background:rgba(0,0,0,0.05);color:var(--ev-${c.type});">${c.icon} ${evCount[c.type]} ${c.label}</div>`
+    ).join('');
+
+    html += `<div class="cal-3m-month">
+      <div class="cal-3m-hdr">
+        <div>
+          <div class="cal-3m-title">${TH_MONTHS_FULL[m]} ${beYear(y)}</div>
+          <div class="cal-3m-sub">${daysInMonth} วัน · ${totalEv} events</div>
+        </div>
+        <div class="cal-3m-chips">${chips}</div>
+      </div>
+      <div class="cal-3m-grid">`;
+
+    // headers
+    TH_DAYS_SHORT.forEach((d,i) => {
+      html += `<div class="cal-3m-dh${i===0||i===6?' weekend':''}">${d}</div>`;
+    });
+
+    // leading cells
+    for (let i=firstDay-1;i>=0;i--) {
+      html += `<div class="cal-3m-cell other"><div class="cal-3m-num">${prevDays-i}</div></div>`;
+    }
+    // month days
+    for (let d=1;d<=daysInMonth;d++) {
+      const dateObj = new Date(y,m,d);
+      const ds = isoDate(dateObj);
+      const dow = dateObj.getDay();
+      const isToday = sameDay(dateObj, today);
+      const isWknd = dow===0||dow===6;
+      const evs = eventsOnDate(events, ds);
+      html += `<div class="cal-3m-cell${isToday?' today':''}${isWknd?' weekend':''}">
+        <div class="cal-3m-num">${d}</div>
+        ${evs.slice(0,2).map(e=>`<div class="${evClass(e.type)}" style="font-size:9px;padding:1px 3px;margin-bottom:1px;">
+          <div class="cal-ev-dot" style="background:var(--ev-${e.type});flex-shrink:0;"></div>
+          <span style="overflow:hidden;text-overflow:ellipsis;">${e.label}</span>
+        </div>`).join('')}
+        ${evs.length>2?`<div class="cal-3m-more">+${evs.length-2}</div>`:''}
+      </div>`;
+    }
+    // trailing
+    const total = Math.ceil((firstDay+daysInMonth)/7)*7;
+    for (let i=firstDay+daysInMonth;i<total;i++) {
+      html += `<div class="cal-3m-cell other"><div class="cal-3m-num">${i-firstDay-daysInMonth+1}</div></div>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  document.getElementById('calView3month').innerHTML = html;
+}
 
 </script>
 </body>
