@@ -1144,7 +1144,8 @@
   .wfh-badge.wfh    { background:var(--accent2); border-color:var(--accent2); }
   .wfh-badge.office { background:#1a7f37; border-color:#1a7f37; }
   .wfh-badge.leave  { background:#9a6700; border-color:#9a6700; }
-  .wfh-holiday-tag  { font-size:9px; color:#8250df; font-weight:600; padding:1px 4px; background:rgba(130,80,223,0.1); border-radius:3px; margin-top:2px; display:inline-block; }
+  .wfh-badge.outing { background:#e36209; border-color:#e36209; }
+  .wfh-holiday-tag  { font-size:9px; color:#8250df; font-weight:600; padding:1px 4px; background:rgba(130,80,223,0.1); border-radius:3px; margin-top:2px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
 
   /* progress bar ด้านล่าง cell */
   .wfh-bar { position:absolute; bottom:4px; left:5px; right:5px; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
@@ -1173,6 +1174,7 @@
   .wfh-mstatus.wfh    { background:rgba(9,105,218,0.12); color:var(--accent2); }
   .wfh-mstatus.office { background:rgba(26,127,55,0.1); color:#1a7f37; }
   .wfh-mstatus.leave  { background:rgba(154,103,0,0.1); color:#9a6700; }
+  .wfh-mstatus.outing { background:rgba(227,98,9,0.1); color:#e36209; }
   .wfh-mstatus.none   { background:var(--surface2); color:var(--text-dim); }
 
   /* summary panel */
@@ -2128,9 +2130,9 @@
 
       <!-- KPI strip -->
       <div class="wfh-kpi" id="wfhKpi">
-        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">WFH รวม</div><div class="wfh-kpi-val" id="wfhKv1" style="color:var(--accent2);">—</div><div class="wfh-kpi-sub">วัน-คน</div></div>
-        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">เข้าออฟฟิศ</div><div class="wfh-kpi-val" id="wfhKv2" style="color:#1a7f37;">—</div><div class="wfh-kpi-sub">วัน-คน</div></div>
-        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">ลางาน</div><div class="wfh-kpi-val" id="wfhKv3" style="color:#9a6700;">—</div><div class="wfh-kpi-sub">วัน-คน</div></div>
+        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">WFH รวม</div><div class="wfh-kpi-val" id="wfhKv1" style="color:var(--accent2);">—</div><div class="wfh-kpi-sub">วัน-คน (ผลรวมทุกคน)</div></div>
+        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">เข้าออฟฟิศ</div><div class="wfh-kpi-val" id="wfhKv2" style="color:#1a7f37;">—</div><div class="wfh-kpi-sub">วัน-คน (ผลรวมทุกคน)</div></div>
+        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">ลางาน</div><div class="wfh-kpi-val" id="wfhKv3" style="color:#9a6700;">—</div><div class="wfh-kpi-sub">วัน-คน (ผลรวมทุกคน)</div></div>
         <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">วันทำงาน</div><div class="wfh-kpi-val" id="wfhKv4" style="color:var(--text);">—</div><div class="wfh-kpi-sub">วัน (เดือนนี้)</div></div>
       </div>
 
@@ -2140,6 +2142,7 @@
         <div class="wfh-leg"><div class="wfh-leg-dot" style="background:#1a7f37;"></div>เข้าออฟฟิศ</div>
         <div class="wfh-leg"><div class="wfh-leg-dot" style="background:#9a6700;"></div>ลา</div>
         <div class="wfh-leg"><div class="wfh-leg-dot" style="background:#8250df;"></div>วันหยุดราชการ</div>
+        <div class="wfh-leg"><div class="wfh-leg-dot" style="background:#e36209;"></div>Outing</div>
         <div id="wfhQuotaWarn" class="wfh-quota-warn" style="display:none;"></div>
       </div>
 
@@ -2156,7 +2159,7 @@
         <!-- Side panel -->
         <div class="wfh-side">
           <div class="wfh-side-top">
-            <div class="wfh-side-title">👥 สมาชิกฝ่าย</div>
+            <div class="wfh-side-title">👥 สมาชิกฝ่ายบริหารทรัพย์สิน</div>
             <div class="wfh-side-sub" id="wfhSideSub">7 คน · สถานะวันนี้</div>
           </div>
           <div class="wfh-members" id="wfhMembers"></div>
@@ -2484,7 +2487,9 @@ async function _doLoadAllSheets() {
       wfhData = rows.map(r => {
         const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k)) return r[rk]||''; return ''; };
         const pos = g('ตำแหน่ง','position','pos');
-        const member = WFH_MEMBERS.find(m => pos.includes(m.position.substring(0,6))) || null;
+        // เรียงจาก longest match ก่อน เพื่อให้ "ผู้ชำนาญการ 2" ไม่ match "ผู้ชำนาญการ 1" ผิด
+        const member = [...WFH_MEMBERS].sort((a,b) => b.position.length - a.position.length)
+          .find(m => pos.replace(/\s/g,'').includes(m.position.replace(/\s/g,''))) || null;
         return {
           date:          g('วันที่','date'),
           name:          g('ชื่อ','name'),
@@ -5366,27 +5371,30 @@ const AVATAR_COLORS = ['#0969da','#1a7f37','#8250df','#d4580a','#9a6700','#cf222
 
 // วันหยุดธนาคาร ปี 2569 (ค.ศ. 2026) — ตามประกาศ ธนาคารแห่งประเทศไทย
 // รวม 19 วัน (รวมวันหยุดพิเศษ 2 ม.ค. 2569)
-const TH_HOLIDAYS_2568 = [
-  '2026-01-01', // วันขึ้นปีใหม่
-  '2026-01-02', // วันหยุดทำการเพิ่มเป็นกรณีพิเศษ (ครม.)
-  '2026-03-03', // วันมาฆบูชา
-  '2026-04-06', // วันจักรี
-  '2026-04-13', // วันสงกรานต์
-  '2026-04-14', // วันสงกรานต์
-  '2026-04-15', // วันสงกรานต์
-  '2026-05-01', // วันแรงงานแห่งชาติ
-  '2026-05-04', // วันฉัตรมงคล
-  '2026-06-01', // ชดเชยวันวิสาขบูชา (31 พ.ค. ตรงวันอาทิตย์)
-  '2026-06-03', // วันเฉลิมพระชนมพรรษา สมเด็จพระนางเจ้าสุทิดาฯ
-  '2026-07-28', // วันเฉลิมพระชนมพรรษา พระบาทสมเด็จพระเจ้าอยู่หัว
-  '2026-07-29', // วันอาสาฬหบูชา
-  '2026-08-12', // วันเฉลิมพระชนมพรรษา สมเด็จพระนางเจ้าสิริกิติ์ฯ และวันแม่แห่งชาติ
-  '2026-10-13', // วันนวมินทรมหาราช
-  '2026-10-23', // วันปิยมหาราช
-  '2026-12-07', // ชดเชยวันคล้ายวันพระบรมราชสมภพ ร.9 (5 ธ.ค. ตรงวันเสาร์)
-  '2026-12-10', // วันรัฐธรรมนูญ
-  '2026-12-31', // วันสิ้นปี
-];
+const TH_HOLIDAYS_2568 = {
+  '2026-01-01': 'วันขึ้นปีใหม่',
+  '2026-01-02': 'วันหยุดพิเศษ (ครม.)',
+  '2026-03-03': 'วันมาฆบูชา',
+  '2026-04-06': 'วันจักรี',
+  '2026-04-13': 'วันสงกรานต์',
+  '2026-04-14': 'วันสงกรานต์',
+  '2026-04-15': 'วันสงกรานต์',
+  '2026-05-01': 'วันแรงงานแห่งชาติ',
+  '2026-05-04': 'วันฉัตรมงคล',
+  '2026-06-01': 'ชดเชยวันวิสาขบูชา',
+  '2026-06-03': 'วันเฉลิมพระชนมพรรษา ร.10',
+  '2026-07-28': 'วันเฉลิมพระชนมพรรษา ร.10',
+  '2026-07-29': 'วันอาสาฬหบูชา',
+  '2026-08-12': 'วันแม่แห่งชาติ',
+  '2026-10-13': 'วันนวมินทรมหาราช',
+  '2026-10-23': 'วันปิยมหาราช',
+  '2026-12-07': 'ชดเชยวันพ่อแห่งชาติ',
+  '2026-12-10': 'วันรัฐธรรมนูญ',
+  '2026-12-31': 'วันสิ้นปี',
+};
+// helper
+function isHolidayDate(ds) { return ds in TH_HOLIDAYS_2568; }
+function getHolidayName(ds) { return TH_HOLIDAYS_2568[ds] || ''; }
 
 function wfhNav(dir) {
   wfhCursor = new Date(wfhCursor);
@@ -5427,7 +5435,7 @@ function renderWFHPage() {
     const date = new Date(y, m, d);
     const dow  = date.getDay();
     const ds   = isoDate(date);
-    if (dow !== 0 && dow !== 6 && !TH_HOLIDAYS_2568.includes(ds)) workdays++;
+    if (dow !== 0 && dow !== 6 && !isHolidayDate(ds)) workdays++;
   }
   document.getElementById('wfhKv1').textContent = nWFH;
   document.getElementById('wfhKv2').textContent = nOffice;
@@ -5462,7 +5470,7 @@ function renderWFHGrid(y, m, monthRows) {
   // helper: render cell
   function cellHtml(ds, dayNum, cls, showEvents) {
     if (!showEvents) return `<div class="wfh-day-cell${cls}"><div class="wfh-day-num">${dayNum}</div></div>`;
-    const isHoliday = TH_HOLIDAYS_2568.includes(ds);
+    const isHoliday = isHolidayDate(ds);
     const dayEvs    = getWFHByDate(monthRows, ds);
     const wfhCount  = dayEvs.filter(r => r.status==='WFH').length;
     const total     = membersSorted.length;
@@ -5471,16 +5479,17 @@ function renderWFHGrid(y, m, monthRows) {
     membersSorted.forEach((mem, idx) => {
       const ev = dayEvs.find(r => r.name === mem.name);
       if (!ev) return;
-      const stCls = ev.status === 'WFH' ? 'wfh' : ev.status === 'ลา' ? 'leave' : 'office';
+      const stCls = ev.status === 'WFH' ? 'wfh' : ev.status === 'ลา' ? 'leave' : ev.status === 'Outing' ? 'outing' : 'office';
       const initials = mem.name.substring(0,1);
       const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-      const bg = ev.status === 'WFH' ? '#0969da' : ev.status === 'ลา' ? '#9a6700' : '#1a7f37';
+      const bg = ev.status === 'WFH' ? '#0969da' : ev.status === 'ลา' ? '#9a6700' : ev.status === 'Outing' ? '#e36209' : '#1a7f37';
       badges += `<div class="wfh-badge ${stCls}" style="background:${bg};border-color:${bg};" title="${mem.name} · ${ev.status}">${initials}</div>`;
     });
 
     const pct = total > 0 ? (wfhCount / total) * 100 : 0;
     const barCls = pct >= 100 ? ' over' : pct >= 70 ? ' warn' : '';
-    const holidayTag = isHoliday ? '<div class="wfh-holiday-tag">วันหยุด</div>' : '';
+    const holidayName = isHoliday ? getHolidayName(ds) : '';
+    const holidayTag  = isHoliday ? `<div class="wfh-holiday-tag" title="${holidayName}">วันหยุด : ${holidayName}</div>` : '';
 
     return `<div class="wfh-day-cell${cls}${isHoliday?' holiday':''}">
       <div class="wfh-day-num">${dayNum}</div>
@@ -5546,7 +5555,7 @@ function renderWFHSide(y, m, monthRows) {
     const nWFH = monthEvs.filter(r => r.status === 'WFH').length;
 
     const stLabel = todayEv ? todayEv.status : '—';
-    const stCls   = todayEv ? (todayEv.status === 'WFH' ? 'wfh' : todayEv.status === 'ลา' ? 'leave' : 'office') : 'none';
+    const stCls   = todayEv ? (todayEv.status === 'WFH' ? 'wfh' : todayEv.status === 'ลา' ? 'leave' : todayEv.status === 'Outing' ? 'outing' : 'office') : 'none';
     const color   = AVATAR_COLORS[idx % AVATAR_COLORS.length];
     const initials = mem.name !== '—' ? mem.name.substring(0,1) : String(idx+1);
 
@@ -5566,10 +5575,11 @@ function renderWFHSide(y, m, monthRows) {
      <div class="empty-sub" style="margin-top:4px;font-size:10px;">กรุณาเพิ่ม Sheet ชื่อ "WFH" ที่มีคอลัมน์<br>วันที่ · ชื่อ · ตำแหน่ง · สถานะ</div></div>`;
 
   // monthly summary bars
-  const totalWFH    = monthRows.filter(r => r.status==='WFH').length;
-  const totalOffice = monthRows.filter(r => r.status==='Office').length;
-  const totalLeave  = monthRows.filter(r => r.status==='ลา').length;
-  const grandTotal  = totalWFH + totalOffice + totalLeave || 1;
+  // นับเป็นจำนวนวัน (unique dates) ที่มีคนทำ WFH/Office/ลา อย่างน้อย 1 คน
+  const totalWFH    = new Set(monthRows.filter(r => r.status==='WFH').map(r => r.date)).size;
+  const totalOffice = new Set(monthRows.filter(r => r.status==='Office').map(r => r.date)).size;
+  const totalLeave  = new Set(monthRows.filter(r => r.status==='ลา').map(r => r.date)).size;
+  const grandTotal  = Math.max(totalWFH, totalOffice, totalLeave) || 1;
 
   document.getElementById('wfhSummaryRows').innerHTML = `
     <div class="wfh-sum-row">
