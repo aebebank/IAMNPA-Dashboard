@@ -1100,6 +1100,93 @@
      PAGE 5: ปฏิทินงาน
   ══════════════════════════════════════════ */
   #page-calendar.active { display:flex; flex-direction:column; height:100%; overflow:hidden; }
+  #page-wfh.active { display:flex; flex-direction:column; height:100%; overflow:hidden; }
+
+  /* ── WFH PAGE ── */
+  .wfh-topbar { padding:10px 18px; border-bottom:1px solid var(--border); background:var(--surface); display:flex; align-items:center; gap:10px; flex-shrink:0; flex-wrap:wrap; }
+  .wfh-title  { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .wfh-icon-box { width:28px; height:28px; background:rgba(9,105,218,0.1); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .wfh-nav    { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .wfh-cur-label { font-family:var(--mono); font-size:13px; font-weight:600; min-width:130px; text-align:center; }
+
+  .wfh-body   { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+
+  /* KPI strip */
+  .wfh-kpi    { display:flex; gap:0; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .wfh-kpi-cell { flex:1; padding:10px 14px; border-right:1px solid var(--border); background:var(--surface); }
+  .wfh-kpi-cell:last-child { border-right:none; }
+  .wfh-kpi-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:3px; }
+  .wfh-kpi-val { font-family:var(--mono); font-size:22px; font-weight:700; }
+  .wfh-kpi-sub { font-size:10px; color:var(--text-muted); margin-top:1px; }
+
+  /* calendar + sidebar */
+  .wfh-content { flex:1; overflow:hidden; display:flex; }
+  .wfh-cal-area { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+  .wfh-cal-wrap { flex:1; overflow:auto; }
+
+  /* grid */
+  .wfh-grid { display:grid; grid-template-columns:repeat(7,1fr); border-left:1px solid var(--border); border-top:1px solid var(--border); }
+  .wfh-day-hdr { padding:7px 0; text-align:center; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); background:var(--surface2); border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .wfh-day-hdr.weekend { color:var(--text-dim); }
+  .wfh-day-cell { min-height:90px; padding:5px 5px 12px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); background:var(--surface); position:relative; }
+  .wfh-day-cell.other { background:var(--surface2); opacity:0.5; }
+  .wfh-day-cell.today { background:rgba(9,105,218,0.04); }
+  .wfh-day-cell.holiday { background:rgba(130,80,223,0.04); }
+  .wfh-day-cell.weekend { background:rgba(0,0,0,0.01); }
+  .wfh-day-num { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-muted); width:20px; height:20px; display:flex; align-items:center; justify-content:center; border-radius:50%; margin-bottom:3px; }
+  .wfh-day-cell.today .wfh-day-num { background:var(--accent2); color:#fff; }
+  .wfh-day-cell.holiday .wfh-day-num { color:var(--holiday,#8250df); }
+
+  /* avatar badges */
+  .wfh-badges { display:flex; flex-wrap:wrap; gap:3px; }
+  .wfh-badge { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; flex-shrink:0; cursor:pointer; border:2px solid transparent; transition:transform 0.1s; color:#fff; }
+  .wfh-badge:hover { transform:scale(1.18); }
+  .wfh-badge.wfh    { background:var(--accent2); border-color:var(--accent2); }
+  .wfh-badge.office { background:#1a7f37; border-color:#1a7f37; }
+  .wfh-badge.leave  { background:#9a6700; border-color:#9a6700; }
+  .wfh-holiday-tag  { font-size:9px; color:#8250df; font-weight:600; padding:1px 4px; background:rgba(130,80,223,0.1); border-radius:3px; margin-top:2px; display:inline-block; }
+
+  /* progress bar ด้านล่าง cell */
+  .wfh-bar { position:absolute; bottom:4px; left:5px; right:5px; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+  .wfh-bar-fill { height:100%; border-radius:2px; background:var(--accent2); }
+  .wfh-bar-fill.warn { background:#9a6700; }
+  .wfh-bar-fill.over { background:var(--danger); }
+
+  /* legend */
+  .wfh-legend { display:flex; gap:12px; padding:6px 18px; border-bottom:1px solid var(--border); background:var(--surface2); flex-shrink:0; flex-wrap:wrap; }
+  .wfh-leg    { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-muted); }
+  .wfh-leg-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+
+  /* side panel */
+  .wfh-side { width:260px; flex-shrink:0; border-left:1px solid var(--border); background:var(--surface); display:flex; flex-direction:column; overflow:hidden; }
+  .wfh-side-top { padding:12px 14px; border-bottom:1px solid var(--border); background:var(--surface2); flex-shrink:0; }
+  .wfh-side-title { font-size:12px; font-weight:700; margin-bottom:2px; }
+  .wfh-side-sub   { font-size:10px; color:var(--text-muted); margin-bottom:8px; }
+  .wfh-members  { flex:1; overflow-y:auto; padding:8px 10px; display:flex; flex-direction:column; gap:3px; }
+  .wfh-member   { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:7px; border:1px solid transparent; }
+  .wfh-avatar   { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; color:#fff; }
+  .wfh-minfo    { flex:1; min-width:0; }
+  .wfh-mname    { font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .wfh-mpos     { font-size:9px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .wfh-mcount   { font-size:10px; font-family:var(--mono); color:var(--text-muted); white-space:nowrap; }
+  .wfh-mstatus  { font-size:10px; font-weight:700; padding:2px 6px; border-radius:3px; flex-shrink:0; }
+  .wfh-mstatus.wfh    { background:rgba(9,105,218,0.12); color:var(--accent2); }
+  .wfh-mstatus.office { background:rgba(26,127,55,0.1); color:#1a7f37; }
+  .wfh-mstatus.leave  { background:rgba(154,103,0,0.1); color:#9a6700; }
+  .wfh-mstatus.none   { background:var(--surface2); color:var(--text-dim); }
+
+  /* summary panel */
+  .wfh-summary { border-top:1px solid var(--border); padding:12px 14px; background:var(--surface2); flex-shrink:0; }
+  .wfh-sum-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-dim); margin-bottom:8px; }
+  .wfh-sum-row  { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+  .wfh-sum-dot  { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+  .wfh-sum-lbl  { font-size:11px; color:var(--text-muted); flex:1; }
+  .wfh-sum-bar  { width:55px; height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+  .wfh-sum-fill { height:100%; border-radius:3px; }
+  .wfh-sum-val  { font-family:var(--mono); font-size:11px; font-weight:700; }
+
+  /* quota warning */
+  .wfh-quota-warn { margin:6px 16px 0; padding:6px 10px; background:rgba(207,34,46,0.08); border:1px solid rgba(207,34,46,0.25); border-radius:6px; font-size:11px; color:var(--danger); display:flex; align-items:center; gap:6px; }
 
   /* event colors */
   :root {
@@ -1363,6 +1450,10 @@
     <div class="nav-item" id="nav-calendar" onclick="switchPage('calendar')">
       <span class="nav-icon">📅</span>
       <span>ปฏิทินงาน</span>
+    </div>
+    <div class="nav-item" id="nav-wfh" onclick="switchPage('wfh')">
+      <span class="nav-icon">🏠</span>
+      <span>ปฏิทิน WFH</span>
     </div>
     <div class="sidebar-divider"></div>
   </nav>
@@ -2016,6 +2107,71 @@
 
     </div><!-- /page-calendar -->
 
+    <!-- ══════════════════════════════════════════
+         PAGE: ปฏิทิน WFH
+    ══════════════════════════════════════════ -->
+    <div class="page-view" id="page-wfh">
+
+      <!-- Topbar -->
+      <div class="wfh-topbar">
+        <div class="wfh-title">
+          <div class="wfh-icon-box">🏠</div>
+          ปฏิทิน WFH — ฝ่ายบริหารทรัพย์สิน
+        </div>
+        <div class="wfh-nav">
+          <button class="btn-cal-nav" onclick="wfhNav(-1)">◀</button>
+          <div class="wfh-cur-label" id="wfhCurLabel">—</div>
+          <button class="btn-cal-nav" onclick="wfhNav(1)">▶</button>
+          <button class="btn-cal-today" onclick="wfhGoToday()">วันนี้</button>
+        </div>
+      </div>
+
+      <!-- KPI strip -->
+      <div class="wfh-kpi" id="wfhKpi">
+        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">WFH รวม</div><div class="wfh-kpi-val" id="wfhKv1" style="color:var(--accent2);">—</div><div class="wfh-kpi-sub">วัน-คน</div></div>
+        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">เข้าออฟฟิศ</div><div class="wfh-kpi-val" id="wfhKv2" style="color:#1a7f37;">—</div><div class="wfh-kpi-sub">วัน-คน</div></div>
+        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">ลางาน</div><div class="wfh-kpi-val" id="wfhKv3" style="color:#9a6700;">—</div><div class="wfh-kpi-sub">วัน-คน</div></div>
+        <div class="wfh-kpi-cell"><div class="wfh-kpi-lbl">วันทำงาน</div><div class="wfh-kpi-val" id="wfhKv4" style="color:var(--text);">—</div><div class="wfh-kpi-sub">วัน (เดือนนี้)</div></div>
+      </div>
+
+      <!-- Legend -->
+      <div class="wfh-legend">
+        <div class="wfh-leg"><div class="wfh-leg-dot" style="background:var(--accent2);"></div>WFH</div>
+        <div class="wfh-leg"><div class="wfh-leg-dot" style="background:#1a7f37;"></div>เข้าออฟฟิศ</div>
+        <div class="wfh-leg"><div class="wfh-leg-dot" style="background:#9a6700;"></div>ลา</div>
+        <div class="wfh-leg"><div class="wfh-leg-dot" style="background:#8250df;"></div>วันหยุดราชการ</div>
+        <div id="wfhQuotaWarn" class="wfh-quota-warn" style="display:none;"></div>
+      </div>
+
+      <!-- Body -->
+      <div class="wfh-content">
+
+        <!-- Calendar -->
+        <div class="wfh-cal-area">
+          <div class="wfh-cal-wrap">
+            <div class="wfh-grid" id="wfhGrid"></div>
+          </div>
+        </div>
+
+        <!-- Side panel -->
+        <div class="wfh-side">
+          <div class="wfh-side-top">
+            <div class="wfh-side-title">👥 สมาชิกฝ่าย</div>
+            <div class="wfh-side-sub" id="wfhSideSub">7 คน · สถานะวันนี้</div>
+          </div>
+          <div class="wfh-members" id="wfhMembers"></div>
+          <div class="wfh-summary">
+            <div class="wfh-sum-title">สรุปเดือนนี้</div>
+            <div id="wfhSummaryRows"></div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;">
+              <button onclick="exportWFHCsv()" style="flex:1;padding:5px;border-radius:6px;background:var(--accent2);border:none;color:#fff;font-size:11px;font-weight:600;font-family:var(--font);cursor:pointer;">⬇️ Export CSV</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /page-wfh -->
+
   </div><!-- /page-content -->
 </div><!-- /app-shell -->
 
@@ -2202,9 +2358,22 @@ const SHEET_TABS = {
   survey:       'ประวัติการสำรวจ',
   meeting:      'นัดประชุม',
   cleaningWO:   'CleaningWO',
+  wfh:          'WFH',
 };
 
 let meetingData = [];
+let wfhData = []; // [{date, name, position, positionOrder, status}]
+
+// สมาชิกฝ่ายบริหารทรัพย์สิน (ลำดับตำแหน่ง)
+const WFH_MEMBERS = [
+  { position: 'ผู้จัดการฝ่ายบริหารทรัพย์สิน',         order: 1 },
+  { position: 'หัวหน้าส่วนจำหน่ายทรัพย์สิน',          order: 2 },
+  { position: 'หัวหน้าส่วนพัฒนาทรัพย์สิน',            order: 3 },
+  { position: 'ผู้ชำนาญการอาวุโส',                     order: 4 },
+  { position: 'ผู้ชำนาญการ 2',                         order: 5 },
+  { position: 'ผู้ชำนาญการ 1',                         order: 6 },
+  { position: 'ลูกจ้างในตำแหน่งผู้ชำนาญการ 1',        order: 7 },
+];
 let cleaningWOData    = [];   // [{wo_number, asset_id_list, wo_date, clean_date, contractor, status, note}]
 let cleaningItemsData = [];   // [{wo_number, asset_id, item_type, cost}]
 
@@ -2308,6 +2477,24 @@ async function _doLoadAllSheets() {
       }).filter(r => r.wo_number && r.asset_id);
 
     } catch(e) { console.warn('tab CleaningWO:', e.message); }
+
+    // Tab 7 — WFH
+    try {
+      const rows = await fetchSheet(sheetId, SHEET_TABS.wfh);
+      wfhData = rows.map(r => {
+        const g = (...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase().includes(k)) return r[rk]||''; return ''; };
+        const pos = g('ตำแหน่ง','position','pos');
+        const member = WFH_MEMBERS.find(m => pos.includes(m.position.substring(0,6))) || null;
+        return {
+          date:          g('วันที่','date'),
+          name:          g('ชื่อ','name'),
+          position:      pos,
+          positionOrder: member ? member.order : 99,
+          status:        g('สถานะ','status'), // WFH | Office | ลา
+        };
+      }).filter(r => r.date && r.name && r.status);
+      if (document.getElementById('page-wfh')?.classList.contains('active')) renderWFHPage();
+    } catch(e) { console.warn('tab WFH:', e.message); }
 
     processData(npaData);
     const now = new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
@@ -3692,16 +3879,17 @@ function fmtDate(s) {
 //  SIDEBAR NAVIGATION
 // ═══════════════════════════════════════════
 function switchPage(page) {
-  ['summary','history','timeline','valuation','calendar'].forEach(p => {
+  ['summary','history','timeline','valuation','calendar','wfh'].forEach(p => {
     document.getElementById('page-' + p)?.classList.toggle('active', p === page);
     document.getElementById('nav-' + p)?.classList.toggle('active', p === page);
   });
   const pc = document.querySelector('.page-content');
-  if (pc) pc.style.overflowY = (page === 'valuation' || page === 'calendar') ? 'hidden' : 'auto';
-  if (page === 'history')  renderHistPage();
-  if (page === 'timeline') renderTLPills();
+  if (pc) pc.style.overflowY = (page === 'valuation' || page === 'calendar' || page === 'wfh') ? 'hidden' : 'auto';
+  if (page === 'history')   renderHistPage();
+  if (page === 'timeline')  renderTLPills();
   if (page === 'valuation') renderValPage();
   if (page === 'calendar')  renderCalPage();
+  if (page === 'wfh')       renderWFHPage();
 }
 
 // ═══════════════════════════════════════════
@@ -5018,7 +5206,6 @@ function renderCalWeek(events) {
 }
 
 function drawCalNowLine(days) {
-  document.querySelectorAll('.cal-now-line').forEach(el => el.remove());
   if (calView !== 'week') return;
 
   const now      = new Date();
@@ -5026,13 +5213,15 @@ function drawCalNowLine(days) {
   if (todayIdx === -1) return;
 
   const SLOTS    = ['08:30','09:30','10:30','11:30','12:30','13:30','14:30','15:30','16:30'];
-  const SLOT_H   = 60; // px height ต่อ slot
+  const SLOT_H   = 60;
   const nowMin   = now.getHours()*60 + now.getMinutes();
   const startMin = 8*60+30;
   const endMin   = 17*60+30;
-  if (nowMin < startMin || nowMin > endMin) return;
+  if (nowMin < startMin || nowMin > endMin) {
+    document.querySelectorAll('.cal-now-line').forEach(el => el.remove());
+    return;
+  }
 
-  // หา slot และ offset ภายใน slot
   let slotIdx = 0;
   for (let i = SLOTS.length-1; i >= 0; i--) {
     const [sh,sm] = SLOTS[i].split(':').map(Number);
@@ -5041,13 +5230,15 @@ function drawCalNowLine(days) {
   const [sh,sm]  = SLOTS[slotIdx].split(':').map(Number);
   const offsetPx = ((nowMin - (sh*60+sm)) / 60) * SLOT_H;
 
-  // รอ DOM paint ก่อนวัด position (แก้ปัญหา getBoundingClientRect คืน 0)
   requestAnimationFrame(() => {
+    // ลบเส้นเก่าภายใน rAF เพื่อให้แน่ใจว่า remove + append อยู่ใน frame เดียวกัน
+    document.querySelectorAll('.cal-now-line').forEach(el => el.remove());
+
     const grid = document.querySelector('.cal-week-grid');
     if (!grid) return;
 
-    const TOTAL_COLS  = 8; // 1 time col + 7 days
-    const HEADER_ROWS = 2; // day-header + allday
+    const TOTAL_COLS  = 8;
+    const HEADER_ROWS = 2;
     const cellIdx = TOTAL_COLS * (HEADER_ROWS + slotIdx) + (todayIdx + 1);
     const cell    = grid.children[cellIdx];
     if (!cell) return;
@@ -5055,7 +5246,7 @@ function drawCalNowLine(days) {
     const wrap     = grid.closest('.cal-week-wrap') || grid.parentElement;
     const wrapRect = wrap.getBoundingClientRect();
     const cellRect = cell.getBoundingClientRect();
-    if (!cellRect.width) return; // ยังไม่ paint
+    if (!cellRect.width) return;
 
     const topPx  = cellRect.top  - wrapRect.top  + wrap.scrollTop + offsetPx;
     const leftPx = cellRect.left - wrapRect.left;
@@ -5067,7 +5258,6 @@ function drawCalNowLine(days) {
     line.className = 'cal-now-line';
     line.style.cssText = `top:${topPx}px;left:${leftPx}px;width:${wPx}px;`;
 
-    // label เวลา
     const label = document.createElement('span');
     label.style.cssText = [
       'position:absolute','right:4px','top:-9px',
@@ -5166,6 +5356,262 @@ function renderCal3Month(events) {
   html += `</div>`;
   document.getElementById('calView3month').innerHTML = html;
 }
+
+
+// ═══════════════════════════════════════════
+//  PAGE: ปฏิทิน WFH
+// ═══════════════════════════════════════════
+let wfhCursor = new Date();
+const AVATAR_COLORS = ['#0969da','#1a7f37','#8250df','#d4580a','#9a6700','#cf222e','#0550ae'];
+
+// วันหยุดธนาคาร ปี 2569 (ค.ศ. 2026) — ตามประกาศ ธนาคารแห่งประเทศไทย
+// รวม 19 วัน (รวมวันหยุดพิเศษ 2 ม.ค. 2569)
+const TH_HOLIDAYS_2568 = [
+  '2026-01-01', // วันขึ้นปีใหม่
+  '2026-01-02', // วันหยุดทำการเพิ่มเป็นกรณีพิเศษ (ครม.)
+  '2026-03-03', // วันมาฆบูชา
+  '2026-04-06', // วันจักรี
+  '2026-04-13', // วันสงกรานต์
+  '2026-04-14', // วันสงกรานต์
+  '2026-04-15', // วันสงกรานต์
+  '2026-05-01', // วันแรงงานแห่งชาติ
+  '2026-05-04', // วันฉัตรมงคล
+  '2026-06-01', // ชดเชยวันวิสาขบูชา (31 พ.ค. ตรงวันอาทิตย์)
+  '2026-06-03', // วันเฉลิมพระชนมพรรษา สมเด็จพระนางเจ้าสุทิดาฯ
+  '2026-07-28', // วันเฉลิมพระชนมพรรษา พระบาทสมเด็จพระเจ้าอยู่หัว
+  '2026-07-29', // วันอาสาฬหบูชา
+  '2026-08-12', // วันเฉลิมพระชนมพรรษา สมเด็จพระนางเจ้าสิริกิติ์ฯ และวันแม่แห่งชาติ
+  '2026-10-13', // วันนวมินทรมหาราช
+  '2026-10-23', // วันปิยมหาราช
+  '2026-12-07', // ชดเชยวันคล้ายวันพระบรมราชสมภพ ร.9 (5 ธ.ค. ตรงวันเสาร์)
+  '2026-12-10', // วันรัฐธรรมนูญ
+  '2026-12-31', // วันสิ้นปี
+];
+
+function wfhNav(dir) {
+  wfhCursor = new Date(wfhCursor);
+  wfhCursor.setMonth(wfhCursor.getMonth() + dir);
+  renderWFHPage();
+}
+function wfhGoToday() { wfhCursor = new Date(); renderWFHPage(); }
+
+// ── สรุปข้อมูล WFH ──────────────────────────
+function getWFHMonthData(y, m) {
+  // filter เฉพาะเดือนนี้
+  const monthStr = `${y}-${String(m+1).padStart(2,'0')}`;
+  return wfhData.filter(r => (r.date||'').startsWith(monthStr));
+}
+
+function getWFHByDate(rows, ds) {
+  return rows.filter(r => r.date === ds);
+}
+
+// ── render ───────────────────────────────────
+function renderWFHPage() {
+  const y = wfhCursor.getFullYear();
+  const m = wfhCursor.getMonth();
+  const monthRows = getWFHMonthData(y, m);
+
+  // label
+  document.getElementById('wfhCurLabel').textContent =
+    TH_MONTHS_FULL[m] + ' ' + beYear(y);
+
+  // KPI
+  const nWFH    = monthRows.filter(r => r.status === 'WFH').length;
+  const nOffice = monthRows.filter(r => r.status === 'Office').length;
+  const nLeave  = monthRows.filter(r => r.status === 'ลา').length;
+  // นับวันทำงาน (จันทร์-ศุกร์ ไม่ใช่วันหยุด)
+  let workdays = 0;
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(y, m, d);
+    const dow  = date.getDay();
+    const ds   = isoDate(date);
+    if (dow !== 0 && dow !== 6 && !TH_HOLIDAYS_2568.includes(ds)) workdays++;
+  }
+  document.getElementById('wfhKv1').textContent = nWFH;
+  document.getElementById('wfhKv2').textContent = nOffice;
+  document.getElementById('wfhKv3').textContent = nLeave;
+  document.getElementById('wfhKv4').textContent = workdays;
+
+  renderWFHGrid(y, m, monthRows);
+  renderWFHSide(y, m, monthRows);
+}
+
+// ── Grid ─────────────────────────────────────
+function renderWFHGrid(y, m, monthRows) {
+  const today     = new Date();
+  const firstDay  = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const prevDays  = new Date(y, m, 0).getDate();
+
+  // สร้าง member list จาก data + WFH_MEMBERS order
+  const knownNames = [...new Set(wfhData.map(r => r.name))];
+  // เรียงตาม positionOrder
+  const membersSorted = knownNames.map(name => {
+    const latest = wfhData.filter(r => r.name === name).slice(-1)[0];
+    return { name, order: latest?.positionOrder || 99, position: latest?.position || '' };
+  }).sort((a, b) => a.order - b.order);
+
+  let html = '';
+  // headers
+  TH_DAYS_SHORT.forEach((d, i) => {
+    html += `<div class="wfh-day-hdr${i===0||i===6?' weekend':''}">${d}</div>`;
+  });
+
+  // helper: render cell
+  function cellHtml(ds, dayNum, cls, showEvents) {
+    if (!showEvents) return `<div class="wfh-day-cell${cls}"><div class="wfh-day-num">${dayNum}</div></div>`;
+    const isHoliday = TH_HOLIDAYS_2568.includes(ds);
+    const dayEvs    = getWFHByDate(monthRows, ds);
+    const wfhCount  = dayEvs.filter(r => r.status==='WFH').length;
+    const total     = membersSorted.length;
+
+    let badges = '';
+    membersSorted.forEach((mem, idx) => {
+      const ev = dayEvs.find(r => r.name === mem.name);
+      if (!ev) return;
+      const stCls = ev.status === 'WFH' ? 'wfh' : ev.status === 'ลา' ? 'leave' : 'office';
+      const initials = mem.name.substring(0,1);
+      const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+      const bg = ev.status === 'WFH' ? '#0969da' : ev.status === 'ลา' ? '#9a6700' : '#1a7f37';
+      badges += `<div class="wfh-badge ${stCls}" style="background:${bg};border-color:${bg};" title="${mem.name} · ${ev.status}">${initials}</div>`;
+    });
+
+    const pct = total > 0 ? (wfhCount / total) * 100 : 0;
+    const barCls = pct >= 100 ? ' over' : pct >= 70 ? ' warn' : '';
+    const holidayTag = isHoliday ? '<div class="wfh-holiday-tag">วันหยุด</div>' : '';
+
+    return `<div class="wfh-day-cell${cls}${isHoliday?' holiday':''}">
+      <div class="wfh-day-num">${dayNum}</div>
+      ${holidayTag}
+      <div class="wfh-badges">${badges}</div>
+      ${dayEvs.length > 0 ? `<div class="wfh-bar"><div class="wfh-bar-fill${barCls}" style="width:${pct}%;"></div></div>` : ''}
+    </div>`;
+  }
+
+  // leading
+  for (let i = firstDay-1; i >= 0; i--) {
+    const dn = prevDays - i;
+    const ds = isoDate(new Date(y, m-1, dn));
+    html += cellHtml(ds, dn, ' other', false);
+  }
+  // days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(y, m, d);
+    const ds  = isoDate(dateObj);
+    const dow = dateObj.getDay();
+    const isToday = sameDay(dateObj, today);
+    const isWknd  = dow===0||dow===6;
+    let cls = '';
+    if (isToday) cls += ' today';
+    if (isWknd)  cls += ' weekend';
+    html += cellHtml(ds, d, cls, true);
+  }
+  // trailing
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  let next = 1;
+  for (let i = firstDay + daysInMonth; i < totalCells; i++, next++) {
+    const ds = isoDate(new Date(y, m+1, next));
+    html += cellHtml(ds, next, ' other', false);
+  }
+
+  document.getElementById('wfhGrid').innerHTML = html;
+}
+
+// ── Side panel ───────────────────────────────
+function renderWFHSide(y, m, monthRows) {
+  const today   = new Date();
+  const todayDs = isoDate(today);
+
+  // สมาชิกจาก data จริง (เรียงตาม order)
+  const knownNames = [...new Set(wfhData.map(r => r.name))];
+  const membersSorted = knownNames.map(name => {
+    const latest = wfhData.filter(r => r.name === name).slice(-1)[0];
+    return { name, order: latest?.positionOrder || 99, position: latest?.position || '' };
+  }).sort((a, b) => a.order - b.order);
+
+  // ถ้าไม่มีข้อมูลใน sheet ใช้ WFH_MEMBERS เป็น placeholder
+  const displayMembers = membersSorted.length > 0
+    ? membersSorted
+    : WFH_MEMBERS.map(m => ({ name: '—', order: m.order, position: m.position }));
+
+  document.getElementById('wfhSideSub').textContent =
+    `${displayMembers.length} คน · ${TH_MONTHS_SHORT[m]} ${beYear(y)}`;
+
+  let html = '';
+  displayMembers.forEach((mem, idx) => {
+    const todayEv = monthRows.find(r => r.name === mem.name && r.date === todayDs);
+    const monthEvs = monthRows.filter(r => r.name === mem.name);
+    const nWFH = monthEvs.filter(r => r.status === 'WFH').length;
+
+    const stLabel = todayEv ? todayEv.status : '—';
+    const stCls   = todayEv ? (todayEv.status === 'WFH' ? 'wfh' : todayEv.status === 'ลา' ? 'leave' : 'office') : 'none';
+    const color   = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+    const initials = mem.name !== '—' ? mem.name.substring(0,1) : String(idx+1);
+
+    html += `<div class="wfh-member">
+      <div class="wfh-avatar" style="background:${color};">${initials}</div>
+      <div class="wfh-minfo">
+        <div class="wfh-mname">${mem.name !== '—' ? mem.name : mem.position}</div>
+        <div class="wfh-mpos">${mem.position || ''}</div>
+        <div class="wfh-mcount">WFH เดือนนี้: <strong style="color:var(--accent2);">${nWFH} วัน</strong></div>
+      </div>
+      <div class="wfh-mstatus ${stCls}">${stLabel}</div>
+    </div>`;
+  });
+
+  document.getElementById('wfhMembers').innerHTML = html ||
+    `<div class="empty-state" style="padding:24px;"><div class="empty-sub">ยังไม่มีข้อมูลใน Sheet WFH</div>
+     <div class="empty-sub" style="margin-top:4px;font-size:10px;">กรุณาเพิ่ม Sheet ชื่อ "WFH" ที่มีคอลัมน์<br>วันที่ · ชื่อ · ตำแหน่ง · สถานะ</div></div>`;
+
+  // monthly summary bars
+  const totalWFH    = monthRows.filter(r => r.status==='WFH').length;
+  const totalOffice = monthRows.filter(r => r.status==='Office').length;
+  const totalLeave  = monthRows.filter(r => r.status==='ลา').length;
+  const grandTotal  = totalWFH + totalOffice + totalLeave || 1;
+
+  document.getElementById('wfhSummaryRows').innerHTML = `
+    <div class="wfh-sum-row">
+      <div class="wfh-sum-dot" style="background:var(--accent2);"></div>
+      <div class="wfh-sum-lbl">WFH</div>
+      <div class="wfh-sum-bar"><div class="wfh-sum-fill" style="background:var(--accent2);width:${(totalWFH/grandTotal*100).toFixed(0)}%;"></div></div>
+      <div class="wfh-sum-val" style="color:var(--accent2);">${totalWFH} วัน</div>
+    </div>
+    <div class="wfh-sum-row">
+      <div class="wfh-sum-dot" style="background:#1a7f37;"></div>
+      <div class="wfh-sum-lbl">Office</div>
+      <div class="wfh-sum-bar"><div class="wfh-sum-fill" style="background:#1a7f37;width:${(totalOffice/grandTotal*100).toFixed(0)}%;"></div></div>
+      <div class="wfh-sum-val" style="color:#1a7f37;">${totalOffice} วัน</div>
+    </div>
+    <div class="wfh-sum-row">
+      <div class="wfh-sum-dot" style="background:#9a6700;"></div>
+      <div class="wfh-sum-lbl">ลา</div>
+      <div class="wfh-sum-bar"><div class="wfh-sum-fill" style="background:#9a6700;width:${(totalLeave/grandTotal*100).toFixed(0)}%;"></div></div>
+      <div class="wfh-sum-val" style="color:#9a6700;">${totalLeave} วัน</div>
+    </div>`;
+}
+
+// ── Export CSV ───────────────────────────────
+function exportWFHCsv() {
+  const y = wfhCursor.getFullYear(), m = wfhCursor.getMonth();
+  const rows = getWFHMonthData(y, m);
+  if (!rows.length) { alert('ไม่มีข้อมูล WFH ในเดือนนี้'); return; }
+
+  const header = 'วันที่,ชื่อ,ตำแหน่ง,สถานะ';
+  const lines  = rows
+    .sort((a,b) => (a.date||'').localeCompare(b.date||'') || a.positionOrder - b.positionOrder)
+    .map(r => `${r.date},${r.name},${r.position},${r.status}`);
+
+  const blob = new Blob([header + '\n' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `WFH_${TH_MONTHS_SHORT[m].replace('.','')}_${beYear(y)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 
 </script>
 </body>
