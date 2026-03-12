@@ -1211,6 +1211,16 @@
     border-right:1px solid var(--border); border-bottom:1px solid var(--border);
     height:60px; padding:3px; background:var(--surface); position:relative;
   }
+
+  /* เส้นเวลาปัจจุบัน */
+  .cal-now-line {
+    position:absolute; height:2px;
+    background:var(--danger); z-index:10; pointer-events:none;
+  }
+  .cal-now-line::before {
+    content:''; position:absolute; left:-5px; top:-4px;
+    width:10px; height:10px; border-radius:50%; background:var(--danger);
+  }
   .cal-wk-cell.today { background:rgba(9,105,218,0.02); }
   body.dark .cal-wk-cell.today { background:rgba(88,166,255,0.03); }
   .cal-wk-cell.weekend { background:rgba(0,0,0,0.01); }
@@ -2766,12 +2776,13 @@ function renderUpcoming(data = allData) {
     if (isNaN(d)) return;
     const diff = Math.ceil((d - today) / 86400000);
     if (diff >= 0 && diff <= horizon) {
+      const parts = [r.name, r.type, r.province, r.note].filter(v => v && v.trim() && v !== '-');
       events.push({
         date: d, diff,
         icon: '📐',
         category: 'นัดรังวัด',
         title: `นัดรังวัด: ${r.id}`,
-        desc: `${r.name} · ${r.province || '-'}`,
+        desc: parts.join(' · ') || '-',
         urgency: diff <= 30 ? 'warning' : 'info',
       });
     }
@@ -2784,12 +2795,13 @@ function renderUpcoming(data = allData) {
     if (isNaN(d)) return;
     const diff = Math.ceil((d - today) / 86400000);
     if (diff >= 0 && diff <= horizon) {
+      const parts = [r.name, r.type, r.province, r.note].filter(v => v && v.trim() && v !== '-');
       events.push({
         date: d, diff,
         icon: '🚶',
         category: 'นัดสำรวจด้วยตนเอง',
         title: `สำรวจด้วยตนเอง: ${r.id}`,
-        desc: `${r.name} · ${r.province || '-'} · 📅 ${fmtDate(r.selfSurveyDate)}`,
+        desc: parts.join(' · ') || '-',
         urgency: diff <= 7 ? 'warning' : 'info',
       });
     }
@@ -4999,6 +5011,77 @@ function renderCalWeek(events) {
 
   html += `</div></div>`;
   document.getElementById('calViewWeek').innerHTML = html;
+
+  // วาดเส้นเวลาปัจจุบัน
+  drawCalNowLine(days);
+
+  // อัปเดตทุก 1 นาที
+  clearInterval(window._calNowTimer);
+  window._calNowTimer = setInterval(() => drawCalNowLine(days), 60000);
+}
+
+function drawCalNowLine(days) {
+  document.querySelectorAll('.cal-now-line').forEach(el => el.remove());
+  if (calView !== 'week') return;
+
+  const now      = new Date();
+  const todayIdx = days.findIndex(d => sameDay(d, now));
+  if (todayIdx === -1) return;
+
+  const SLOTS    = ['08:30','09:30','10:30','11:30','12:30','13:30','14:30','15:30','16:30'];
+  const SLOT_H   = 60; // px height ต่อ slot
+  const nowMin   = now.getHours()*60 + now.getMinutes();
+  const startMin = 8*60+30;
+  const endMin   = 17*60+30;
+  if (nowMin < startMin || nowMin > endMin) return;
+
+  // หา slot และ offset ภายใน slot
+  let slotIdx = 0;
+  for (let i = SLOTS.length-1; i >= 0; i--) {
+    const [sh,sm] = SLOTS[i].split(':').map(Number);
+    if (nowMin >= sh*60+sm) { slotIdx = i; break; }
+  }
+  const [sh,sm]  = SLOTS[slotIdx].split(':').map(Number);
+  const offsetPx = ((nowMin - (sh*60+sm)) / 60) * SLOT_H;
+
+  // หา cell วันนี้ใน slot นั้น
+  const grid = document.querySelector('.cal-week-grid');
+  if (!grid) return;
+
+  const TOTAL_COLS  = 8; // 1 time col + 7 days
+  const HEADER_ROWS = 2; // day-header + allday
+  const cellIdx = TOTAL_COLS * (HEADER_ROWS + slotIdx) + (todayIdx + 1);
+  const cell    = grid.children[cellIdx];
+  if (!cell) return;
+
+  // วัด position เทียบกับ .cal-week-wrap
+  const wrap     = grid.closest('.cal-week-wrap') || grid.parentElement;
+  const wrapRect = wrap.getBoundingClientRect();
+  const cellRect = cell.getBoundingClientRect();
+
+  const topPx  = cellRect.top  - wrapRect.top  + wrap.scrollTop + offsetPx;
+  const leftPx = cellRect.left - wrapRect.left;
+  const wPx    = cellRect.width;
+
+  wrap.style.position = 'relative';
+
+  const line = document.createElement('div');
+  line.className = 'cal-now-line';
+  line.style.cssText = `top:${topPx}px;left:${leftPx}px;width:${wPx}px;`;
+
+  // label เวลา
+  const label = document.createElement('span');
+  label.style.cssText = [
+    'position:absolute','right:4px','top:-9px',
+    'font-size:9px','font-weight:700','font-family:var(--mono)',
+    'color:var(--danger)','background:var(--surface)',
+    'padding:1px 4px','border-radius:3px',
+    'border:1px solid var(--danger)','line-height:1.4','white-space:nowrap'
+  ].join(';');
+  label.textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  line.appendChild(label);
+
+  wrap.appendChild(line);
 }
 
 // ═══════════════════════════════════════════
