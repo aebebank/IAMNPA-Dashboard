@@ -1988,9 +1988,8 @@
           ปฏิทินงาน
         </div>
         <div class="cal-view-toggle">
-          <button class="cal-vt" id="calVtWeek"   onclick="setCalView('week')">รายสัปดาห์</button>
-          <button class="cal-vt active" id="calVtMonth"  onclick="setCalView('month')">รายเดือน</button>
-          <button class="cal-vt" id="calVt3month" onclick="setCalView('3month')">3 เดือน</button>
+          <button class="cal-vt" id="calVtWeek"  onclick="setCalView('week')">รายสัปดาห์</button>
+          <button class="cal-vt active" id="calVtMonth" onclick="setCalView('month')">รายเดือน</button>
         </div>
         <div class="cal-nav-row">
           <button class="btn-cal-nav" onclick="calNav(-1)">◀</button>
@@ -2013,7 +2012,7 @@
       <!-- View containers -->
       <div id="calViewMonth"  style="flex:1;overflow:hidden;display:flex;flex-direction:column;"></div>
       <div id="calViewWeek"   style="flex:1;overflow:hidden;display:none;flex-direction:column;"></div>
-      <div id="calView3month" style="flex:1;overflow:hidden;display:none;flex-direction:column;"></div>
+
 
     </div><!-- /page-calendar -->
 
@@ -4839,9 +4838,9 @@ function moreBtn(dateStr, evs) {
 // ── view switcher ────────────────────────────
 function setCalView(v) {
   calView = v;
-  const btnMap  = { week:'calVtWeek', month:'calVtMonth', '3month':'calVt3month' };
-  const viewMap = { week:'calViewWeek', month:'calViewMonth', '3month':'calView3month' };
-  ['week','month','3month'].forEach(k => {
+  const btnMap  = { week:'calVtWeek', month:'calVtMonth' };
+  const viewMap = { week:'calViewWeek', month:'calViewMonth' };
+  ['week','month'].forEach(k => {
     document.getElementById(btnMap[k])?.classList.toggle('active', k===v);
     const el = document.getElementById(viewMap[k]);
     if (el) el.style.display = k===v ? 'flex' : 'none';
@@ -4851,9 +4850,8 @@ function setCalView(v) {
 
 function calNav(dir) {
   calCursor = new Date(calCursor);
-  if (calView==='week')        calCursor.setDate(calCursor.getDate()+dir*7);
-  else if (calView==='month')  calCursor.setMonth(calCursor.getMonth()+dir);
-  else                         calCursor.setMonth(calCursor.getMonth()+dir*3);
+  if (calView==='week')  calCursor.setDate(calCursor.getDate()+dir*7);
+  else               calCursor.setMonth(calCursor.getMonth()+dir);
   renderCalPage();
 }
 
@@ -4864,7 +4862,6 @@ function renderCalPage() {
   const events = buildCalEvents();
   if (calView==='month')  renderCalMonth(events);
   if (calView==='week')   renderCalWeek(events);
-  if (calView==='3month') renderCal3Month(events);
 }
 
 // ═══════════════════════════════════════════
@@ -5044,44 +5041,46 @@ function drawCalNowLine(days) {
   const [sh,sm]  = SLOTS[slotIdx].split(':').map(Number);
   const offsetPx = ((nowMin - (sh*60+sm)) / 60) * SLOT_H;
 
-  // หา cell วันนี้ใน slot นั้น
-  const grid = document.querySelector('.cal-week-grid');
-  if (!grid) return;
+  // รอ DOM paint ก่อนวัด position (แก้ปัญหา getBoundingClientRect คืน 0)
+  requestAnimationFrame(() => {
+    const grid = document.querySelector('.cal-week-grid');
+    if (!grid) return;
 
-  const TOTAL_COLS  = 8; // 1 time col + 7 days
-  const HEADER_ROWS = 2; // day-header + allday
-  const cellIdx = TOTAL_COLS * (HEADER_ROWS + slotIdx) + (todayIdx + 1);
-  const cell    = grid.children[cellIdx];
-  if (!cell) return;
+    const TOTAL_COLS  = 8; // 1 time col + 7 days
+    const HEADER_ROWS = 2; // day-header + allday
+    const cellIdx = TOTAL_COLS * (HEADER_ROWS + slotIdx) + (todayIdx + 1);
+    const cell    = grid.children[cellIdx];
+    if (!cell) return;
 
-  // วัด position เทียบกับ .cal-week-wrap
-  const wrap     = grid.closest('.cal-week-wrap') || grid.parentElement;
-  const wrapRect = wrap.getBoundingClientRect();
-  const cellRect = cell.getBoundingClientRect();
+    const wrap     = grid.closest('.cal-week-wrap') || grid.parentElement;
+    const wrapRect = wrap.getBoundingClientRect();
+    const cellRect = cell.getBoundingClientRect();
+    if (!cellRect.width) return; // ยังไม่ paint
 
-  const topPx  = cellRect.top  - wrapRect.top  + wrap.scrollTop + offsetPx;
-  const leftPx = cellRect.left - wrapRect.left;
-  const wPx    = cellRect.width;
+    const topPx  = cellRect.top  - wrapRect.top  + wrap.scrollTop + offsetPx;
+    const leftPx = cellRect.left - wrapRect.left;
+    const wPx    = cellRect.width;
 
-  wrap.style.position = 'relative';
+    wrap.style.position = 'relative';
 
-  const line = document.createElement('div');
-  line.className = 'cal-now-line';
-  line.style.cssText = `top:${topPx}px;left:${leftPx}px;width:${wPx}px;`;
+    const line = document.createElement('div');
+    line.className = 'cal-now-line';
+    line.style.cssText = `top:${topPx}px;left:${leftPx}px;width:${wPx}px;`;
 
-  // label เวลา
-  const label = document.createElement('span');
-  label.style.cssText = [
-    'position:absolute','right:4px','top:-9px',
-    'font-size:9px','font-weight:700','font-family:var(--mono)',
-    'color:var(--danger)','background:var(--surface)',
-    'padding:1px 4px','border-radius:3px',
-    'border:1px solid var(--danger)','line-height:1.4','white-space:nowrap'
-  ].join(';');
-  label.textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-  line.appendChild(label);
+    // label เวลา
+    const label = document.createElement('span');
+    label.style.cssText = [
+      'position:absolute','right:4px','top:-9px',
+      'font-size:9px','font-weight:700','font-family:var(--mono)',
+      'color:var(--danger)','background:var(--surface)',
+      'padding:1px 4px','border-radius:3px',
+      'border:1px solid var(--danger)','line-height:1.4','white-space:nowrap'
+    ].join(';');
+    label.textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    line.appendChild(label);
 
-  wrap.appendChild(line);
+    wrap.appendChild(line);
+  });
 }
 
 // ═══════════════════════════════════════════
