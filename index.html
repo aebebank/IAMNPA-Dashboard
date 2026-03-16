@@ -2586,7 +2586,9 @@ function mapRow(row) {
     status:     get('สถานะ','status','state'),
     issue:      get('ปัญหาทรัพย์','issue','ปัญหา','problem'),
     surveyDate:      get('วันนัดรังวัด','surveydate','นัดรังวัด','รังวัด'),
+    surveyNote:      get('หมายเหตุนัดรังวัด','surveynote','หมายเหตุรังวัด'),
     selfSurveyDate:  get('วันนัดสำรวจด้วยตนเอง','selfsurvedate','สำรวจด้วยตนเอง','นัดสำรวจเอง'),
+    selfSurveyNote:  get('หมายเหตุนัดสำรวจด้วยตนเอง','selfsurveynote','หมายเหตุสำรวจด้วยตนเอง','หมายเหตุนัดสำรวจ'),
     workOrderDate:   get('วันออกWork','workorder','workorderdate','วันworkorder','ออกwork'),
     firstCleanDate:  get('วันทำความสะอาดล่าสุด','วันทำความสะอาดครั้งแรก','firstcleandate'),
     cleanWODate:     get('วันออก WO ทำความสะอาด','cleanwodate','WOทำความสะอาด'),
@@ -2597,6 +2599,10 @@ function mapRow(row) {
     contractType:get('ประเภทสัญญา','contracttype','งาน','service'),
     lastValuationDate:  get('วันประเมินล่าสุด','lastvaluationdate','lastvaldate','วันที่ประเมินล่าสุด','ประเมินล่าสุด'),
     valuationSentDate:  get('วันส่งประเมิน','valuationsentdate','วันส่ง','sentdate','ส่งประเมิน'),
+    handoverDate:       get('วันที่รับมอบทรัพย์','handoverdate','รับมอบทรัพย์','รับมอบ'),
+    handoverNote:       get('หมายเหตุรับมอบทรัพย์','handovernote','หมายเหตุรับมอบ'),
+    weeklySurveyDate:   get('ครบกำหนดสำรวจทุกสัปดาห์','weeklysurveydate','ครบกำหนดสำรวจ','สำรวจทุกสัปดาห์'),
+    weeklySurveyNote:   get('หมายเหตุครบกำหนดสำรวจ','weeklysurveyynote','หมายเหตุสำรวจสัปดาห์'),
     zone:              (() => {
       for (const rk of Object.keys(row)) {
         if (rk.replace(/\s/g,'').toLowerCase() === 'โซน') {
@@ -2872,6 +2878,27 @@ function renderAlerts(data = allData) {
     else if (diff <= 30) alerts.push({ cat:'contract', type:'warning', title:`🛡️ สัญญา รปภ. ใกล้หมด`, desc:`${r.company} — อีก ${diff} วัน`, time: fmtDate(r.end) });
   });
 
+  // ── วันที่รับมอบทรัพย์: เลยกำหนด ────────────────────────
+  data.forEach(r => {
+    if (!r.handoverDate) return;
+    const d = new Date(r.handoverDate);
+    if (isNaN(d)) return;
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff < 0)       alerts.push({ cat:'handover', type:'danger',  title:`🤝 รับมอบทรัพย์เลยกำหนด`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — เกินมา ${Math.abs(diff)} วัน`, time: fmtDate(r.handoverDate) });
+    else if (diff <= 7) alerts.push({ cat:'handover', type:'danger',  title:`🤝 รับมอบทรัพย์ใกล้มาก`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — อีก ${diff} วัน`, time: fmtDate(r.handoverDate) });
+  });
+
+  // ── ครบกำหนดสำรวจรายสัปดาห์ (67IAM-G-0310): เลยกำหนด ──
+  data.forEach(r => {
+    if (r.id !== '67IAM-G-0310') return;
+    if (!r.weeklySurveyDate) return;
+    const d = new Date(r.weeklySurveyDate);
+    if (isNaN(d)) return;
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff < 0)       alerts.push({ cat:'weeklysurvey', type:'danger',  title:`🔁 ครบกำหนดสำรวจรายสัปดาห์เลยกำหนด`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — เกินมา ${Math.abs(diff)} วัน`, time: fmtDate(r.weeklySurveyDate) });
+    else if (diff <= 3) alerts.push({ cat:'weeklysurvey', type:'warning', title:`🔁 ครบกำหนดสำรวจรายสัปดาห์ใกล้มาก`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — อีก ${diff} วัน`, time: fmtDate(r.weeklySurveyDate) });
+  });
+
   // ── ปัญหาทรัพย์ ───────────────────────────────────────────
   const issueLevel = {
     'มีปัญหากฎหมาย':               'danger',
@@ -2982,6 +3009,7 @@ function renderUpcoming(data = allData) {
         category: 'นัดรังวัด',
         title: `นัดรังวัด: ${r.id}`,
         desc: parts.join(' · ') || '-',
+        note: r.surveyNote || '',
         urgency: diff <= 30 ? 'warning' : 'info',
       });
     }
@@ -3001,6 +3029,7 @@ function renderUpcoming(data = allData) {
         category: 'นัดสำรวจด้วยตนเอง',
         title: `สำรวจด้วยตนเอง: ${r.id}`,
         desc: parts.join(' · ') || '-',
+        note: r.selfSurveyNote || '',
         urgency: diff <= 7 ? 'warning' : 'info',
       });
     }
@@ -3037,7 +3066,48 @@ function renderUpcoming(data = allData) {
     });
   }
 
-  // 6. (งานทำความสะอาดไม่เชื่อม Upcoming)
+  // 6. วันที่รับมอบทรัพย์ — แสดงใน 0–60 วัน
+  data.forEach(r => {
+    if (!r.handoverDate) return;
+    const d = new Date(r.handoverDate);
+    if (isNaN(d)) return;
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff >= 0 && diff <= horizon) {
+      const parts = [r.name, r.type, r.province].filter(v => v && v.trim() && v !== '-');
+      events.push({
+        date: d, diff,
+        icon: '🤝',
+        category: 'รับมอบทรัพย์',
+        title: `รับมอบทรัพย์: ${r.id}`,
+        desc: parts.join(' · ') || '-',
+        note: r.handoverNote || '',
+        urgency: diff <= 7 ? 'warning' : 'info',
+      });
+    }
+  });
+
+  // 7. ครบกำหนดสำรวจทุกสัปดาห์ (เฉพาะ 67IAM-G-0310) — แสดงใน 0–60 วัน
+  data.forEach(r => {
+    if (r.id !== '67IAM-G-0310') return;
+    if (!r.weeklySurveyDate) return;
+    const d = new Date(r.weeklySurveyDate);
+    if (isNaN(d)) return;
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff >= 0 && diff <= horizon) {
+      const parts = [r.name, r.type, r.province].filter(v => v && v.trim() && v !== '-');
+      events.push({
+        date: d, diff,
+        icon: '🔁',
+        category: 'ครบกำหนดสำรวจรายสัปดาห์',
+        title: `ครบกำหนดสำรวจ: ${r.id}`,
+        desc: parts.join(' · ') || '-',
+        note: r.weeklySurveyNote || '',
+        urgency: diff <= 3 ? 'warning' : 'info',
+      });
+    }
+  });
+
+  // 8. (งานทำความสะอาดไม่เชื่อม Upcoming)
 
   // เรียงตามวันที่ใกล้สุด (null ไว้ท้าย)
   events.sort((a, b) => {
@@ -3074,6 +3144,7 @@ function renderUpcoming(data = allData) {
           <span class="alert-title">${e.title}</span>
         </div>
         <div class="alert-desc">${e.desc}</div>
+        ${e.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">📝 ${e.note}</div>` : ''}
       </div>
       <div style="flex-shrink:0;text-align:right;white-space:nowrap;" class="${blinkClass}">
         <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};">${diffStr}</div>
