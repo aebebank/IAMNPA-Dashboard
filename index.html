@@ -2618,6 +2618,8 @@ function mapRow(row) {
     handoverNote:       get('หมายเหตุรับมอบทรัพย์','handovernote','หมายเหตุรับมอบ'),
     weeklySurveyDate:   get('ครบกำหนดสำรวจทุกสัปดาห์','weeklysurveydate','ครบกำหนดสำรวจ','สำรวจทุกสัปดาห์'),
     weeklySurveyNote:   get('หมายเหตุครบกำหนดสำรวจ','weeklysurveyynote','หมายเหตุสำรวจสัปดาห์'),
+    dailyLogDate:       get('วันลงบันทึกประจำวัน','dailylogdate','ลงบันทึกประจำวัน','ลงบันทึก','dailylog'),
+    dailyLogNote:       get('หมายเหตุลงบันทึกประจำวัน','dailylognote','หมายเหตุลงบันทึก'),
     zone:              (() => {
       for (const rk of Object.keys(row)) {
         if (rk.replace(/\s/g,'').toLowerCase() === 'โซน') {
@@ -3048,6 +3050,7 @@ function renderUpcoming(data = allData) {
         desc: parts.join(' · ') || '-',
         note: r.surveyNote || '',
         urgency: diff <= 30 ? 'warning' : 'info',
+        isSiteVisit: true,
       });
     }
   });
@@ -3068,6 +3071,7 @@ function renderUpcoming(data = allData) {
         desc: parts.join(' · ') || '-',
         note: r.selfSurveyNote || '',
         urgency: diff <= 7 ? 'warning' : 'info',
+        isSiteVisit: true,
       });
     }
   });
@@ -3119,6 +3123,7 @@ function renderUpcoming(data = allData) {
         desc: parts.join(' · ') || '-',
         note: r.handoverNote || '',
         urgency: diff <= 7 ? 'warning' : 'info',
+        isSiteVisit: true,
       });
     }
   });
@@ -3144,7 +3149,28 @@ function renderUpcoming(data = allData) {
     }
   });
 
-  // 8. (งานทำความสะอาดไม่เชื่อม Upcoming)
+  // 8. ลงบันทึกประจำวัน — แสดงใน 0–60 วัน (ถือเป็น Site Visit)
+  data.forEach(r => {
+    if (!r.dailyLogDate) return;
+    const d = new Date(r.dailyLogDate);
+    if (isNaN(d)) return;
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff >= 0 && diff <= horizon) {
+      const parts = [r.name, r.type, r.province].filter(v => v && v.trim() && v !== '-');
+      events.push({
+        date: d, diff,
+        icon: '📋',
+        category: 'ลงบันทึกประจำวัน',
+        title: `ลงบันทึกประจำวัน: ${r.id}`,
+        desc: parts.join(' · ') || '-',
+        note: r.dailyLogNote || '',
+        urgency: diff <= 7 ? 'warning' : 'info',
+        isSiteVisit: true,
+      });
+    }
+  });
+
+  // (งานทำความสะอาดไม่เชื่อม Upcoming)
 
   // 9. นัดขายทอดตลาดเครื่องจักร NPL — แสดงเฉพาะนัดถัดไปที่ยังไม่มีผล ภายใน 0–60 วัน
   if (typeof auctionData !== 'undefined' && auctionData.length > 0) {
@@ -3223,25 +3249,102 @@ function renderUpcoming(data = allData) {
     return a.date - b.date;
   });
 
-  document.getElementById('upcomingCount').textContent = `${events.length} รายการ`;
-  document.getElementById('upcomingCount').className = `panel-badge ${events.length > 0 ? 'blue' : 'muted'}`;
+  // ═══════════════════════════════════════════
+  // Merge: Site Visit วันเดียวกันรวมเป็น card เดียว
+  // ═══════════════════════════════════════════
+  const mergedEvents = [];
+  const siteVisitByDay = {}; // key = dateKey (YYYY-MM-DD)
 
-  if (events.length === 0) {
+  events.forEach(e => {
+    if (!e.isSiteVisit) {
+      mergedEvents.push(e);
+      return;
+    }
+    const dateKey = e.date ? e.date.toISOString().split('T')[0] : 'nodate';
+    if (!siteVisitByDay[dateKey]) {
+      // สร้าง merged event ใหม่
+      const merged = {
+        date: e.date,
+        diff: e.diff,
+        icon: '🚗',
+        category: 'Site Visit',
+        _isMergedSiteVisit: true,
+        _items: [],
+        urgency: e.urgency,
+      };
+      siteVisitByDay[dateKey] = merged;
+      mergedEvents.push(merged);
+    }
+    const m = siteVisitByDay[dateKey];
+    m._items.push(e);
+    // urgency: warning ชนะ info
+    if (e.urgency === 'warning') m.urgency = 'warning';
+  });
+
+  // เรียง merged events ตามวันอีกรอบ (เผื่อ insert ลำดับ)
+  mergedEvents.sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return a.date - b.date;
+  });
+
+  document.getElementById('upcomingCount').textContent = `${mergedEvents.length} รายการ`;
+  document.getElementById('upcomingCount').className = `panel-badge ${mergedEvents.length > 0 ? 'blue' : 'muted'}`;
+
+  if (mergedEvents.length === 0) {
     document.getElementById('upcomingList').innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-sub">✅ ไม่มีกำหนดการใน 60 วัน</div></div>';
     return;
   }
 
   const colorMap = { warning: 'var(--warning)', info: 'var(--accent)', today: '#f85149' };
 
-  document.getElementById('upcomingList').innerHTML = events.slice(0, 10).map((e, i) => {
+  document.getElementById('upcomingList').innerHTML = mergedEvents.slice(0, 10).map((e, i) => {
     const isToday = e.diff === 0;
     const color   = isToday ? '#f85149' : (colorMap[e.urgency] || 'var(--accent)');
     const diffStr = isToday ? '🔴 วันนี้' : `อีก ${e.diff} วัน`;
     const blinkClass = isToday ? ' today-blink' : '';
-    // คำนวณวันที่จริงของ event
     const eventDate = new Date();
     eventDate.setDate(eventDate.getDate() + e.diff);
     const dateStr = fmtDate(eventDate.toISOString().split('T')[0]);
+
+    // ─── Merged Site Visit card ───
+    if (e._isMergedSiteVisit) {
+      const count = e._items.length;
+      const hasMultiple = count > 1;
+      const itemsHtml = e._items.map(item => {
+        const iconCat = `<span style="font-size:12px;">${item.icon}</span> <span style="font-size:11px;color:var(--accent);">${item.category}</span>`;
+        const noteHtml = item.note ? `<span style="color:var(--text-muted);"> · 📝 ${item.note}</span>` : '';
+        return `<div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary,rgba(128,128,128,0.15));flex-wrap:wrap;">
+          <span style="flex-shrink:0;">${item.icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              <span style="font-size:11px;color:var(--accent);">${item.category}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--text-primary);">${item.title.replace(/^[^:]+:\s*/,'')}</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);">${item.desc}${noteHtml}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      return `
+    <div class="alert-item" style="animation-delay:${i*0.04}s${isToday ? ';border-left:2px solid #f85149;' : ''}">
+      <div style="font-size:16px;flex-shrink:0;" class="${blinkClass}">${e.icon}</div>
+      <div class="alert-text" style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;background:rgba(88,166,255,0.15);color:var(--accent);padding:1px 6px;border-radius:3px;">Site Visit</span>
+          ${hasMultiple ? `<span style="font-size:11px;background:rgba(240,136,62,0.15);color:var(--warning);padding:1px 6px;border-radius:3px;">${count} งาน</span>` : ''}
+          <span class="alert-title">${hasMultiple ? `ออกพื้นที่ ${count} งาน` : e._items[0].title}</span>
+        </div>
+        <div style="margin-top:6px;">${itemsHtml}</div>
+      </div>
+      <div style="flex-shrink:0;text-align:right;white-space:nowrap;" class="${blinkClass}">
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};">${diffStr}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:1px;">${dateStr}</div>
+      </div>
+    </div>`;
+    }
+
+    // ─── Normal (non-Site-Visit) card ───
     return `
     <div class="alert-item" style="animation-delay:${i*0.04}s${isToday ? ';border-left:2px solid #f85149;' : ''}">
       <div style="font-size:16px;flex-shrink:0;" class="${blinkClass}">${e.icon}</div>
