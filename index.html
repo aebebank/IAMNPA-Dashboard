@@ -2370,10 +2370,12 @@ const SHEET_TABS = {
   meeting:      'นัดประชุม',
   cleaningWO:   'CleaningWO',
   wfh:          'WFH',
+  auction:      'ขายทอดตลาด',
 };
 
 let meetingData = [];
 let wfhData = []; // [{date, name, position, positionOrder, status}]
+let auctionData = []; // [{assetId, round, date, result, note}]
 
 // สมาชิกฝ่ายบริหารทรัพย์สิน (ลำดับตำแหน่ง)
 const WFH_MEMBERS = [
@@ -2508,6 +2510,19 @@ async function _doLoadAllSheets() {
       }).filter(r => r.date && r.name && r.status);
       if (document.getElementById('page-wfh')?.classList.contains('active')) renderWFHPage();
     } catch(e) { console.warn('tab WFH:', e.message); }
+
+    // Tab 8 — ขายทอดตลาด
+    try {
+      const rows = await fetchSheet(sheetId, SHEET_TABS.auction);
+      const g = (r, ...ks) => { for (const k of ks) for (const rk of Object.keys(r)) if (rk.replace(/\s/g,'').toLowerCase() === k.replace(/\s/g,'').toLowerCase()) return r[rk]||''; return ''; };
+      auctionData = rows.map(r => ({
+        assetId: g(r, 'รหัสทรัพย์', 'รหัส', 'assetid'),
+        round:   parseInt(g(r, 'นัดที่', 'ครั้งที่', 'round') || '0', 10) || 0,
+        date:    g(r, 'วันที่นัด', 'วันที่', 'date'),
+        result:  g(r, 'ผล', 'result'),
+        note:    g(r, 'หมายเหตุ', 'note'),
+      })).filter(r => r.assetId && r.date);
+    } catch(e) { console.warn('tab ขายทอดตลาด:', e.message); }
 
     processData(npaData);
     const now = new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
@@ -2932,6 +2947,28 @@ function renderAlerts(data = allData) {
     });
   }
 
+  // ── นัดขายทอดตลาดเครื่องจักร NPL: เลยกำหนดยังไม่มีผล ──
+  if (typeof auctionData !== 'undefined' && auctionData.length > 0) {
+    const assetIds = [...new Set(auctionData.map(r => r.assetId))];
+    assetIds.forEach(assetId => {
+      const rounds = auctionData.filter(r => r.assetId === assetId).sort((a,b) => a.round - b.round);
+      rounds.forEach(r => {
+        if (!r.date) return;
+        const d = new Date(r.date);
+        if (isNaN(d)) return;
+        const diff = Math.ceil((d - today) / 86400000);
+        const result = (r.result || '').trim();
+        // นัดผ่านไปแล้วแต่ผลว่างหรือ 'รอผล' = overdue
+        if (diff < 0 && (result === '' || result === 'รอผล')) {
+          alerts.push({ cat:'auction', type:'danger',
+            title:`🔨 ขายทอดตลาดเลยกำหนด (นัดที่ ${r.round})`,
+            desc:`${assetId} — เกินมา ${Math.abs(diff)} วัน · ยังไม่บันทึกผล`,
+            time: fmtDate(r.date) });
+        }
+      });
+    });
+  }
+
   _allAlerts = alerts;
 
   // badge count + color
@@ -3109,6 +3146,76 @@ function renderUpcoming(data = allData) {
 
   // 8. (งานทำความสะอาดไม่เชื่อม Upcoming)
 
+  // 9. นัดขายทอดตลาดเครื่องจักร NPL — แสดงเฉพาะนัดถัดไปที่ยังไม่มีผล ภายใน 0–60 วัน
+  if (typeof auctionData !== 'undefined' && auctionData.length > 0) {
+    const assetIds = [...new Set(auctionData.map(r => r.assetId))];
+    assetIds.forEach(assetId => {
+      const rounds = auctionData.filter(r => r.assetId === assetId).sort((a,b) => a.round - b.round);
+      const totalRounds = rounds.length;
+
+      // นับผลที่มีแล้ว
+      const sold    = rounds.filter(r => r.result === 'ขายได้');
+      const unsold  = rounds.filter(r => r.result === 'ไม่ได้ขาย');
+      const pending = rounds.filter(r => (r.result || '').trim() === 'รอผล');
+
+      // ถ้าขายได้แล้ว — แสดง card สำเร็จ (ไม่ขึ้น Upcoming อีก)
+      if (sold.length > 0) return;
+
+      // หานัดถัดไปที่ยังไม่มีผล (result ว่าง) และวันในอนาคต
+      const nextRound = rounds.find(r => {
+        const result = (r.result || '').trim();
+        if (result === 'ขายได้' || result === 'ไม่ได้ขาย') return false;
+        const d = new Date(r.date);
+        if (isNaN(d)) return false;
+        const diff = Math.ceil((d - today) / 86400000);
+        return diff >= 0 && diff <= horizon;
+      });
+      if (!nextRound) return;
+
+      const nextDate = new Date(nextRound.date);
+      const diff = Math.ceil((nextDate - today) / 86400000);
+
+      // สร้าง dots HTML สำหรับ progress (6 จุด)
+      const dotsHtml = rounds.map(r => {
+        const res = (r.result || '').trim();
+        if (res === 'ขายได้')     return `<span title="นัดที่ ${r.round} · ขายได้" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--color-background-success);border:1px solid var(--color-border-success);margin-right:3px;"></span>`;
+        if (res === 'ไม่ได้ขาย') return `<span title="นัดที่ ${r.round} · ไม่ได้ขาย" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--color-background-danger);border:1px solid var(--color-border-danger);margin-right:3px;"></span>`;
+        if (res === 'รอผล')       return `<span title="นัดที่ ${r.round} · รอผล" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--color-background-warning);border:1px solid var(--color-border-warning);margin-right:3px;"></span>`;
+        return `<span title="นัดที่ ${r.round} · ยังไม่ถึง" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);margin-right:3px;"></span>`;
+      }).join('');
+
+      // สร้าง detail rows ของนัดที่ผ่านมา
+      const doneRounds = rounds.filter(r => r.result && r.result !== '' && r.result !== 'รอผล' || r.result === 'รอผล');
+      const detailRows = doneRounds.map(r => {
+        const res = (r.result || '').trim();
+        const resColor = res === 'ขายได้' ? 'var(--color-text-success)' : res === 'รอผล' ? 'var(--color-text-warning)' : 'var(--color-text-danger)';
+        const noteStr = r.note ? ` · ${r.note}` : '';
+        return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-bottom:0.5px solid var(--color-border-tertiary);">` +
+          `<span style="color:var(--color-text-secondary);">นัดที่ ${r.round} · ${fmtDate(r.date)}</span>` +
+          `<span style="color:${resColor};font-weight:500;">${res || '—'}${noteStr}</span></div>`;
+      }).join('');
+
+      const doneCount = unsold.length + pending.length;
+      const remainCount = totalRounds - doneCount - sold.length;
+      const urgency = diff <= 7 ? 'warning' : 'info';
+
+      events.push({
+        date: nextDate, diff, urgency,
+        icon: '🔨',
+        category: 'ขายทอดตลาด',
+        title: `${assetId} · เครื่องจักร NPL`,
+        desc: `นัดถัดไป: นัดที่ ${nextRound.round} · ${fmtDate(nextRound.date)}`,
+        _auctionHtml: `
+          <div style="margin:6px 0 4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:11px;color:var(--color-text-secondary);">${unsold.length + pending.length} / ${totalRounds} นัด</span>
+            <span>${dotsHtml}</span>
+            <span style="font-size:11px;color:var(--color-text-tertiary);">เหลืออีก ${remainCount} นัด</span>
+          </div>
+          ${detailRows ? `<div style="margin-top:6px;border-top:0.5px solid var(--color-border-tertiary);padding-top:4px;">${detailRows}</div>` : ''}`,
+      });
+    });
+  }
+
   // เรียงตามวันที่ใกล้สุด (null ไว้ท้าย)
   events.sort((a, b) => {
     if (!a.date) return 1;
@@ -3144,6 +3251,7 @@ function renderUpcoming(data = allData) {
           <span class="alert-title">${e.title}</span>
         </div>
         <div class="alert-desc">${e.desc}</div>
+        ${e._auctionHtml || ''}
         ${e.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">📝 ${e.note}</div>` : ''}
       </div>
       <div style="flex-shrink:0;text-align:right;white-space:nowrap;" class="${blinkClass}">
