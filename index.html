@@ -1654,7 +1654,10 @@
           <span class="panel-icon green">📊</span>
           สรุปภาพรวมรายไตรมาส
         </div>
-        <span id="quarterlyLabel" class="panel-badge info" style="font-size:12px;"></span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div id="quarterBtns" style="display:flex;gap:4px;"></div>
+          <span id="quarterlyLabel" class="panel-badge info" style="font-size:12px;"></span>
+        </div>
       </div>
       <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="quarterlyGrid">
         <div class="empty-state" style="padding:24px;grid-column:1/-1;"><div class="empty-sub">โหลดข้อมูลเพื่อดูสรุปรายไตรมาส</div></div>
@@ -2600,8 +2603,10 @@ function mapRow(row) {
     price:      parseFloat((get('ราคาขาย','price','ราคาขาย','ราคา2') || '0').replace(/,/g,'')) || 0,
     status:     get('สถานะ','status','state'),
     issue:      get('ปัญหาทรัพย์','issue','ปัญหา','problem'),
-    surveyDate:      get('วันนัดรังวัด','surveydate','นัดรังวัด','รังวัด'),
-    surveyNote:      get('หมายเหตุนัดรังวัด','surveynote','หมายเหตุรังวัด'),
+    surveyDateSelf:      get('วันนัดรังวัด (ตนเอง)','surveydateself','นัดรังวัดตนเอง','รังวัดตนเอง'),
+    surveyNoteSelf:      get('หมายเหตุนัดรังวัด (ตนเอง)','surveynoteself','หมายเหตุรังวัดตนเอง'),
+    surveyDateOut:       get('วันนัดรังวัด (Outsource)','surveydateout','นัดรังวัดoutsource','รังวัดoutsource'),
+    surveyNoteOut:       get('หมายเหตุนัดรังวัด (Outsource)','surveynoteout','หมายเหตุรังวัดoutsource'),
     selfSurveyDate:  get('วันนัดสำรวจด้วยตนเอง','selfsurvedate','สำรวจด้วยตนเอง','นัดสำรวจเอง'),
     selfSurveyNote:  get('หมายเหตุนัดสำรวจด้วยตนเอง','selfsurveynote','หมายเหตุสำรวจด้วยตนเอง','หมายเหตุนัดสำรวจ'),
     workOrderDate:   get('วันออกWork','workorder','workorderdate','วันworkorder','ออกwork'),
@@ -2656,6 +2661,7 @@ function processData(raw) {
   populateSurveyQuarters();
   renderSurveyPanel();
   renderCleaningPanel();
+  window._selectedQuarter = getCurrentQuarter(); // reset ทุกครั้งที่โหลดข้อมูลใหม่
   renderQuarterlySummary();
   renderAll();
 }
@@ -3033,24 +3039,44 @@ function renderUpcoming(data = allData) {
     }
   });
 
-  // 3. นัดรังวัด (คอลัมน์ วันนัดรังวัด ใน CSV ทรัพย์) — แสดงทุกวันใน 0–60 วัน
-  //    (ไม่มีใน Alert logic จึงไม่มี overlap)
+  // 3a. นัดรังวัด (ตนเอง) — Site Visit — แสดงทุกวันใน 0–60 วัน
   data.forEach(r => {
-    if (!r.surveyDate) return;
-    const d = new Date(r.surveyDate);
+    if (!r.surveyDateSelf) return;
+    const d = new Date(r.surveyDateSelf);
     if (isNaN(d)) return;
     const diff = Math.ceil((d - today) / 86400000);
     if (diff >= 0 && diff <= horizon) {
-      const parts = [r.name, r.type, r.province, r.note].filter(v => v && v.trim() && v !== '-');
+      const parts = [r.name, r.type, r.province].filter(v => v && v.trim() && v !== '-');
       events.push({
         date: d, diff,
         icon: '📐',
-        category: 'นัดรังวัด',
+        category: 'นัดรังวัด (ตนเอง)',
         title: `นัดรังวัด: ${r.id}`,
         desc: parts.join(' · ') || '-',
-        note: r.surveyNote || '',
+        note: r.surveyNoteSelf || '',
         urgency: diff <= 30 ? 'warning' : 'info',
         isSiteVisit: true,
+      });
+    }
+  });
+
+  // 3b. นัดรังวัด (Outsource) — ไม่ใช่ Site Visit — แสดงทุกวันใน 0–60 วัน
+  data.forEach(r => {
+    if (!r.surveyDateOut) return;
+    const d = new Date(r.surveyDateOut);
+    if (isNaN(d)) return;
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff >= 0 && diff <= horizon) {
+      const parts = [r.name, r.type, r.province].filter(v => v && v.trim() && v !== '-');
+      events.push({
+        date: d, diff,
+        icon: '📐',
+        category: 'นัดรังวัด (Outsource)',
+        title: `นัดรังวัด: ${r.id}`,
+        desc: parts.join(' · ') || '-',
+        note: r.surveyNoteOut || '',
+        urgency: diff <= 30 ? 'warning' : 'info',
+        isSiteVisit: false,
       });
     }
   });
@@ -3702,7 +3728,7 @@ function renderPropTable(data) {
       <td style="font-family:var(--mono);text-align:right;">${r.price > 0 ? r.price.toLocaleString() : '-'}</td>
       <td><span class="badge badge-${statusColor}">${r.status || '-'}</span></td>
       <td><span class="badge badge-${issueColor}">${issueLabel}</span></td>
-      <td style="font-family:var(--mono);font-size:12px;text-align:center;">${r.surveyDate ? fmtDate(r.surveyDate) : '-'}</td>
+      <td style="font-family:var(--mono);font-size:12px;text-align:center;">${r.surveyDateSelf ? fmtDate(r.surveyDateSelf) + ' (ตนเอง)' : ''}${r.surveyDateSelf && r.surveyDateOut ? '<br>' : ''}${r.surveyDateOut ? fmtDate(r.surveyDateOut) + ' (OS)' : ''}${!r.surveyDateSelf && !r.surveyDateOut ? '-' : ''}</td>
       <td style="font-family:var(--mono);text-align:center;">${age}</td>
     </tr>`;
   }).join('') || `<tr><td colspan="9"><div class="empty-state" style="padding:16px"><div class="empty-sub">ไม่พบข้อมูล</div></div></td></tr>`;
@@ -3911,12 +3937,31 @@ function setSurveyFilter(f) {
 // ═══════════════════════════════════════════
 //  QUARTERLY SUMMARY PANEL
 // ═══════════════════════════════════════════
-function renderQuarterlySummary() {
-  const currentQ = getCurrentQuarter();
+function renderQuarterlySummary(forceQ) {
+  const currentQ = forceQ || window._selectedQuarter || getCurrentQuarter();
   const prevQ    = getPrevQuarter(currentQ);
+  const isActualCurrent = currentQ === getCurrentQuarter();
   const showComparison = currentQ !== 'Q1/2569'; // เปรียบเทียบตั้งแต่ Q2/2569 เป็นต้นไป
 
+  // อัปเดต label
   document.getElementById('quarterlyLabel').textContent = showComparison ? `${prevQ} → ${currentQ}` : currentQ;
+
+  // อัปเดตปุ่ม quarter (สร้างครั้งแรก / highlight active)
+  const qYear = currentQ.split('/')[1];
+  const allQs = ['Q1','Q2','Q3','Q4'].map(q => `${q}/${qYear}`);
+  const btnsEl = document.getElementById('quarterBtns');
+  if (btnsEl) {
+    btnsEl.innerHTML = allQs.map(q => {
+      const isActive = q === currentQ;
+      const isReal   = isActualCurrent && q === currentQ;
+      return `<button onclick="window._selectedQuarter='${q}';renderQuarterlySummary('${q}')"
+        style="font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};
+        background:${isActive ? 'var(--accent)' : 'transparent'};color:${isActive ? '#000' : 'var(--text-muted)'};
+        cursor:pointer;font-family:var(--mono);font-weight:${isActive ? '700' : '400'};transition:all 0.15s;">
+        ${q.split('/')[0]}${isReal ? ' 🟢' : ''}
+      </button>`;
+    }).join('');
+  }
 
   const total = allData.length;
 
@@ -5236,7 +5281,8 @@ function sameDay(a,b) { return a.getFullYear()===b.getFullYear()&&a.getMonth()==
 function buildCalEvents() {
   const events = [];
   allData.forEach(r => {
-    if (r.surveyDate)    events.push({ date:parseDateStr(r.surveyDate),    type:'survey',    label:`${r.id} นัดรังวัด`,        sub:r.province||'', time:'' });
+    if (r.surveyDateSelf) events.push({ date:parseDateStr(r.surveyDateSelf), type:'survey', label:`${r.id} นัดรังวัด (ตนเอง)`,    sub:r.province||'', time:'' });
+    if (r.surveyDateOut)  events.push({ date:parseDateStr(r.surveyDateOut),  type:'survey', label:`${r.id} นัดรังวัด (Outsource)`, sub:r.province||'', time:'' });
     if (r.selfSurveyDate)events.push({ date:parseDateStr(r.selfSurveyDate),type:'survey',    label:`${r.id} สำรวจเอง`,         sub:r.province||'', time:'' });
     if (r.cleanWODate)   events.push({ date:parseDateStr(r.cleanWODate),   type:'wo',        label:`${r.id} ออก WO`,           sub:r.province||'', time:'' });
     if (r.workOrderDate) events.push({ date:parseDateStr(r.workOrderDate), type:'wo',        label:`${r.id} Work Order`,       sub:r.province||'', time:'' });
