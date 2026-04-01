@@ -2587,9 +2587,16 @@ function loadSampleData() {
 // ═══════════════════════════════════════════
 function mapRow(row) {
   const get = (...keys) => {
+    // pass แรก: exact match (strip spaces, lowercase) — ป้องกัน includes() จับผิดคอลัมน์
     for (const k of keys) {
       for (const rk of Object.keys(row)) {
-        if (rk.replace(/\s/g,'').toLowerCase().includes(k.toLowerCase())) return row[rk] || '';
+        if (rk.replace(/\s/g,'').toLowerCase() === k.replace(/\s/g,'').toLowerCase()) return row[rk] || '';
+      }
+    }
+    // pass สอง: includes() fallback สำหรับ key ย่อ / alias
+    for (const k of keys) {
+      for (const rk of Object.keys(row)) {
+        if (rk.replace(/\s/g,'').toLowerCase().includes(k.replace(/\s/g,'').toLowerCase())) return row[rk] || '';
       }
     }
     return '';
