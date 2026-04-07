@@ -1117,13 +1117,17 @@
   .aging-threshold { display:flex; gap:4px; margin-left:auto; }
   .aging-thresh-btn { font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text-muted); cursor:pointer; transition:all .15s; font-family:var(--mono); }
   .aging-thresh-btn.active { background:var(--warning,#d29000); border-color:var(--warning,#d29000); color:#fff; }
-  .aging-table-wrap { flex:1; overflow:auto; padding:14px 18px; }
-  .aging-tbl { width:100%; border-collapse:collapse; font-size:12px; }
-  .aging-tbl th { position:sticky; top:0; background:var(--surface); padding:7px 10px; text-align:left; font-size:11px; font-weight:700; color:var(--text-muted); border-bottom:2px solid var(--border); white-space:nowrap; cursor:pointer; user-select:none; }
+  .aging-table-wrap { flex:1; overflow:auto; padding:0; }
+  .aging-tbl { width:100%; border-collapse: separate; border-spacing:0; font-size:12px; }
+  .aging-tbl th { position:sticky; top:0; z-index:2; background:var(--surface); padding:7px 10px; text-align:left; font-size:11px; font-weight:700; color:var(--text-muted); border-bottom:2px solid var(--border); white-space:nowrap; cursor:pointer; user-select:none; }
+  .aging-tbl th:first-child { padding-left:18px; }
+  .aging-tbl th:last-child  { padding-right:18px; }
   .aging-tbl th:hover { color:var(--text); }
   .aging-tbl th .sort-arrow { margin-left:3px; opacity:.4; }
   .aging-tbl th.sorted .sort-arrow { opacity:1; color:var(--accent2); }
   .aging-tbl td { padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:middle; white-space:nowrap; }
+  .aging-tbl td:first-child { padding-left:18px; }
+  .aging-tbl td:last-child  { padding-right:18px; }
   .aging-tbl tr:hover td { background:var(--surface2); }
   .aging-row-y5  td:first-child { border-left:3px solid #d29000; }
   .aging-row-y7  td:first-child { border-left:3px solid #e36209; }
@@ -6325,7 +6329,11 @@ function renderAgingCharts() {
         plugins: {
           legend: { position: 'right', labels: { font: { size: 10, family: 'IBM Plex Sans Thai' }, boxWidth: 10, padding: 6,
             color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#24292f' } },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} รายการ` } }
+          tooltip: { callbacks: { label: ctx => {
+            const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+            const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+            return ` ${ctx.label}: ${ctx.parsed} รายการ (${pct}%)`;
+          }}}
         }
       }
     });
@@ -6355,7 +6363,11 @@ function renderAgingCharts() {
         indexAxis: 'y',
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} รายการ` } }
+          tooltip: { callbacks: { label: ctx => {
+            const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+            const pct = total > 0 ? ((ctx.parsed.x / total) * 100).toFixed(1) : 0;
+            return ` ${ctx.parsed.x} รายการ (${pct}%)`;
+          }}}
         },
         scales: {
           x: { ticks: { font: { size: 10 }, color: '#888', stepSize: 1 }, grid: { color: 'rgba(128,128,128,0.1)' } },
