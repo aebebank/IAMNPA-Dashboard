@@ -1102,6 +1102,74 @@
   #page-calendar.active { display:flex; flex-direction:column; height:100%; overflow:hidden; }
   #page-wfh.active { display:flex; flex-direction:column; height:100%; overflow:hidden; }
 
+  /* ── AGING PAGE ── */
+  .aging-topbar { padding:10px 18px; border-bottom:1px solid var(--border); background:var(--surface); display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+  .aging-title  { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .aging-icon-box { width:28px; height:28px; background:rgba(210,140,0,0.12); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .aging-kpi-strip { display:flex; gap:10px; padding:12px 18px; border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; }
+  .aging-kpi { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 16px; min-width:140px; }
+  .aging-kpi-label { font-size:10px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; }
+  .aging-kpi-val   { font-size:20px; font-weight:700; font-family:var(--mono); margin-top:2px; color:var(--text); }
+  .aging-kpi-sub   { font-size:10px; color:var(--text-dim); margin-top:1px; }
+  .aging-filterbar { padding:10px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0; background:var(--surface); }
+  .aging-pill { font-size:11px; font-weight:600; padding:4px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface2); color:var(--text-muted); cursor:pointer; transition:all .15s; }
+  .aging-pill.active { background:var(--accent2); border-color:var(--accent2); color:#fff; }
+  .aging-threshold { display:flex; gap:4px; margin-left:auto; }
+  .aging-thresh-btn { font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text-muted); cursor:pointer; transition:all .15s; font-family:var(--mono); }
+  .aging-thresh-btn.active { background:var(--warning,#d29000); border-color:var(--warning,#d29000); color:#fff; }
+  .aging-table-wrap { flex:1; overflow:auto; padding:14px 18px; }
+  .aging-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+  .aging-tbl th { position:sticky; top:0; background:var(--surface); padding:7px 10px; text-align:left; font-size:11px; font-weight:700; color:var(--text-muted); border-bottom:2px solid var(--border); white-space:nowrap; cursor:pointer; user-select:none; }
+  .aging-tbl th:hover { color:var(--text); }
+  .aging-tbl th .sort-arrow { margin-left:3px; opacity:.4; }
+  .aging-tbl th.sorted .sort-arrow { opacity:1; color:var(--accent2); }
+  .aging-tbl td { padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:middle; white-space:nowrap; }
+  .aging-tbl tr:hover td { background:var(--surface2); }
+  .aging-row-y5  td:first-child { border-left:3px solid #d29000; }
+  .aging-row-y7  td:first-child { border-left:3px solid #e36209; }
+  .aging-row-y10 td:first-child { border-left:3px solid var(--danger); }
+  .aging-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; }
+  .aging-badge-5  { background:rgba(210,144,0,.12); color:#a07000; }
+  .aging-badge-7  { background:rgba(227,98,9,.12); color:#c85000; }
+  .aging-badge-10 { background:rgba(207,34,46,.12); color:var(--danger); }
+  .aging-grade { display:inline-block; font-size:11px; font-weight:800; width:22px; height:22px; line-height:22px; text-align:center; border-radius:5px; }
+  .aging-grade-A { background:rgba(26,127,55,.12); color:#1a7f37; }
+  .aging-grade-B { background:rgba(9,105,218,.12); color:var(--accent2); }
+  .aging-grade-C { background:rgba(210,144,0,.12); color:#a07000; }
+  .aging-grade-D { background:rgba(207,34,46,.12); color:var(--danger); }
+  .aging-empty { text-align:center; padding:48px; color:var(--text-dim); font-size:13px; }
+
+  /* ── AGING CHART + SEARCH ── */
+  .aging-mid { display:flex; gap:0; border-bottom:1px solid var(--border); flex-shrink:0; max-height:220px; }
+  .aging-charts { display:flex; gap:12px; padding:12px 18px; flex:1; overflow:hidden; }
+  .aging-chart-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 14px; flex:1; min-width:0; display:flex; flex-direction:column; }
+  .aging-chart-card-title { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; }
+  .aging-chart-canvas-wrap { flex:1; position:relative; min-height:0; }
+  .aging-search-wrap { padding:10px 18px; border-left:1px solid var(--border); display:flex; align-items:center; width:220px; flex-shrink:0; }
+  .aging-search-input { width:100%; padding:7px 10px 7px 30px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font); outline:none; }
+  .aging-search-input:focus { border-color:var(--accent2); }
+  .aging-search-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:13px; pointer-events:none; }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar, .topbar, .footer, .aging-filterbar, .aging-topbar .aging-threshold,
+    #btn-aging-print, .aging-pill, .aging-search-wrap { display:none !important; }
+    .aging-mid { max-height:none; border:none; }
+    .aging-charts { padding:8px 0; }
+    .aging-chart-card { border:1px solid #ccc; }
+    body, .app-shell, .page-content, #page-aging { background:#fff !important; }
+    .app-shell { display:block !important; }
+    .page-content { display:block !important; }
+    .page-view { display:none !important; }
+    #page-aging { display:block !important; }
+    .aging-kpi-strip { border-bottom:1px solid #ccc; }
+    .aging-table-wrap { overflow:visible; padding:8px 0; }
+    .aging-tbl th { background:#fff; border-bottom:2px solid #333; color:#333; }
+    .aging-tbl td { color:#333; border-bottom:1px solid #ddd; }
+    .print-header { display:block !important; padding:12px 0 8px; border-bottom:2px solid #333; margin-bottom:8px; }
+  }
+  .print-header { display:none; }
+
   /* ── WFH PAGE ── */
   .wfh-topbar { padding:10px 18px; border-bottom:1px solid var(--border); background:var(--surface); display:flex; align-items:center; gap:10px; flex-shrink:0; flex-wrap:wrap; }
   .wfh-title  { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
@@ -1444,6 +1512,10 @@
     <div class="nav-item active" id="nav-summary" onclick="switchPage('summary')">
       <span class="nav-icon">📊</span>
       <span>Summary</span>
+    </div>
+    <div class="nav-item" id="nav-aging" onclick="switchPage('aging')">
+      <span class="nav-icon">⏳</span>
+      <span>ถือครองเกิน 5 ปี</span>
     </div>
     <div class="nav-item" id="nav-history" onclick="switchPage('history')">
       <span class="nav-icon">🧹</span>
@@ -2186,6 +2258,117 @@
       </div>
     </div><!-- /page-wfh -->
 
+    <!-- ══════════════════════════════════════ -->
+    <!--  PAGE 7: ทรัพย์ถือครองนาน              -->
+    <!-- ══════════════════════════════════════ -->
+    <div class="page-view" id="page-aging" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+
+      <!-- Print Header (ซ่อนปกติ แสดงเฉพาะ Print) -->
+      <div class="print-header">
+        <div style="font-size:16px;font-weight:700;">รายการทรัพย์ NPA ถือครองเกิน 5 ปี — บสอ. ฝ่ายบริหารทรัพย์สิน</div>
+        <div id="aging-print-meta" style="font-size:11px;color:#555;margin-top:4px;"></div>
+      </div>
+
+      <!-- Top Bar -->
+      <div class="aging-topbar">
+        <div class="aging-icon-box">⏳</div>
+        <div class="aging-title">ทรัพย์ถือครองเกิน 5 ปี</div>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+          <button id="btn-aging-print" onclick="agingPrint()"
+            style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-family:var(--font);">
+            🖨️ พิมพ์ / PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Strip -->
+      <div class="aging-kpi-strip" id="aging-kpi-strip">
+        <div class="aging-kpi">
+          <div class="aging-kpi-label">จำนวนทรัพย์</div>
+          <div class="aging-kpi-val" id="aging-kpi-count">—</div>
+          <div class="aging-kpi-sub">รายการ (≥ threshold ที่เลือก)</div>
+        </div>
+        <div class="aging-kpi">
+          <div class="aging-kpi-label">มูลค่ารวม</div>
+          <div class="aging-kpi-val" id="aging-kpi-value">—</div>
+          <div class="aging-kpi-sub">บาท (ราคาประกาศขาย)</div>
+        </div>
+        <div class="aging-kpi">
+          <div class="aging-kpi-label">อายุเฉลี่ย</div>
+          <div class="aging-kpi-val" id="aging-kpi-avg">—</div>
+          <div class="aging-kpi-sub">ปี</div>
+        </div>
+        <div class="aging-kpi">
+          <div class="aging-kpi-label">อายุสูงสุด</div>
+          <div class="aging-kpi-val" id="aging-kpi-max">—</div>
+          <div class="aging-kpi-sub">ปี</div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="aging-filterbar">
+        <span style="font-size:11px;font-weight:600;color:var(--text-muted);">สถานะ:</span>
+        <div id="aging-status-pills" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+      </div>
+
+      <!-- Charts + Search -->
+      <div class="aging-mid">
+        <div class="aging-charts">
+          <!-- Chart: ประเภท -->
+          <div class="aging-chart-card">
+            <div class="aging-chart-card-title">
+              <span>📦 ตามประเภทอาคาร</span>
+            </div>
+            <div class="aging-chart-canvas-wrap">
+              <canvas id="aging-chart-type"></canvas>
+            </div>
+          </div>
+          <!-- Chart: จังหวัด -->
+          <div class="aging-chart-card">
+            <div class="aging-chart-card-title">
+              <span>📍 ตามจังหวัด (Top 8)</span>
+            </div>
+            <div class="aging-chart-canvas-wrap">
+              <canvas id="aging-chart-province"></canvas>
+            </div>
+          </div>
+        </div>
+        <!-- Search -->
+        <div class="aging-search-wrap">
+          <div style="position:relative;width:100%;">
+            <span class="aging-search-icon">🔍</span>
+            <input class="aging-search-input" id="aging-search"
+              placeholder="รหัส / ชื่อ / จังหวัด..."
+              oninput="renderAgingTable()" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="aging-table-wrap">
+        <table class="aging-tbl" id="aging-tbl">
+          <thead>
+            <tr>
+              <th onclick="agingSort('id')">#&nbsp;<span class="sort-arrow">↕</span></th>
+              <th onclick="agingSort('id')">รหัสทรัพย์<span class="sort-arrow">↕</span></th>
+              <th onclick="agingSort('type')">ประเภท<span class="sort-arrow">↕</span></th>
+              <th onclick="agingSort('name')">ชื่อทรัพย์<span class="sort-arrow">↕</span></th>
+              <th onclick="agingSort('province')">จังหวัด<span class="sort-arrow">↕</span></th>
+              <th onclick="agingSort('acquired')">วันที่รับทรัพย์<span class="sort-arrow">↕</span></th>
+              <th onclick="agingSort('age')" class="sorted">อายุ (ปี เดือน)<span class="sort-arrow">↓</span></th>
+              <th onclick="agingSort('price')">ราคาขาย (บาท)<span class="sort-arrow">↕</span></th>
+              <th onclick="agingSort('status')">สถานะ<span class="sort-arrow">↕</span></th>
+              <th onclick="agingSort('intrusion')">สถานะบุกรุก<span class="sort-arrow">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="aging-tbody">
+            <tr><td colspan="9" class="aging-empty">กรุณาโหลดข้อมูลก่อน</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /page-aging -->
+
   </div><!-- /page-content -->
 </div><!-- /app-shell -->
 
@@ -2621,6 +2804,8 @@ function mapRow(row) {
     cleanWODate:     get('วันออก WO ทำความสะอาด','cleanwodate','WOทำความสะอาด'),
     cleanStatus:     get('สถานะทำความสะอาด','cleanstatus','สถานะความสะอาด'),
     acquired:   get('วันที่รับทรัพย์','รับที่รับทรัพย์','acquired','วันที่','date'),
+    grade:      get('เกรดทรัพย์ปีล่าสุด','เกรดทรัพย์','grade','เกรด'),
+    intrusion:  get('สถานะบุกรุกปัจจุบัน','สถานะบุกรุก','intrusion','บุกรุก'),
     contractEnd:get('วันหมดสัญญา','contractend','สิ้นสุด','expire','enddate'),
     contractVal:parseFloat((get('มูลค่าสัญญา','contractval','มูลค่า','value') || '0').replace(/,/g,'')) || 0,
     contractType:get('ประเภทสัญญา','contracttype','งาน','service'),
@@ -4226,17 +4411,18 @@ function fmtDate(s) {
 //  SIDEBAR NAVIGATION
 // ═══════════════════════════════════════════
 function switchPage(page) {
-  ['summary','history','timeline','valuation','calendar','wfh'].forEach(p => {
+  ['summary','history','timeline','valuation','calendar','wfh','aging'].forEach(p => {
     document.getElementById('page-' + p)?.classList.toggle('active', p === page);
     document.getElementById('nav-' + p)?.classList.toggle('active', p === page);
   });
   const pc = document.querySelector('.page-content');
-  if (pc) pc.style.overflowY = (page === 'valuation' || page === 'calendar' || page === 'wfh') ? 'hidden' : 'auto';
+  if (pc) pc.style.overflowY = (page === 'valuation' || page === 'calendar' || page === 'wfh' || page === 'aging') ? 'hidden' : 'auto';
   if (page === 'history')   renderHistPage();
   if (page === 'timeline')  renderTLPills();
   if (page === 'valuation') renderValPage();
   if (page === 'calendar')  renderCalPage();
   if (page === 'wfh')       renderWFHPage();
+  if (page === 'aging')     renderAgingPage();
 }
 
 // ═══════════════════════════════════════════
@@ -5263,6 +5449,7 @@ renderAll = function() {
   if (activePage === 'page-history') renderHistPage();
   if (activePage === 'page-timeline') renderTLPills();
   if (activePage === 'page-valuation') renderValPage();
+  if (activePage === 'page-aging') renderAgingPage();
 };
 
 // ═══════════════════════════════════════════
@@ -5973,6 +6160,315 @@ function exportWFHCsv() {
   a.click();
   URL.revokeObjectURL(url);
 }
+// ═══════════════════════════════════════════
+//  PAGE 7: ทรัพย์ถือครองนาน (Aging Assets)
+// ═══════════════════════════════════════════
+let agingThresh    = 5;      // ปี threshold ปัจจุบัน
+let agingSortKey   = 'age';  // คอลัมน์ sort
+let agingSortDir   = -1;     // -1=มากไปน้อย, 1=น้อยไปมาก
+let agingStatusFilter = 'all';
+
+// คำนวณอายุ (ปี) จากวันที่รับทรัพย์
+function calcAge(acquired) {
+  if (!acquired) return null;
+  const d = new Date(acquired);
+  if (isNaN(d)) return null;
+  return (Date.now() - d) / (365.25 * 86400000);
+}
+
+// แปลงอายุเป็น "X ปี Y เดือน"
+function fmtAge(yrs) {
+  if (yrs === null || yrs === undefined) return '-';
+  const totalMonths = Math.floor(yrs * 12);
+  const y = Math.floor(totalMonths / 12);
+  const m = totalMonths % 12;
+  return m > 0 ? `${y} ปี ${m} เดือน` : `${y} ปี`;
+}
+
+// แปลงวันที่เป็น พ.ศ.
+function fmtDateTH(str) {
+  if (!str) return '-';
+  const d = new Date(str);
+  if (isNaN(d)) return str;
+  return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+}
+
+// badge สีตามช่วงอายุ
+function ageBadge(yrs) {
+  if (yrs === null) return '';
+  if (yrs >= 10) return `<span class="aging-badge aging-badge-10">10 ปี+</span>`;
+  if (yrs >= 7)  return `<span class="aging-badge aging-badge-7">7 ปี+</span>`;
+  return `<span class="aging-badge aging-badge-5">5 ปี+</span>`;
+}
+
+// row class ตามช่วงอายุ
+function ageRowClass(yrs) {
+  if (yrs >= 10) return 'aging-row-y10';
+  if (yrs >= 7)  return 'aging-row-y7';
+  return 'aging-row-y5';
+}
+
+// grade badge
+function gradeBadge(g) {
+  if (!g) return '-';
+  const cls = ['A','B','C','D'].includes(g.toUpperCase()) ? `aging-grade-${g.toUpperCase()}` : '';
+  return `<span class="aging-grade ${cls}">${g.toUpperCase()}</span>`;
+}
+
+// สร้าง status pills แบบ fixed 4 ปุ่ม
+function agingBuildPills() {
+  const container = document.getElementById('aging-status-pills');
+  if (!container) return;
+
+  const filters = [
+    { key: 'all',                    label: 'ALL' },
+    { key: 'intrusion:มีผู้บุกรุก',  label: 'มีผู้บุกรุก' },
+    { key: 'intrusion:ไม่มีผู้บุกรุก', label: 'ไม่มีผู้บุกรุก' },
+    { key: 'status:ชะลอขาย',        label: 'ชะลอขาย' },
+  ];
+
+  container.innerHTML = filters.map(f =>
+    `<button class="aging-pill ${agingStatusFilter === f.key ? 'active' : ''}"
+      onclick="agingSetStatus('${f.key}')">${f.label}</button>`
+  ).join('');
+}
+
+function agingSetStatus(key) {
+  agingStatusFilter = key;
+  agingBuildPills();
+  renderAgingKPIs();
+  renderAgingCharts();
+  renderAgingTable();
+}
+
+function agingSetThresh(yr) {
+  agingThresh = yr;
+  document.querySelectorAll('.aging-thresh-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.yr) === yr);
+  });
+  renderAgingPage();
+}
+
+function agingSort(key) {
+  if (agingSortKey === key) {
+    agingSortDir *= -1;
+  } else {
+    agingSortKey = key;
+    agingSortDir = key === 'age' ? -1 : 1;
+  }
+  // อัปเดต header arrows
+  document.querySelectorAll('.aging-tbl th').forEach(th => {
+    th.classList.remove('sorted');
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = '↕';
+  });
+  // หา th ที่ตรงกับ key
+  const thMap = { id:1, type:2, name:3, province:4, acquired:5, age:6, price:7, status:8, intrusion:9 };
+  const idx = thMap[key];
+  if (idx) {
+    const th = document.querySelectorAll('.aging-tbl th')[idx];
+    if (th) {
+      th.classList.add('sorted');
+      const arrow = th.querySelector('.sort-arrow');
+      if (arrow) arrow.textContent = agingSortDir === -1 ? '↓' : '↑';
+    }
+  }
+  renderAgingTable();
+}
+
+function agingGetFiltered() {
+  return (allData || [])
+    .map(r => ({ ...r, _age: calcAge(r.acquired) }))
+    .filter(r => r._age !== null && r._age >= agingThresh)
+    .filter(r => {
+      if (agingStatusFilter === 'all') return true;
+      if (agingStatusFilter.startsWith('intrusion:')) {
+        const val = agingStatusFilter.slice('intrusion:'.length);
+        return (r.intrusion || '') === val;
+      }
+      if (agingStatusFilter.startsWith('status:')) {
+        const val = agingStatusFilter.slice('status:'.length);
+        return (r.status || '') === val;
+      }
+      return true;
+    });
+}
+
+// ─── Aging Charts ────────────────────────────────
+let agingCharts = {};
+
+function renderAgingCharts() {
+  const rows = agingGetFiltered();
+
+  // ── Chart 1: ประเภท ──
+  const typeCounts = {};
+  rows.forEach(r => {
+    const t = r.type || 'ไม่ระบุ';
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+  const typeEntries = Object.entries(typeCounts).sort((a,b) => b[1]-a[1]);
+  const typeLabels = typeEntries.map(e => e[0]);
+  const typeVals   = typeEntries.map(e => e[1]);
+  const palette = ['#3b82f6','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#6366f1','#84cc16'];
+
+  if (agingCharts.type) agingCharts.type.destroy();
+  const ctxType = document.getElementById('aging-chart-type');
+  if (ctxType) {
+    agingCharts.type = new Chart(ctxType, {
+      type: 'doughnut',
+      data: {
+        labels: typeLabels,
+        datasets: [{ data: typeVals, backgroundColor: palette.slice(0, typeLabels.length), borderWidth: 1, borderColor: 'transparent' }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 10, family: 'IBM Plex Sans Thai' }, boxWidth: 10, padding: 6,
+            color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#24292f' } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} รายการ` } }
+        }
+      }
+    });
+  }
+
+  // ── Chart 2: จังหวัด Top 8 ──
+  const provCounts = {};
+  rows.forEach(r => {
+    const p = r.province || 'ไม่ระบุ';
+    provCounts[p] = (provCounts[p] || 0) + 1;
+  });
+  const provEntries = Object.entries(provCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  const provLabels = provEntries.map(e => e[0]);
+  const provVals   = provEntries.map(e => e[1]);
+
+  if (agingCharts.province) agingCharts.province.destroy();
+  const ctxProv = document.getElementById('aging-chart-province');
+  if (ctxProv) {
+    agingCharts.province = new Chart(ctxProv, {
+      type: 'bar',
+      data: {
+        labels: provLabels,
+        datasets: [{ data: provVals, backgroundColor: '#3b82f6', borderRadius: 4, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} รายการ` } }
+        },
+        scales: {
+          x: { ticks: { font: { size: 10 }, color: '#888', stepSize: 1 }, grid: { color: 'rgba(128,128,128,0.1)' } },
+          y: { ticks: { font: { size: 10, family: 'IBM Plex Sans Thai' }, color: '#888' }, grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+function renderAgingPage() {
+  if (!allData || allData.length === 0) return;
+  agingBuildPills();
+  renderAgingKPIs();
+  renderAgingCharts();
+  renderAgingTable();
+}
+
+function renderAgingKPIs() {
+  const rows = agingGetFiltered();
+  const count = rows.length;
+  const totalVal = rows.reduce((s, r) => s + (r.price || 0), 0);
+  const ages = rows.map(r => r._age).filter(Boolean);
+  const avgAge = ages.length ? (ages.reduce((a, b) => a + b, 0) / ages.length).toFixed(1) : '-';
+  const maxAge = ages.length ? Math.max(...ages).toFixed(1) : '-';
+
+  document.getElementById('aging-kpi-count').textContent = count.toLocaleString('th-TH');
+  document.getElementById('aging-kpi-value').textContent = totalVal > 0
+    ? (totalVal / 1e6).toFixed(2) + ' ล้าน'
+    : '-';
+  document.getElementById('aging-kpi-avg').textContent = avgAge !== '-' ? avgAge : '-';
+  document.getElementById('aging-kpi-max').textContent = maxAge !== '-' ? maxAge : '-';
+}
+
+function renderAgingTable() {
+  const tbody = document.getElementById('aging-tbody');
+  if (!tbody) return;
+
+  let rows = agingGetFiltered();
+
+  // Search filter
+  const q = (document.getElementById('aging-search')?.value || '').toLowerCase().trim();
+  if (q) {
+    rows = rows.filter(r =>
+      (r.id || '').toLowerCase().includes(q) ||
+      (r.name || '').toLowerCase().includes(q) ||
+      (r.province || '').toLowerCase().includes(q)
+    );
+  }
+
+  // Sort
+  rows.sort((a, b) => {
+    let va, vb;
+    switch (agingSortKey) {
+      case 'id':        va = a.id || ''; vb = b.id || ''; break;
+      case 'name':      va = a.name || ''; vb = b.name || ''; break;
+      case 'type':      va = a.type || ''; vb = b.type || ''; break;
+      case 'province':  va = a.province || ''; vb = b.province || ''; break;
+      case 'acquired':  va = a.acquired || ''; vb = b.acquired || ''; break;
+      case 'age':       va = a._age || 0; vb = b._age || 0; break;
+      case 'price':     va = a.price || 0; vb = b.price || 0; break;
+      case 'status':    va = a.status || ''; vb = b.status || ''; break;
+      case 'intrusion': va = a.intrusion || ''; vb = b.intrusion || ''; break;
+      default:          va = a._age || 0; vb = b._age || 0;
+    }
+    if (typeof va === 'string') return agingSortDir * va.localeCompare(vb, 'th');
+    return agingSortDir * (va - vb);
+  });
+
+  // Update KPIs after filter
+  renderAgingKPIs();
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="aging-empty">ไม่พบทรัพย์ที่ตรงกับเงื่อนไข</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((r, i) => {
+    const rc = ageRowClass(r._age);
+    const intrusionBadge = r.intrusion
+      ? `<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:${r.intrusion.includes('มี') ? 'rgba(207,34,46,.1)' : 'rgba(26,127,55,.1)'};color:${r.intrusion.includes('มี') ? 'var(--danger)' : '#1a7f37'};">${r.intrusion}</span>`
+      : '<span style="color:var(--text-dim)">-</span>';
+    const priceStr = r.price > 0 ? r.price.toLocaleString('th-TH') : '-';
+    return `<tr class="${rc}">
+      <td style="color:var(--text-dim);font-family:var(--mono);font-size:11px;">${i + 1}</td>
+      <td style="font-family:var(--mono);font-weight:600;font-size:11px;">${r.id || '-'}</td>
+      <td>${r.type || '-'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${r.name || '-'}</td>
+      <td>${r.province || '-'}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${fmtDateTH(r.acquired)}</td>
+      <td style="font-weight:700;font-family:var(--mono);">${fmtAge(r._age)}&nbsp;${ageBadge(r._age)}</td>
+      <td style="font-family:var(--mono);text-align:right;">${priceStr}</td>
+      <td><span style="font-size:10px;">${r.status || '-'}</span></td>
+      <td>${intrusionBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+function agingPrint() {
+  // เตรียม print header
+  const meta = document.getElementById('aging-print-meta');
+  if (meta) {
+    const d = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
+    const rows = agingGetFiltered();
+    const filterLabel = agingStatusFilter === 'all' ? 'ทั้งหมด'
+      : agingStatusFilter.startsWith('intrusion:') ? agingStatusFilter.slice('intrusion:'.length)
+      : agingStatusFilter.startsWith('status:') ? agingStatusFilter.slice('status:'.length)
+      : agingStatusFilter;
+    meta.textContent = `พิมพ์วันที่: ${d} | เงื่อนไข: ถือครองเกิน 5 ปี | สถานะ: ${filterLabel} | จำนวน: ${rows.length} รายการ`;
+  }
+  window.print();
+}
+
 
 
 </script>
