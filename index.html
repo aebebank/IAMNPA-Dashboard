@@ -2483,7 +2483,7 @@ async function fetchSheet(sheetId, sheetName = '') {
   if (!gsAccessToken) throw new Error('กรุณา Sign in ก่อน');
   // encode เฉพาะชื่อ tab เท่านั้น ไม่ encode ! และ :
   const encodedName = sheetName ? encodeURIComponent(sheetName) : '';
-  const range = encodedName ? `${encodedName}!A1:Z` : 'A1:Z';
+  const range = encodedName ? `${encodedName}!A1:AZ` : 'A1:AZ';
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?access_token=${gsAccessToken}`;
   const res = await fetch(url);
   if (res.status === 401) { gsAccessToken = null; throw new Error('Session หมดอายุ กรุณา Sign in ใหม่'); }
@@ -2813,13 +2813,6 @@ function debugColumns() {
 }
 
 function processData(raw) {
-  // DEBUG: แสดง raw column names ของ 67IAM-G-0310
-  const debugRow = raw.find(r => Object.values(r).some(v => String(v).includes('67IAM-G-0310')));
-  if (debugRow) {
-    const surveyKeys = Object.keys(debugRow).filter(k => k.includes('สำรวจ') || k.includes('ครบกำหนด'));
-    console.log('[DEBUG 67IAM-G-0310 survey-related keys]', surveyKeys.map(k => `"${k}" = "${debugRow[k]}"`).join(' | '));
-    console.log('[DEBUG 67IAM-G-0310 ALL keys]', Object.keys(debugRow).join(' | '));
-  }
   allData = raw.map(mapRow).filter(r => r.id || r.name);
   debugZones();
   if (allData.length === 0) return alert('ไม่พบข้อมูล กรุณาตรวจสอบ CSV');
@@ -3328,15 +3321,12 @@ function renderUpcoming(data = allData) {
   });
 
   // 7. ครบกำหนดสำรวจทุกสัปดาห์ (เฉพาะ 67IAM-G-0310) — Upcoming 8–60 วัน (≤ 7 วัน = Alert รับแทน)
-  console.log('[WeeklySurvey] all IDs:', data.map(r => JSON.stringify(r.id)));
   data.forEach(r => {
     if (r.id !== '67IAM-G-0310') return;
-    console.log('[WeeklySurvey] found id:', JSON.stringify(r.id), 'weeklySurveyDate:', r.weeklySurveyDate);
-    if (!r.weeklySurveyDate) { console.log('[WeeklySurvey] SKIP: no date'); return; }
+    if (!r.weeklySurveyDate) return;
     const d = new Date(r.weeklySurveyDate);
-    if (isNaN(d)) { console.log('[WeeklySurvey] SKIP: invalid date'); return; }
+    if (isNaN(d)) return;
     const diff = Math.ceil((d - today) / 86400000);
-    console.log('[WeeklySurvey] diff:', diff, 'horizon:', horizon);
     if (diff >= 8 && diff <= horizon) {
       const parts = [r.name, r.type, r.province].filter(v => v && v.trim() && v !== '-');
       events.push({
