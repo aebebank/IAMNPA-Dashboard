@@ -2786,7 +2786,7 @@ function mapRow(row) {
     valuationSentDate:  get('วันส่งประเมิน','valuationsentdate','วันส่ง','sentdate','ส่งประเมิน'),
     handoverDate:       get('วันที่รับมอบทรัพย์','handoverdate','รับมอบทรัพย์','รับมอบ'),
     handoverNote:       get('หมายเหตุรับมอบทรัพย์','handovernote','หมายเหตุรับมอบ'),
-    weeklySurveyDate:   get('ครบกำหนดสำรวจทุกสัปดาห์','weeklysurveydate','ครบกำหนดสำรวจ','สำรวจทุกสัปดาห์'),
+    weeklySurveyDate:   get('ครบกำหนดสำรวจทุกสัปดาห์','ครบกำหนดสำรวจทุกสัปดาห์','weeklysurveydate','ครบกำหนดสำรวจ','สำรวจทุกสัปดาห์','ทุกสัปดาห์'),
     weeklySurveyNote:   get('หมายเหตุครบกำหนดสำรวจ','weeklysurveyynote','หมายเหตุสำรวจสัปดาห์'),
     dailyLogDate:       get('วันลงบันทึกประจำวัน','dailylogdate','ลงบันทึกประจำวัน','ลงบันทึก','dailylog'),
     dailyLogNote:       get('หมายเหตุลงบันทึกประจำวัน','dailylognote','หมายเหตุลงบันทึก'),
@@ -2813,6 +2813,13 @@ function debugColumns() {
 }
 
 function processData(raw) {
+  // DEBUG: แสดง raw column names ของ 67IAM-G-0310
+  const debugRow = raw.find(r => Object.values(r).some(v => String(v).includes('67IAM-G-0310')));
+  if (debugRow) {
+    const surveyKeys = Object.keys(debugRow).filter(k => k.includes('สำรวจ') || k.includes('ครบกำหนด'));
+    console.log('[DEBUG 67IAM-G-0310 survey-related keys]', surveyKeys.map(k => `"${k}" = "${debugRow[k]}"`).join(' | '));
+    console.log('[DEBUG 67IAM-G-0310 ALL keys]', Object.keys(debugRow).join(' | '));
+  }
   allData = raw.map(mapRow).filter(r => r.id || r.name);
   debugZones();
   if (allData.length === 0) return alert('ไม่พบข้อมูล กรุณาตรวจสอบ CSV');
