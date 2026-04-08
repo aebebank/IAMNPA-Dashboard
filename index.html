@@ -1144,12 +1144,7 @@
   .aging-empty { text-align:center; padding:48px; color:var(--text-dim); font-size:13px; }
 
   /* ── AGING CHART + SEARCH ── */
-  .aging-mid { display:flex; gap:0; border-bottom:1px solid var(--border); flex-shrink:0; max-height:220px; }
-  .aging-charts { display:flex; gap:12px; padding:12px 18px; flex:1; overflow:hidden; }
-  .aging-chart-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 14px; flex:1; min-width:0; display:flex; flex-direction:column; }
-  .aging-chart-card-title { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; }
-  .aging-chart-canvas-wrap { flex:1; position:relative; min-height:0; }
-  .aging-search-wrap { padding:10px 18px; border-left:1px solid var(--border); display:flex; align-items:center; width:220px; flex-shrink:0; }
+  .aging-search-wrap { padding:10px 18px; display:flex; align-items:center; width:220px; flex-shrink:0; }
   .aging-search-input { width:100%; padding:7px 10px 7px 30px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font); outline:none; }
   .aging-search-input:focus { border-color:var(--accent2); }
   .aging-search-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:13px; pointer-events:none; }
@@ -1157,10 +1152,7 @@
   /* ── PRINT ── */
   @media print {
     .sidebar, .topbar, .footer, .aging-filterbar, .aging-topbar .aging-threshold,
-    #btn-aging-print, .aging-pill, .aging-search-wrap { display:none !important; }
-    .aging-mid { max-height:none; border:none; }
-    .aging-charts { padding:8px 0; }
-    .aging-chart-card { border:1px solid #ccc; }
+    #btn-aging-print, .aging-pill { display:none !important; }
     body, .app-shell, .page-content, #page-aging { background:#fff !important; }
     .app-shell { display:block !important; }
     .page-content { display:block !important; }
@@ -2315,36 +2307,13 @@
         <div id="aging-status-pills" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
       </div>
 
-      <!-- Charts + Search -->
-      <div class="aging-mid">
-        <div class="aging-charts">
-          <!-- Chart: ประเภท -->
-          <div class="aging-chart-card">
-            <div class="aging-chart-card-title">
-              <span>📦 ตามประเภทอาคาร</span>
-            </div>
-            <div class="aging-chart-canvas-wrap">
-              <canvas id="aging-chart-type"></canvas>
-            </div>
-          </div>
-          <!-- Chart: จังหวัด -->
-          <div class="aging-chart-card">
-            <div class="aging-chart-card-title">
-              <span>📍 ตามจังหวัด (Top 8)</span>
-            </div>
-            <div class="aging-chart-canvas-wrap">
-              <canvas id="aging-chart-province"></canvas>
-            </div>
-          </div>
-        </div>
-        <!-- Search -->
-        <div class="aging-search-wrap">
-          <div style="position:relative;width:100%;">
-            <span class="aging-search-icon">🔍</span>
-            <input class="aging-search-input" id="aging-search"
-              placeholder="รหัส / ชื่อ / จังหวัด..."
-              oninput="renderAgingTable()" />
-          </div>
+      <!-- Search -->
+      <div style="padding:8px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;flex-shrink:0;">
+        <div style="position:relative;width:240px;">
+          <span class="aging-search-icon" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;">🔍</span>
+          <input class="aging-search-input" id="aging-search"
+            placeholder="รหัส / ชื่อ / จังหวัด..."
+            oninput="renderAgingTable()" />
         </div>
       </div>
 
@@ -6241,7 +6210,6 @@ function agingSetStatus(key) {
   agingStatusFilter = key;
   agingBuildPills();
   renderAgingKPIs();
-  renderAgingCharts();
   renderAgingTable();
 }
 
@@ -6298,91 +6266,11 @@ function agingGetFiltered() {
     });
 }
 
-// ─── Aging Charts ────────────────────────────────
-let agingCharts = {};
-
-function renderAgingCharts() {
-  const rows = agingGetFiltered();
-
-  // ── Chart 1: ประเภท ──
-  const typeCounts = {};
-  rows.forEach(r => {
-    const t = r.type || 'ไม่ระบุ';
-    typeCounts[t] = (typeCounts[t] || 0) + 1;
-  });
-  const typeEntries = Object.entries(typeCounts).sort((a,b) => b[1]-a[1]);
-  const typeLabels = typeEntries.map(e => e[0]);
-  const typeVals   = typeEntries.map(e => e[1]);
-  const palette = ['#3b82f6','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#6366f1','#84cc16'];
-
-  if (agingCharts.type) agingCharts.type.destroy();
-  const ctxType = document.getElementById('aging-chart-type');
-  if (ctxType) {
-    agingCharts.type = new Chart(ctxType, {
-      type: 'doughnut',
-      data: {
-        labels: typeLabels,
-        datasets: [{ data: typeVals, backgroundColor: palette.slice(0, typeLabels.length), borderWidth: 1, borderColor: 'transparent' }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'right', labels: { font: { size: 10, family: 'IBM Plex Sans Thai' }, boxWidth: 10, padding: 6,
-            color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#24292f' } },
-          tooltip: { callbacks: { label: ctx => {
-            const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
-            const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
-            return ` ${ctx.label}: ${ctx.parsed} รายการ (${pct}%)`;
-          }}}
-        }
-      }
-    });
-  }
-
-  // ── Chart 2: จังหวัด Top 8 ──
-  const provCounts = {};
-  rows.forEach(r => {
-    const p = r.province || 'ไม่ระบุ';
-    provCounts[p] = (provCounts[p] || 0) + 1;
-  });
-  const provEntries = Object.entries(provCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
-  const provLabels = provEntries.map(e => e[0]);
-  const provVals   = provEntries.map(e => e[1]);
-
-  if (agingCharts.province) agingCharts.province.destroy();
-  const ctxProv = document.getElementById('aging-chart-province');
-  if (ctxProv) {
-    agingCharts.province = new Chart(ctxProv, {
-      type: 'bar',
-      data: {
-        labels: provLabels,
-        datasets: [{ data: provVals, backgroundColor: '#3b82f6', borderRadius: 4, borderSkipped: false }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        indexAxis: 'y',
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: ctx => {
-            const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
-            const pct = total > 0 ? ((ctx.parsed.x / total) * 100).toFixed(1) : 0;
-            return ` ${ctx.parsed.x} รายการ (${pct}%)`;
-          }}}
-        },
-        scales: {
-          x: { ticks: { font: { size: 10 }, color: '#888', stepSize: 1 }, grid: { color: 'rgba(128,128,128,0.1)' } },
-          y: { ticks: { font: { size: 10, family: 'IBM Plex Sans Thai' }, color: '#888' }, grid: { display: false } }
-        }
-      }
-    });
-  }
-}
 
 function renderAgingPage() {
   if (!allData || allData.length === 0) return;
   agingBuildPills();
   renderAgingKPIs();
-  renderAgingCharts();
   renderAgingTable();
 }
 
