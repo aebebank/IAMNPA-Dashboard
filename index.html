@@ -3083,8 +3083,9 @@ function renderAlerts(data = allData) {
     const d = new Date(r.weeklySurveyDate);
     if (isNaN(d)) return;
     const diff = Math.ceil((d - today) / 86400000);
-    if (diff < 0)       alerts.push({ cat:'weeklysurvey', type:'danger',  title:`🔁 ครบกำหนดสำรวจรายสัปดาห์เลยกำหนด`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — เกินมา ${Math.abs(diff)} วัน`, time: fmtDate(r.weeklySurveyDate) });
-    else if (diff <= 3) alerts.push({ cat:'weeklysurvey', type:'warning', title:`🔁 ครบกำหนดสำรวจรายสัปดาห์ใกล้มาก`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — อีก ${diff} วัน`, time: fmtDate(r.weeklySurveyDate) });
+    if (diff < 0)            alerts.push({ cat:'weeklysurvey', type:'danger',  title:`🔁 ครบกำหนดสำรวจรายสัปดาห์เลยกำหนด`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — เกินมา ${Math.abs(diff)} วัน`, time: fmtDate(r.weeklySurveyDate) });
+    else if (diff <= 3)      alerts.push({ cat:'weeklysurvey', type:'warning', title:`🔁 ครบกำหนดสำรวจรายสัปดาห์ใกล้มาก`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — อีก ${diff} วัน`, time: fmtDate(r.weeklySurveyDate) });
+    else if (diff <= 7)      alerts.push({ cat:'weeklysurvey', type:'info',    title:`🔁 ครบกำหนดสำรวจรายสัปดาห์`, desc:`${r.id}${r.name ? ' · '+r.name : ''} — อีก ${diff} วัน`, time: fmtDate(r.weeklySurveyDate) });
   });
 
   // ── ปัญหาทรัพย์ ───────────────────────────────────────────
@@ -3319,14 +3320,14 @@ function renderUpcoming(data = allData) {
     }
   });
 
-  // 7. ครบกำหนดสำรวจทุกสัปดาห์ (เฉพาะ 67IAM-G-0310) — แสดงใน 0–60 วัน
+  // 7. ครบกำหนดสำรวจทุกสัปดาห์ (เฉพาะ 67IAM-G-0310) — Upcoming 8–60 วัน (≤ 7 วัน = Alert รับแทน)
   data.forEach(r => {
     if (r.id !== '67IAM-G-0310') return;
     if (!r.weeklySurveyDate) return;
     const d = new Date(r.weeklySurveyDate);
     if (isNaN(d)) return;
     const diff = Math.ceil((d - today) / 86400000);
-    if (diff >= 0 && diff <= horizon) {
+    if (diff >= 8 && diff <= horizon) {
       const parts = [r.name, r.type, r.province].filter(v => v && v.trim() && v !== '-');
       events.push({
         date: d, diff,
@@ -3335,7 +3336,7 @@ function renderUpcoming(data = allData) {
         title: `ครบกำหนดสำรวจ: ${r.id}`,
         desc: parts.join(' · ') || '-',
         note: r.weeklySurveyNote || '',
-        urgency: diff <= 3 ? 'warning' : 'info',
+        urgency: 'info',
       });
     }
   });
@@ -3489,7 +3490,7 @@ function renderUpcoming(data = allData) {
 
   const colorMap = { warning: 'var(--warning)', info: 'var(--accent)', today: '#f85149' };
 
-  document.getElementById('upcomingList').innerHTML = mergedEvents.slice(0, 10).map((e, i) => {
+  document.getElementById('upcomingList').innerHTML = mergedEvents.slice(0, 20).map((e, i) => {
     const isToday = e.diff === 0;
     const color   = isToday ? '#f85149' : (colorMap[e.urgency] || 'var(--accent)');
     const diffStr = isToday ? '🔴 วันนี้' : `อีก ${e.diff} วัน`;
