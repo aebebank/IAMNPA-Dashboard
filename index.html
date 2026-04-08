@@ -3321,6 +3321,7 @@ function renderUpcoming(data = allData) {
   });
 
   // 7. ครบกำหนดสำรวจทุกสัปดาห์ (เฉพาะ 67IAM-G-0310) — Upcoming 8–60 วัน (≤ 7 วัน = Alert รับแทน)
+  console.log('[WeeklySurvey] all IDs:', data.map(r => JSON.stringify(r.id)));
   data.forEach(r => {
     if (r.id !== '67IAM-G-0310') return;
     console.log('[WeeklySurvey] found id:', JSON.stringify(r.id), 'weeklySurveyDate:', r.weeklySurveyDate);
