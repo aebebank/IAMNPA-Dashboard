@@ -3323,10 +3323,12 @@ function renderUpcoming(data = allData) {
   // 7. ครบกำหนดสำรวจทุกสัปดาห์ (เฉพาะ 67IAM-G-0310) — Upcoming 8–60 วัน (≤ 7 วัน = Alert รับแทน)
   data.forEach(r => {
     if (r.id !== '67IAM-G-0310') return;
-    if (!r.weeklySurveyDate) return;
+    console.log('[WeeklySurvey] found id:', JSON.stringify(r.id), 'weeklySurveyDate:', r.weeklySurveyDate);
+    if (!r.weeklySurveyDate) { console.log('[WeeklySurvey] SKIP: no date'); return; }
     const d = new Date(r.weeklySurveyDate);
-    if (isNaN(d)) return;
+    if (isNaN(d)) { console.log('[WeeklySurvey] SKIP: invalid date'); return; }
     const diff = Math.ceil((d - today) / 86400000);
+    console.log('[WeeklySurvey] diff:', diff, 'horizon:', horizon);
     if (diff >= 8 && diff <= horizon) {
       const parts = [r.name, r.type, r.province].filter(v => v && v.trim() && v !== '-');
       events.push({
